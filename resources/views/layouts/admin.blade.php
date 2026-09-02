@@ -159,7 +159,7 @@
 
         <!-- Pengaturan Profil & Logout di bawah Sidebar -->
         <div class="p-4 border-t border-gray-200 space-y-2">
-            <a href="/profile/edit"
+            <a href="/profile"
                 class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors">
                 <svg class="w-5 h-5 mr-3 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -170,16 +170,16 @@
                 </svg>
                 Pengaturan
             </a>
-            <form method="POST" action="#">
-                @csrf
-                <button type="submit"
+            {{-- <form method="POST" action="#"> --}}
+            <form>
+                <button
                     class="w-full flex items-center px-3 py-2 text-sm font-medium text-red-600 rounded-lg hover:bg-red-50 transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
                         </path>
                     </svg>
-                    Logout
+                    <a href="/">Logout</a>
                 </button>
             </form>
         </div>

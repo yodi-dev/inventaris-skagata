@@ -131,3 +131,8 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
         return view('peminjam.tiket.index');
     })->name('tiket.index');
 });
+
+// Route untuk halaman edit profil (Bisa ditaruh di luar group role atau di dalam middleware auth)
+Route::get('/profile', function () {
+    return view('profile.edit');
+})->name('profile.edit');
