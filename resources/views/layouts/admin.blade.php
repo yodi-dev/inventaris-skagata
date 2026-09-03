@@ -72,7 +72,7 @@
                     <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Master Data</p>
                 </div>
                 <a href="/superadmin/master/bengkel"
-                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/master/bengkel') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/master/bengkel*') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
                     <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">

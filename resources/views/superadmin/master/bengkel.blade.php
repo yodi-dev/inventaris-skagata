@@ -10,13 +10,13 @@
             </div>
 
             <!-- Action Button -->
-            <button
+            <a href="{{ route('superadmin.master.bengkel.create') }}"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Tambah Bengkel
-            </button>
+            </a>
         </div>
 
         <!-- Toolbar / Search Card -->
