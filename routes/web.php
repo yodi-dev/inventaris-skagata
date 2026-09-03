@@ -80,6 +80,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/master/bengkel/create', function () {
         return view('superadmin.master.bengkel-create');
     })->name('master.bengkel.create');
+    Route::get('/master/bengkel/edit', function () {
+        return view('superadmin.master.bengkel-edit');
+    })->name('master.bengkel.edit');
     Route::get('/master/toolman', function () {
         return view('superadmin.master.toolman');
     })->name('master.toolman');
