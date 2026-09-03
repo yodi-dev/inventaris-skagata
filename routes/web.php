@@ -77,6 +77,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/master/bengkel', function () {
         return view('superadmin.master.bengkel');
     })->name('master.bengkel');
+    Route::get('/master/bengkel/create', function () {
+        return view('superadmin.master.bengkel-create');
+    })->name('master.bengkel.create');
     Route::get('/master/toolman', function () {
         return view('superadmin.master.toolman');
     })->name('master.toolman');
