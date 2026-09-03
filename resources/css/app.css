@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] {
+    display: none !important;
+}
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
