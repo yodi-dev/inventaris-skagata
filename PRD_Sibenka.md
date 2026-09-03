@@ -93,3 +93,77 @@ Berdasarkan kebutuhan di atas, sistem akan membutuhkan tabel utama berikut:
 - `detail_pengadaans` (Isi item RAB yang diajukan Toolman).
 
 > **Catatan Relasi:** Tabel `users` (untuk role Toolman dan Peminjam), `barangs`, dan `pengadaans` **wajib** memiliki foreign key `bengkel_id` agar data per jurusan terisolasi dengan aman.
+
+## 6. Sitemap & Struktur Halaman
+
+Sistem dibagi menjadi tiga area utama berdasarkan hak akses:
+
+### Area Super Admin (Waka Sarpras) - Layout Sidebar
+
+- **Dashboard:** Ringkasan total aset, grafik kondisi, alert barang.
+- **Persetujuan Pengadaan:** Tabel pengajuan RAB dari seluruh bengkel (Approve/Revisi/Reject).
+- **Laporan (Reporting):** Laporan Mutasi Aset & Laporan Konsumsi Bahan.
+- **Master Data:** Data Bengkel/Jurusan & Manajemen Akun Toolman.
+- **Pengaturan:** Profil & Ubah Password.
+
+### Area Admin Bengkel (Toolman) - Layout Sidebar
+
+- **Dashboard:** Ringkasan aktivitas (Barang dipinjam, Request baru, Stok menipis).
+- **Manajemen Barang:** Katalog bengkel (CRUD Alat & Bahan).
+- **Sirkulasi Peminjaman:** Antrean Acc request dari siswa/guru.
+- **Sirkulasi Pengembalian:** Form cek fisik & pengubahan status kondisi barang.
+- **Pengadaan Barang:** Form pembuatan RAB (Generate otomatis dari stok limit/rusak).
+- **Manajemen Peminjam:** Tabel akun siswa/guru (Acc pendaftaran & Suspend akun).
+- **Pengaturan:** Profil & Ubah Password.
+
+### Area Peminjam (Siswa & Guru) - Layout Top Navbar
+
+- **Katalog Barang (Beranda):** Grid daftar alat/bahan yang tersedia beserta fitur pencarian.
+- **Form Pengajuan:** Form dinamis (Sistem pintar: kalender disembunyikan jika memilih bahan habis pakai).
+- **Tiket Saya:** Riwayat peminjaman (Pending, Active, Selesai) dan fitur ajukan pengembalian.
+- **Pengaturan:** Profil & Ubah Password.
+
+## 7. Konsep UI & Design System
+
+Sibenka menggunakan pendekatan desain **Clean & Functional Dashboard** dengan teknologi **Tailwind CSS**.
+
+- **Warna Utama (Primary):** Hijau SMKN 3 Yogyakarta (menggunakan basis warna `Emerald-600` / `#059669` di Tailwind).
+- **Warna Semantic (Status):**
+    - Hijau (`Success`): Tersedia, Kondisi Baik, Selesai.
+    - Kuning/Amber (`Warning`): Pending, Low Stock, Revisi.
+    - Merah (`Danger`): Rusak, Hilang, Reject, Terlambat.
+    - Biru (`Info`): Sedang dipinjam (Active).
+- **Layouting:**
+    - `Admin Layout:` Menggunakan _Sidebar Navigation_ (untuk Waka Sarpras & Toolman) karena butuh akses ke banyak sub-menu data padat.
+    - `Peminjam Layout:` Menggunakan _Top Navigation/Navbar_ (untuk Siswa & Guru) agar lebih _mobile-friendly_ dan fokus pada katalog.
+- **Tipografi:** Menggunakan font _sans-serif_ modern dan bersih (Inter atau Plus Jakarta Sans).
+- **Bentuk Elemen:** Menggunakan sudut agak membulat (`rounded-lg` atau `rounded-xl`) untuk kesan modern.
+
+## 8. Struktur File Frontend (Blade Views)
+
+Untuk menjaga agar kode tetap rapi saat dikerjakan bersama tim, struktur folder `resources/views/` diatur sebagai berikut:
+
+```text
+resources/views/
+├── auth/                       (Login & Register)
+├── layouts/
+│   ├── admin.blade.php         (Kerangka UI Waka & Toolman)
+│   ├── peminjam.blade.php      (Kerangka UI Siswa/Guru)
+│   └── auth.blade.php          (Kerangka UI Autentikasi)
+├── superadmin/                 (Area Waka Sarpras)
+│   ├── dashboard.blade.php
+│   ├── pengadaan/
+│   ├── laporan/
+│   └── master/
+├── toolman/                    (Area Admin Bengkel)
+│   ├── dashboard.blade.php
+│   ├── barang/
+│   ├── sirkulasi/
+│   ├── pengadaan/
+│   └── users/
+├── peminjam/                   (Area Siswa & Guru)
+│   ├── katalog/
+│   ├── pengajuan/
+│   └── tiket/
+└── profile/                    (Edit profil general)
+```
