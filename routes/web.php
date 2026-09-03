@@ -99,6 +99,10 @@ Route::prefix('toolman')->name('toolman.')->group(function () {
         return view('toolman.barang.create');
     })->name('barang.create');
 
+    Route::get('/barang/edit', function () {
+        return view('toolman.barang.edit');
+    })->name('barang.edit');
+
     // Sirkulasi
     Route::get('/sirkulasi/peminjaman', function () {
         return view('toolman.sirkulasi.peminjaman');
