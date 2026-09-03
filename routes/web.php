@@ -86,6 +86,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/master/toolman', function () {
         return view('superadmin.master.toolman');
     })->name('master.toolman');
+    Route::get('/master/toolman/create', function () {
+        return view('superadmin.master.toolman-create');
+    })->name('master.toolman.create');
 });
 
 
