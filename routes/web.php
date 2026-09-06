@@ -89,6 +89,11 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/master/toolman/create', function () {
         return view('superadmin.master.toolman-create');
     })->name('master.toolman.create');
+
+    // Profil Waka Sarpras
+    Route::get('/profile', function () {
+        return redirect()->route('profile.edit', ['role' => 'superadmin']);
+    })->name('profile');
 });
 
 
@@ -129,6 +134,11 @@ Route::prefix('toolman')->name('toolman.')->group(function () {
     Route::get('/users', function () {
         return view('toolman.users.index');
     })->name('users.index');
+
+    // Profil Toolman
+    Route::get('/profile', function () {
+        return redirect()->route('profile.edit', ['role' => 'toolman']);
+    })->name('profile');
 });
 
 
@@ -147,9 +157,23 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
     Route::get('/tiket', function () {
         return view('peminjam.tiket.index');
     })->name('tiket.index');
+    Route::get('/profile', function () {
+        return redirect()->route('profile.edit', ['role' => 'peminjam']);
+    })->name('profile');
 });
 
-// Route untuk halaman edit profil (Bisa ditaruh di luar group role atau di dalam middleware auth)
+// Route untuk halaman edit profil dengan deteksi role dinamis
 Route::get('/profile', function () {
-    return view('profile.edit');
+    $role = request('role');
+    if (!$role) {
+        $referer = request()->header('referer') ?? '';
+        if (str_contains($referer, 'superadmin')) {
+            $role = 'superadmin';
+        } elseif (str_contains($referer, 'toolman')) {
+            $role = 'toolman';
+        } else {
+            $role = 'peminjam';
+        }
+    }
+    return view('profile.edit', compact('role'));
 })->name('profile.edit');
