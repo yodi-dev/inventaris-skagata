@@ -406,19 +406,25 @@
                         </svg>
                     </button>
 
-                    <!-- Modal Header (diberi padding kanan aman pr-14 agar tidak tertimpa tombol close) -->
-                    <div class="p-6 sm:p-7 border-b border-gray-100 pr-14">
-                        <div class="flex items-center gap-3.5">
-                            <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 ring-8 ring-amber-50">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Modal Header -->
+                    <div class="p-6 sm:p-7 border-b border-gray-100">
+                        <div class="flex items-start gap-4 pr-10">
+                            <!-- Icon Kunci Amber -->
+                            <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 border border-amber-200/80 ring-4 ring-amber-50/80 shadow-xs">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
                                     </path>
                                 </svg>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-gray-900" id="modal-reset-title">Kredensial Login & Ganti Password</h3>
-                                <p class="text-xs text-gray-500 mt-0.5">Reset dan tetapkan password baru untuk staf toolman.</p>
+                            <!-- Judul & Subtitle Header -->
+                            <div class="flex-1 min-w-0 pt-0.5">
+                                <h3 class="text-lg font-bold text-gray-900 leading-snug" id="modal-reset-title">
+                                    Kredensial Login & Ganti Password
+                                </h3>
+                                <p class="text-xs text-gray-500 mt-1 leading-relaxed">
+                                    Reset dan tetapkan password baru untuk staf toolman.
+                                </p>
                             </div>
                         </div>
 
