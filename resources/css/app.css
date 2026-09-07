@@ -17,3 +17,20 @@
     background-color: #cbd5e1;
     border-radius: 10px;
 }
+
+/* Sidebar Sliding Utilities (Ensures Smooth Hardware-Accelerated Sliding) */
+.-translate-x-full {
+    transform: translateX(-100%);
+}
+
+.translate-x-0 {
+    transform: translateX(0);
+}
+
+.-ml-64 {
+    margin-left: -16rem;
+}
+
+.ml-0 {
+    margin-left: 0;
+}

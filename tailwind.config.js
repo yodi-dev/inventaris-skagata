@@ -11,6 +11,13 @@ export default {
         './resources/**/*.vue',
     ],
 
+    safelist: [
+        '-ml-64',
+        'ml-0',
+        '-translate-x-full',
+        'translate-x-0',
+    ],
+
     theme: {
         extend: {
             fontFamily: {
