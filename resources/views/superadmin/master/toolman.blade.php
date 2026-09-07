@@ -397,98 +397,108 @@
                     @keydown.escape.window="showResetModal = false"
                     class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-gray-100">
                     
-                    <!-- Close button (top right) -->
+                    <!-- Close button (top right dengan z-index dan posisi aman) -->
                     <button type="button" @click="showResetModal = false"
-                        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 p-2 rounded-xl hover:bg-gray-100 transition-colors z-20 focus:outline-none"
+                        title="Tutup Modal">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
 
-                    <!-- Modal Header / Banner Kredensial Login & Ganti Password -->
-                    <div class="p-6 sm:p-7 border-b border-gray-100">
-                        <div class="flex items-start justify-between gap-4">
-                            <div class="flex items-center gap-3.5">
-                                <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 ring-8 ring-amber-50">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
-                                        </path>
-                                    </svg>
-                                </div>
-                                <div>
-                                    <h3 class="text-lg font-bold text-gray-900" id="modal-reset-title">Kredensial Login & Ganti Password</h3>
-                                    <p class="text-xs text-gray-500 mt-0.5">Reset dan tetapkan password baru untuk akun staf toolman.</p>
-                                </div>
-                            </div>
-
-                            <!-- Tombol Acak Password -->
-                            <button type="button" @click="autoGeneratePass()"
-                                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold rounded-lg transition-colors shrink-0">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <!-- Modal Header (diberi padding kanan aman pr-14 agar tidak tertimpa tombol close) -->
+                    <div class="p-6 sm:p-7 border-b border-gray-100 pr-14">
+                        <div class="flex items-center gap-3.5">
+                            <div class="w-11 h-11 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 ring-8 ring-amber-50">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                        d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
+                                    </path>
                                 </svg>
-                                Acak Password
-                            </button>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-bold text-gray-900" id="modal-reset-title">Kredensial Login & Ganti Password</h3>
+                                <p class="text-xs text-gray-500 mt-0.5">Reset dan tetapkan password baru untuk staf toolman.</p>
+                            </div>
                         </div>
 
                         <!-- Target Account Card Preview -->
-                        <div class="mt-4 p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between">
-                            <div>
-                                <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Akun Toolman:</div>
-                                <div class="font-bold text-gray-900 text-sm" x-text="resetNama"></div>
-                                <div class="text-xs text-gray-500 font-mono mt-0.5" x-text="resetEmail"></div>
+                        <div class="mt-4 p-3.5 bg-slate-50 border border-slate-200/80 rounded-xl flex items-center justify-between gap-3">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-lg bg-green-100 text-green-700 font-bold text-xs flex items-center justify-center shrink-0 border border-green-200">
+                                    <span x-text="resetNama ? resetNama.substring(0,2).toUpperCase() : 'TM'"></span>
+                                </div>
+                                <div class="min-w-0">
+                                    <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Akun Sasaran:</div>
+                                    <div class="font-bold text-gray-900 text-sm truncate" x-text="resetNama"></div>
+                                    <div class="text-xs text-gray-500 font-mono truncate" x-text="resetEmail"></div>
+                                </div>
                             </div>
-                            <span class="px-2.5 py-1 rounded-md bg-white border border-gray-200 text-xs font-semibold text-gray-700 shadow-2xs" x-text="resetBengkel"></span>
+                            <span class="px-2.5 py-1 rounded-md bg-white border border-gray-200 text-xs font-semibold text-slate-700 shadow-2xs shrink-0" x-text="resetBengkel"></span>
                         </div>
                     </div>
 
                     <!-- Modal Body / Form Fields -->
                     <form @submit.prevent="confirmReset()" class="p-6 sm:p-7 space-y-4">
-                        <!-- Password Baru -->
+                        <!-- Password Baru with Acak Password button rapi di baris label -->
                         <div>
-                            <div class="flex items-center justify-between mb-1">
+                            <div class="flex items-center justify-between mb-1.5">
                                 <label for="modal_new_password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider">
                                     Password Baru <span class="text-red-500">*</span>
                                 </label>
-                                <button type="button" @click="showNewPassword = !showNewPassword"
-                                    class="text-xs text-gray-500 hover:text-amber-700 transition-colors">
-                                    <span x-text="showNewPassword ? 'Sembunyikan' : 'Tampilkan'"></span>
+                                <!-- Tombol Acak Password rapi berdampingan dengan label -->
+                                <button type="button" @click="autoGeneratePass()"
+                                    class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
+                                    <svg class="w-3.5 h-3.5 text-amber-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                    Acak Password
                                 </button>
                             </div>
                             <div class="relative">
                                 <input :type="showNewPassword ? 'text' : 'password'" id="modal_new_password" x-model="newPassword" required
                                     minlength="8" placeholder="Minimal 8 karakter"
-                                    class="w-full pr-10 rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500 text-sm shadow-sm font-mono">
-                                <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
-                                    @click="showNewPassword = !showNewPassword">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showNewPassword">
+                                    class="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm shadow-sm font-mono tracking-wide">
+                                <button type="button" 
+                                    @click="showNewPassword = !showNewPassword"
+                                    class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                                    :title="showNewPassword ? 'Sembunyikan Password' : 'Lihat Password'">
+                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showNewPassword">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showNewPassword" style="display: none;">
+                                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showNewPassword" style="display: none;">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
                                     </svg>
-                                </div>
+                                </button>
                             </div>
                         </div>
 
                         <!-- Konfirmasi Password Baru -->
                         <div>
-                            <label for="modal_confirm_password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">
+                            <label for="modal_confirm_password" class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
                                 Ulangi Password Baru <span class="text-red-500">*</span>
                             </label>
-                            <input :type="showNewPassword ? 'text' : 'password'" id="modal_confirm_password" x-model="newPasswordConfirmation" required
-                                minlength="8" placeholder="Ketik ulang password baru"
-                                class="w-full rounded-lg border-gray-300 focus:border-amber-500 focus:ring-amber-500 text-sm shadow-sm font-mono">
+                            <div class="relative">
+                                <input :type="showNewPassword ? 'text' : 'password'" id="modal_confirm_password" x-model="newPasswordConfirmation" required
+                                    minlength="8" placeholder="Ketik ulang password baru"
+                                    class="w-full pl-3.5 pr-11 py-2.5 rounded-lg border border-gray-300 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 text-sm shadow-sm font-mono tracking-wide">
+                                <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
+                                    <span x-show="newPassword && newPasswordConfirmation && newPassword === newPasswordConfirmation" class="text-emerald-500 text-xs font-bold flex items-center gap-1">
+                                        <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                        </svg>
+                                    </span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Security Notice Alert -->
-                        <div class="p-3 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-start gap-2.5 text-xs text-amber-800">
+                        <div class="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
                             <svg class="w-4 h-4 text-amber-600 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
@@ -499,13 +509,13 @@
                         </div>
 
                         <!-- Footer Modal Buttons -->
-                        <div class="pt-3 flex items-center justify-end gap-3">
+                        <div class="pt-3 border-t border-gray-100 flex items-center justify-end gap-3">
                             <button type="button" @click="showResetModal = false"
-                                class="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-300 shadow-xs transition-colors">
+                                class="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 text-sm font-medium rounded-lg border border-gray-300 shadow-xs transition-colors cursor-pointer">
                                 Batal
                             </button>
                             <button type="submit"
-                                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all hover:shadow-md">
+                                class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all hover:shadow-md cursor-pointer">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z">
