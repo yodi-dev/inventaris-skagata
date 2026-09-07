@@ -4,23 +4,23 @@
 @section('header_title', 'Dashboard Waka Sarpras')
 
 @section('content')
-    <div class="space-y-6">
+    <div class="space-y-6 w-full min-w-0 max-w-full">
         <!-- Welcome Section -->
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold text-gray-800">Selamat datang, Bapak/Ibu Waka Sarpras</h2>
-                <p class="text-sm text-gray-500 mt-1">Berikut adalah ringkasan inventaris dan sirkulasi barang hari ini.</p>
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+            <div class="min-w-0">
+                <h2 class="text-xl sm:text-2xl font-bold text-gray-800 tracking-tight break-words">Selamat datang, Bapak/Ibu Waka Sarpras</h2>
+                <p class="text-xs sm:text-sm text-gray-500 mt-1">Berikut adalah ringkasan inventaris dan sirkulasi barang hari ini.</p>
             </div>
-            <div class="flex gap-2">
+            <div class="flex items-center gap-2 shrink-0">
                 <a href="#"
-                    class="px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors">
+                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors">
                     Unduh Laporan
                 </a>
             </div>
         </div>
 
         <!-- Stats Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             <!-- Stat Card 1: Total Aset -->
             <div
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
@@ -88,7 +88,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
             <!-- Kolom Kiri: Sering Dipinjam & Alert Stok (Porsi 2/3) -->
-            <div class="lg:col-span-2 space-y-6">
+            <div class="lg:col-span-2 space-y-6 min-w-0">
 
                 <!-- Alert Stok Menipis / Habis -->
                 <div class="bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden">
@@ -128,7 +128,7 @@
                         <h3 class="text-lg font-semibold text-gray-800">Barang Paling Sering Dipinjam (Bulan Ini)</h3>
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
+                        <table class="w-full text-left border-collapse min-w-[480px]">
                             <thead>
                                 <tr class="bg-slate-50 text-gray-500 text-xs uppercase tracking-wider">
                                     <th class="px-6 py-4 font-medium">Nama Barang</th>

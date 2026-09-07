@@ -11,6 +11,17 @@ export default {
         './resources/**/*.vue',
     ],
 
+    safelist: [
+        'sidebar-desktop-transition',
+        'sidebar-desktop-open',
+        'sidebar-desktop-closed',
+        'mobile-drawer-transition',
+        '-ml-64',
+        'ml-0',
+        '-translate-x-full',
+        'translate-x-0',
+    ],
+
     theme: {
         extend: {
             fontFamily: {

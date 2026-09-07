@@ -89,6 +89,9 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
     Route::get('/master/toolman/create', function () {
         return view('superadmin.master.toolman-create');
     })->name('master.toolman.create');
+    Route::get('/master/toolman/edit', function () {
+        return view('superadmin.master.toolman-edit');
+    })->name('master.toolman.edit');
 
     // Profil Waka Sarpras
     Route::get('/profile', function () {
