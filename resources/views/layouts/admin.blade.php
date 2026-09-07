@@ -6,6 +6,31 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Dashboard') - Inventaris SMKN 3 Yk</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>
+        /* Ultra-smooth hardware-accelerated sidebar transition */
+        .sidebar-desktop-transition {
+            transition: margin-left 350ms cubic-bezier(0.25, 1, 0.5, 1) !important;
+            will-change: margin-left;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            transform: translateZ(0);
+        }
+
+        .sidebar-desktop-open {
+            margin-left: 0 !important;
+        }
+
+        .sidebar-desktop-closed {
+            margin-left: -16rem !important;
+        }
+
+        .mobile-drawer-transition {
+            transition: transform 350ms cubic-bezier(0.25, 1, 0.5, 1) !important;
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+        }
+    </style>
 </head>
 
 <body class="bg-slate-50 text-gray-800 font-sans antialiased flex min-h-screen overflow-hidden"
@@ -38,13 +63,13 @@
 
         <!-- Offcanvas Mobile Drawer -->
         <div x-show="mobileSidebarOpen"
-            x-transition:enter="transition ease-in-out duration-300 transform"
+            x-transition:enter="transition ease-out duration-300 transform"
             x-transition:enter-start="-translate-x-full"
             x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in-out duration-300 transform"
+            x-transition:leave="transition ease-in duration-250 transform"
             x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white flex flex-col justify-between shadow-2xl border-r border-gray-200"
+            class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white flex flex-col justify-between shadow-2xl border-r border-gray-200 mobile-drawer-transition"
             style="display: none;">
 
             <!-- Header & Close Button -->
@@ -72,10 +97,8 @@
 
     <!-- Desktop Sidebar -->
     <aside
-        class="w-64 bg-white border-r border-gray-200 flex-col justify-between hidden md:flex z-20 shadow-sm shrink-0"
-        :class="sidebarOpen ? 'ml-0' : '-ml-64'"
-        :style="sidebarOpen ? 'margin-left: 0;' : 'margin-left: -16rem;'"
-        style="transition: margin-left 300ms cubic-bezier(0.4, 0, 0.2, 1);">
+        class="w-64 bg-white border-r border-gray-200 flex-col justify-between hidden md:flex z-20 shadow-sm shrink-0 sidebar-desktop-transition"
+        :class="sidebarOpen ? 'sidebar-desktop-open' : 'sidebar-desktop-closed'">
 
         <div class="w-64 flex flex-col justify-between h-full shrink-0">
             <!-- Logo -->
@@ -102,10 +125,12 @@
 
             <div class="flex items-center min-w-0 flex-1 mr-2 sm:mr-4">
                 <button @click="toggleSidebar()"
-                    class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-2 -ml-1.5 rounded-lg transition-colors shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/20 mr-2 sm:mr-3"
+                    class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-2 -ml-1.5 rounded-lg transition-all duration-200 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/20 mr-2 sm:mr-3 active:scale-95"
                     :title="sidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'"
                     aria-label="Tutup / Buka Sidebar">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out"
+                        :class="sidebarOpen ? '' : 'rotate-180'"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>

@@ -12,6 +12,10 @@ export default {
     ],
 
     safelist: [
+        'sidebar-desktop-transition',
+        'sidebar-desktop-open',
+        'sidebar-desktop-closed',
+        'mobile-drawer-transition',
         '-ml-64',
         'ml-0',
         '-translate-x-full',
