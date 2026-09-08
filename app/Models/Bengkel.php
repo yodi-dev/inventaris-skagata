@@ -9,6 +9,8 @@ class Bengkel extends Model
 {
     use HasFactory;
 
+    protected $table = 'bengkels';
+
     protected $fillable = [
         'id',
         'kode',
