@@ -33,41 +33,32 @@
     </style>
 </head>
 
-<body class="bg-slate-50 text-gray-800 font-sans antialiased flex min-h-screen overflow-hidden"
-    x-data="{
-        sidebarOpen: true,
-        mobileSidebarOpen: false,
-        toggleSidebar() {
-            if (window.innerWidth < 768) {
-                this.mobileSidebarOpen = !this.mobileSidebarOpen;
-            } else {
-                this.sidebarOpen = !this.sidebarOpen;
-            }
+<body class="bg-slate-50 text-gray-800 font-sans antialiased flex min-h-screen overflow-hidden" x-data="{
+    sidebarOpen: true,
+    mobileSidebarOpen: false,
+    toggleSidebar() {
+        if (window.innerWidth < 768) {
+            this.mobileSidebarOpen = !this.mobileSidebarOpen;
+        } else {
+            this.sidebarOpen = !this.sidebarOpen;
         }
-    }">
+    }
+}">
 
     <!-- Mobile Sidebar Drawer (Only on screens < md) -->
     <div class="md:hidden" x-cloak>
         <!-- Backdrop Overlay -->
-        <div x-show="mobileSidebarOpen" 
-            x-transition:enter="transition-opacity ease-linear duration-200"
-            x-transition:enter-start="opacity-0"
-            x-transition:enter-end="opacity-100"
-            x-transition:leave="transition-opacity ease-linear duration-200"
-            x-transition:leave-start="opacity-100"
-            x-transition:leave-end="opacity-0"
-            class="fixed inset-0 bg-gray-900/50 backdrop-blur-xs z-40"
-            @click="mobileSidebarOpen = false"
-            style="display: none;">
+        <div x-show="mobileSidebarOpen" x-transition:enter="transition-opacity ease-linear duration-200"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-900/50 backdrop-blur-xs z-40"
+            @click="mobileSidebarOpen = false" style="display: none;">
         </div>
 
         <!-- Offcanvas Mobile Drawer -->
-        <div x-show="mobileSidebarOpen"
-            x-transition:enter="transition ease-out duration-300 transform"
-            x-transition:enter-start="-translate-x-full"
-            x-transition:enter-end="translate-x-0"
-            x-transition:leave="transition ease-in duration-250 transform"
-            x-transition:leave-start="translate-x-0"
+        <div x-show="mobileSidebarOpen" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
+            x-transition:leave="transition ease-in duration-250 transform" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
             class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white flex flex-col justify-between shadow-2xl border-r border-gray-200 mobile-drawer-transition"
             style="display: none;">
@@ -126,11 +117,10 @@
             <div class="flex items-center min-w-0 flex-1 mr-2 sm:mr-4">
                 <button @click="toggleSidebar()"
                     class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-2 -ml-1.5 rounded-lg transition-all duration-200 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary-500/20 mr-2 sm:mr-3 active:scale-95"
-                    :title="sidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'"
-                    aria-label="Tutup / Buka Sidebar">
+                    :title="sidebarOpen ? 'Tutup Sidebar' : 'Buka Sidebar'" aria-label="Tutup / Buka Sidebar">
                     <svg class="w-5 h-5 sm:w-6 sm:h-6 transition-transform duration-300 ease-in-out"
-                        :class="sidebarOpen ? '' : 'rotate-180'"
-                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        :class="sidebarOpen ? '' : 'rotate-180'" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M4 6h16M4 12h16M4 18h16"></path>
                     </svg>
@@ -142,7 +132,8 @@
             </div>
 
             <!-- Header Profile Section Dynamically Changing -->
-            <div class="flex items-center space-x-3 sm:space-x-4 cursor-pointer hover:opacity-80 transition-opacity shrink-0">
+            <div
+                class="flex items-center space-x-3 sm:space-x-4 cursor-pointer hover:opacity-80 transition-opacity shrink-0">
                 <div class="hidden sm:block text-right">
                     @if (request()->is('superadmin*') || request('role') === 'superadmin' || (isset($role) && $role === 'superadmin'))
                         <p class="text-sm font-medium text-gray-900">Waka Sarpras</p>
