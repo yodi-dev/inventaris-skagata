@@ -30,6 +30,7 @@ Waka Sarpras tidak terikat pada satu bengkel tertentu sehingga `bengkel_id` pada
 
 - Terikat pada satu bengkel.
 - Mengelola master data barang pada bengkel yang menjadi tanggung jawabnya.
+- Mengelola master lokasi penyimpanan pada bengkelnya.
 - Mengelola alat inventaris dan Bahan Habis Pakai (BHP).
 - Memproses tiket peminjaman dari siswa maupun guru.
 - Melakukan Approve atau Reject terhadap tiket peminjaman.
@@ -89,7 +90,18 @@ Peminjam dibedakan menjadi:
 - `bengkel_id` wajib untuk Toolman dan peminjam berjenis Siswa.
 - `bengkel_id` bernilai `NULL` untuk Waka Sarpras dan peminjam berjenis Guru.
 
-### 3.3 Pencatatan Barang
+### 3.3 Lokasi Penyimpanan
+
+- Setiap bengkel dapat memiliki banyak lokasi penyimpanan.
+- Master lokasi penyimpanan dikelola oleh Toolman pada bengkel yang menjadi tanggung jawabnya.
+- Lokasi penyimpanan digunakan untuk menunjukkan lokasi utama tempat suatu barang disimpan, misalnya Gudang Utama, Lemari Alat A, Rak BHP, atau lokasi lain di dalam bengkel.
+- Setiap lokasi penyimpanan wajib terikat pada satu bengkel melalui `bengkel_id`.
+- Kode lokasi bersifat unik dalam satu bengkel. Bengkel berbeda diperbolehkan memiliki kode lokasi yang sama.
+- Pada scope prototype, satu master barang memiliki satu lokasi penyimpanan utama.
+- Barang dan lokasi penyimpanannya wajib berasal dari bengkel yang sama.
+- Penyimpanan satu jenis barang di beberapa lokasi sekaligus belum dimodelkan pada prototype.
+
+### 3.4 Pencatatan Barang
 
 Barang dicatat menggunakan pendekatan **Quantity-Based**, bukan berdasarkan nomor seri individual.
 
@@ -100,7 +112,9 @@ Barang dibedakan menjadi:
 - **Inventaris:** barang yang harus dikembalikan setelah digunakan.
 - **Bahan Habis Pakai (BHP):** barang yang tidak perlu dikembalikan setelah digunakan.
 
-Setiap barang terikat pada satu bengkel.
+Setiap barang terikat pada satu bengkel dan memiliki satu lokasi penyimpanan utama melalui `lokasi_penyimpanan_id`.
+
+Lokasi penyimpanan barang harus berada pada bengkel yang sama dengan barang tersebut.
 
 Kode barang bersifat unik dalam satu bengkel. Bengkel berbeda diperbolehkan memiliki kode barang yang sama.
 
@@ -121,7 +135,7 @@ Low-stock tidak disimpan sebagai status khusus, melainkan ditentukan berdasarkan
 
 `stok_tersedia <= minimum_stok`
 
-### 3.4 Aturan Peminjaman
+### 3.5 Aturan Peminjaman
 
 - Tidak ada batasan jumlah maksimal jenis barang yang dapat dimasukkan ke dalam satu tiket peminjaman.
 - Satu tiket dapat berisi barang Inventaris saja, BHP saja, atau kombinasi keduanya.
@@ -133,7 +147,7 @@ Low-stock tidak disimpan sebagai status khusus, melainkan ditentukan berdasarkan
 - Batas pengembalian disimpan sebagai waktu/tanggal (`DATETIME`) pada transaksi peminjaman.
 - Untuk tiket yang hanya berisi BHP, `batas_kembali` dapat bernilai `NULL`.
 
-### 3.5 Peminjaman Barang Inventaris
+### 3.6 Peminjaman Barang Inventaris
 
 Ketika peminjaman barang inventaris disetujui:
 
@@ -157,7 +171,7 @@ Barang yang kembali rusak akan dipindahkan dari `stok_dipinjam` ke `stok_rusak`.
 
 Barang yang hilang akan mengurangi `stok_dipinjam` sekaligus `stok_total` secara permanen.
 
-### 3.6 Peminjaman Bahan Habis Pakai (BHP)
+### 3.7 Peminjaman Bahan Habis Pakai (BHP)
 
 BHP tidak memiliki proses pengembalian.
 
@@ -174,7 +188,7 @@ Jika tiket berisi kombinasi Inventaris dan BHP:
 - tiket tetap berstatus **Active** karena masih terdapat barang Inventaris yang harus dikembalikan;
 - tiket dinyatakan selesai setelah seluruh barang Inventaris selesai diperiksa.
 
-### 3.7 Sanksi (Penalti)
+### 3.8 Sanksi (Penalti)
 
 Jika peminjam merusak atau menghilangkan barang, atau melakukan pelanggaran seperti keterlambatan berulang, Toolman dapat menangguhkan akun peminjam.
 
@@ -182,7 +196,7 @@ Pengguna dengan status **Suspend** tidak dapat membuat pengajuan peminjaman baru
 
 Urusan ganti rugi atau penyelesaian administratif dilakukan di luar sistem Sibenka.
 
-### 3.8 Pengadaan & RAB
+### 3.9 Pengadaan & RAB
 
 - Toolman membuat draft RAB untuk bengkelnya.
 - RAB dapat memuat barang yang sudah terdaftar pada master barang maupun barang baru yang belum ada dalam master barang.
@@ -194,7 +208,7 @@ Urusan ganti rugi atau penyelesaian administratif dilakukan di luar sistem Siben
 - RAB berfungsi sebagai dokumen pengajuan/pelaporan pengadaan.
 - Penambahan stok dilakukan oleh Toolman hanya ketika barang fisik benar-benar telah diterima di bengkel.
 
-### 3.9 Riwayat Perubahan Stok
+### 3.10 Riwayat Perubahan Stok
 
 Setiap perubahan penting terhadap stok barang dicatat pada `stock_movements`.
 
@@ -213,7 +227,7 @@ Jenis pergerakan stok minimal meliputi:
 
 Setiap movement menyimpan barang, jumlah, pengguna yang memproses, jenis movement, serta referensi transaksi jika tersedia.
 
-### 3.10 Notifikasi
+### 3.11 Notifikasi
 
 Tidak terdapat integrasi notifikasi melalui email atau WhatsApp.
 
@@ -305,7 +319,7 @@ atau:
 
 ## 5. Draf Entitas Database (ERD v1)
 
-Sistem menggunakan delapan tabel utama.
+Sistem menggunakan sembilan tabel utama.
 
 ### 5.1 `bengkels`
 
@@ -323,13 +337,37 @@ Atribut utama:
 Relasi utama:
 
 - satu Bengkel memiliki banyak User;
+- satu Bengkel memiliki banyak Lokasi Penyimpanan;
 - satu Bengkel memiliki banyak Barang;
 - satu Bengkel memiliki banyak Peminjaman;
 - satu Bengkel memiliki banyak Pengadaan.
 
 ---
 
-### 5.2 `users`
+### 5.2 `lokasi_penyimpanans`
+
+Master data lokasi penyimpanan barang pada setiap bengkel.
+
+Atribut utama:
+
+- `id`
+- `bengkel_id`
+- `kode`
+- `nama`
+- `deskripsi` nullable
+- `created_at`
+- `updated_at`
+
+Aturan utama:
+
+- satu lokasi penyimpanan hanya dimiliki oleh satu bengkel;
+- satu bengkel dapat memiliki banyak lokasi penyimpanan;
+- kode lokasi unik berdasarkan kombinasi `bengkel_id + kode`;
+- pada scope prototype, satu lokasi penyimpanan dapat digunakan oleh banyak master barang.
+
+---
+
+### 5.3 `users`
 
 Menyimpan seluruh akun sistem.
 
@@ -371,7 +409,7 @@ Aturan `bengkel_id`:
 
 ---
 
-### 5.3 `barangs`
+### 5.4 `barangs`
 
 Master data barang pada setiap bengkel.
 
@@ -379,6 +417,7 @@ Atribut utama:
 
 - `id`
 - `bengkel_id`
+- `lokasi_penyimpanan_id`
 - `kode_barang`
 - `nama`
 - `jenis_barang`
@@ -401,9 +440,13 @@ Kode barang unik berdasarkan kombinasi:
 
 `bengkel_id + kode_barang`
 
+`lokasi_penyimpanan_id` mengarah kepada lokasi penyimpanan utama barang.
+
+Lokasi penyimpanan yang dipilih wajib berasal dari bengkel yang sama dengan `barangs.bengkel_id`.
+
 ---
 
-### 5.4 `peminjamans`
+### 5.5 `peminjamans`
 
 Header transaksi peminjaman.
 
@@ -430,7 +473,7 @@ Atribut utama:
 
 ---
 
-### 5.5 `detail_peminjamans`
+### 5.6 `detail_peminjamans`
 
 Menyimpan daftar barang di dalam satu tiket peminjaman.
 
@@ -454,7 +497,7 @@ Untuk BHP, data kondisi pengembalian tidak digunakan karena BHP tidak dikembalik
 
 ---
 
-### 5.6 `pengadaans`
+### 5.7 `pengadaans`
 
 Header pengajuan RAB.
 
@@ -479,7 +522,7 @@ Atribut utama:
 
 ---
 
-### 5.7 `detail_pengadaans`
+### 5.8 `detail_pengadaans`
 
 Menyimpan daftar item dalam satu RAB.
 
@@ -506,7 +549,7 @@ Total RAB dapat dihitung dari seluruh subtotal item.
 
 ---
 
-### 5.8 `stock_movements`
+### 5.9 `stock_movements`
 
 Menyimpan riwayat perubahan stok barang.
 
@@ -546,6 +589,8 @@ Relasi utama ERD v1:
 ```text
 BENGKELS
 ├── USERS
+├── LOKASI_PENYIMPANANS
+│   └── BARANGS
 ├── BARANGS
 ├── PEMINJAMANS
 └── PENGADAANS
@@ -571,6 +616,8 @@ Cardinality utama:
 
 ```text
 bengkels 1 ─── N users
+bengkels 1 ─── N lokasi_penyimpanans
+lokasi_penyimpanans 1 ─── N barangs
 bengkels 1 ─── N barangs
 bengkels 1 ─── N peminjamans
 bengkels 1 ─── N pengadaans
@@ -605,6 +652,7 @@ Sistem dibagi menjadi tiga area utama berdasarkan hak akses.
 
 - **Dashboard:** Ringkasan aktivitas bengkel seperti barang dipinjam, request baru, dan stok menipis.
 - **Manajemen Barang:** CRUD alat Inventaris dan BHP.
+- **Lokasi Penyimpanan:** CRUD master lokasi penyimpanan seperti gudang, lemari, dan rak pada bengkel Toolman.
 - **Sirkulasi Peminjaman:** Antrean pengajuan peminjaman dari siswa dan guru.
 - **Sirkulasi Pengembalian:** Pengajuan pengembalian serta form pengecekan kondisi fisik barang.
 - **Pengadaan Barang:** Pembuatan dan pengelolaan draft RAB.
@@ -699,6 +747,7 @@ resources/views/
 ├── toolman/
 │   ├── dashboard.blade.php
 │   ├── barang/
+│   ├── lokasi-penyimpanan/
 │   ├── peminjaman/
 │   ├── pengembalian/
 │   ├── pengadaan/
@@ -729,6 +778,8 @@ Untuk menjaga prototype tetap fokus, beberapa hal belum menjadi bagian dari scop
 - tidak membuat tabel terpisah untuk Siswa, Guru, maupun Toolman;
 - tidak membuat tabel master Jurusan terpisah;
 - tidak membuat tabel master Satuan pada tahap prototype;
+- satu master barang hanya memiliki satu lokasi penyimpanan utama pada tahap prototype;
+- stok satu jenis barang yang tersebar di beberapa lokasi sekaligus belum dimodelkan;
 - `stock_movements` menggunakan model sederhana berbasis `jenis` movement dan belum menggunakan model perpindahan state `dari → ke`.
 
-Fokus prototype adalah memastikan alur utama **master bengkel → pengguna → barang → peminjaman/pengembalian → pengadaan → riwayat stok** dapat berjalan secara konsisten.
+Fokus prototype adalah memastikan alur utama **master bengkel → lokasi penyimpanan → pengguna → barang → peminjaman/pengembalian → pengadaan → riwayat stok** dapat berjalan secara konsisten.

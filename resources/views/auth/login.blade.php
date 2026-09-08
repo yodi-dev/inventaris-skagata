@@ -5,7 +5,7 @@
 @section('content')
     <!-- Header Form -->
     <div class="mb-8 text-center lg:text-left">
-        <h2 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang! 👋</h2>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang!</h2>
         <p class="text-sm text-gray-500">Silakan masuk dengan akun yang terdaftar.</p>
     </div>
 
@@ -50,12 +50,12 @@
                 <span class="ms-2 text-sm text-gray-600">{{ __('Ingat Saya') }}</span>
             </label>
 
-            @if (Route::has('password.request'))
+            {{-- @if (Route::has('password.request'))
                 <a class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
                     href="{{ route('password.request') }}">
                     {{ __('Lupa Password?') }}
                 </a>
-            @endif
+            @endif --}}
         </div>
 
         <!-- Tombol Submit -->
