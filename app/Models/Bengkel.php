@@ -21,6 +21,11 @@ class Bengkel extends Model
         return $this->hasMany(User::class);
     }
 
+    public function lokasiPenyimpanans()
+    {
+        return $this->hasMany(LokasiPenyimpanan::class);
+    }
+
     public function barangs()
     {
         return $this->hasMany(Barang::class);
