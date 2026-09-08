@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Models;
 
@@ -10,6 +10,7 @@ class Bengkel extends Model
     use HasFactory;
 
     protected $fillable = [
+        'id',
         'kode',
         'nama',
         'deskripsi',
