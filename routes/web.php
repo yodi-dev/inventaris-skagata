@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Route;
 
@@ -8,25 +8,15 @@ Route::get('/', function () {
 });
 
 // ==========================================
-// 1. ROUTE AUTHENTICATION (PROTOTYPE)
+// 1. ROUTE AUTHENTICATION (LARAVEL BREEZE)
 // ==========================================
-Route::get('/login', function () {
-    return view('auth.login');
-})->name('login');
-
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');
-
-Route::post('/logout', function () {
-    return redirect()->route('login');
-})->name('logout');
+require __DIR__ . '/auth.php';
 
 
 // ==========================================
 // 2. ROUTE SUPER ADMIN (WAKA SARPRAS)
 // ==========================================
-Route::prefix('superadmin')->name('superadmin.')->group(function () {
+Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka'])->group(function () {
     Route::get('/dashboard', function () {
         return view('superadmin.dashboard');
     })->name('dashboard');
@@ -105,7 +95,7 @@ Route::prefix('superadmin')->name('superadmin.')->group(function () {
 // ==========================================
 // 3. ROUTE ADMIN BENGKEL (TOOLMAN)
 // ==========================================
-Route::prefix('toolman')->name('toolman.')->group(function () {
+Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])->group(function () {
     Route::get('/dashboard', function () {
         return view('toolman.dashboard');
     })->name('dashboard');
@@ -195,7 +185,7 @@ Route::prefix('toolman')->name('toolman.')->group(function () {
 // ==========================================
 // 4. ROUTE PEMINJAM (GURU & SISWA)
 // ==========================================
-Route::prefix('peminjam')->name('peminjam.')->group(function () {
+Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam'])->group(function () {
     Route::get('/katalog', function () {
         return view('peminjam.katalog.index');
     })->name('katalog.index');
@@ -222,13 +212,13 @@ Route::get('/profile', function () {
     $role = request('role');
     if (!$role) {
         $referer = request()->header('referer') ?? '';
-        if (str_contains($referer, 'superadmin')) {
+        if (str_contains($referer, 'superadmin') || (auth()->check() && auth()->user()->role === 'waka')) {
             $role = 'superadmin';
-        } elseif (str_contains($referer, 'toolman')) {
+        } elseif (str_contains($referer, 'toolman') || (auth()->check() && auth()->user()->role === 'toolman')) {
             $role = 'toolman';
         } else {
             $role = 'peminjam';
         }
     }
     return view('profile.edit', compact('role'));
-})->name('profile.edit');
+})->middleware('auth')->name('profile.edit');

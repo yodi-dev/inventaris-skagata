@@ -54,4 +54,44 @@ class User extends Authenticatable
     {
         return $this->hasMany(StockMovement::class);
     }
+
+    public function isWaka(): bool
+    {
+        return $this->role === 'waka';
+    }
+
+    public function isToolman(): bool
+    {
+        return $this->role === 'toolman';
+    }
+
+    public function isPeminjam(): bool
+    {
+        return $this->role === 'peminjam';
+    }
+
+    public function isSiswa(): bool
+    {
+        return $this->isPeminjam() && $this->jenis_peminjam === 'siswa';
+    }
+
+    public function isGuru(): bool
+    {
+        return $this->isPeminjam() && $this->jenis_peminjam === 'guru';
+    }
+
+    public function isActive(): bool
+    {
+        return $this->status === 'aktif';
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'menunggu_acc';
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspend';
+    }
 }
