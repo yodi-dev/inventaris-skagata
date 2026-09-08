@@ -5,12 +5,21 @@
 @section('content')
     <!-- Header Form -->
     <div class="mb-8 text-center lg:text-left">
-        <h2 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang! 👋</h2>
+        <h2 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang!</h2>
         <p class="text-sm text-gray-500">Silakan masuk dengan akun yang terdaftar.</p>
     </div>
 
     <!-- Session Status (Bawaan Laravel Breeze) -->
-    <x-auth-session-status class="mb-4" :status="session('status')" />
+    @if (session('status'))
+        <div
+            class="mb-5 p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-start gap-2.5">
+            <svg class="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>{{ session('status') }}</div>
+        </div>
+    @endif
 
     <!-- Form -->
     <form method="POST" action="{{ route('login') }}" class="space-y-5">
@@ -41,12 +50,12 @@
                 <span class="ms-2 text-sm text-gray-600">{{ __('Ingat Saya') }}</span>
             </label>
 
-            @if (Route::has('password.request'))
+            {{-- @if (Route::has('password.request'))
                 <a class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
                     href="{{ route('password.request') }}">
                     {{ __('Lupa Password?') }}
                 </a>
-            @endif
+            @endif --}}
         </div>
 
         <!-- Tombol Submit -->
