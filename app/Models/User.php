@@ -11,9 +11,15 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
+        'bengkel_id',
         'name',
         'email',
         'password',
+        'role',
+        'jenis_peminjam',
+        'nomor_identitas',
+        'nomor_wa',
+        'status',
     ];
 
     protected $hidden = [
@@ -29,8 +35,23 @@ class User extends Authenticatable
         ];
     }
 
-    public function itemHistories()
+    public function bengkel()
     {
-        return $this->hasMany(ItemHistory::class);
+        return $this->belongsTo(Bengkel::class);
+    }
+
+    public function peminjamans()
+    {
+        return $this->hasMany(Peminjaman::class);
+    }
+
+    public function pengadaans()
+    {
+        return $this->hasMany(Pengadaan::class, 'dibuat_oleh');
+    }
+
+    public function stockMovements()
+    {
+        return $this->hasMany(StockMovement::class);
     }
 }
