@@ -1,15 +1,38 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bengkel;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class ToolmanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('superadmin.toolman.index');
+        $bengkels = Bengkel::all();
+
+        $query = User::with('bengkel')
+            ->where('role', 'toolman')
+            ->orderBy('name', 'asc');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('nomor_identitas', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('bengkel')) {
+            $query->where('bengkel_id', $request->bengkel);
+        }
+
+        $toolmans = $query->paginate(15)->withQueryString();
+
+        return view('superadmin.toolman.index', compact('toolmans', 'bengkels'));
     }
 
     public function create()

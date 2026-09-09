@@ -9,8 +9,11 @@ class Barang extends Model
 {
     use HasFactory;
 
+    protected $table = 'barangs';
+
     protected $fillable = [
         'bengkel_id',
+        'lokasi_penyimpanan_id',
         'kode_barang',
         'nama',
         'jenis_barang',
@@ -26,6 +29,11 @@ class Barang extends Model
     public function bengkel()
     {
         return $this->belongsTo(Bengkel::class);
+    }
+
+    public function lokasiPenyimpanan()
+    {
+        return $this->belongsTo(LokasiPenyimpanan::class);
     }
 
     public function detailPeminjamans()

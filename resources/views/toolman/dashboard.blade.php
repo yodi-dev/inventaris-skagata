@@ -1,7 +1,7 @@
 @extends('layouts.admin')
 
 @section('title', 'Dashboard Admin Bengkel')
-@section('header_title', 'Dashboard Bengkel - Teknik Komputer Jaringan')
+@section('header_title', 'Dashboard Bengkel - ' . ($bengkel->nama ?? 'Teknik Komputer Jaringan'))
 
 @section('content')
     <div class="max-w-7xl mx-auto space-y-6">
@@ -9,16 +9,17 @@
         <!-- Header & Quick Actions -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <h3 class="text-2xl font-bold text-gray-900">Halo, Yodi! 👋</h3>
-                <p class="text-sm text-gray-500 mt-1">Berikut adalah ringkasan aktivitas bengkel TKJ hari ini.</p>
+                <h3 class="text-2xl font-bold text-gray-900">Halo, {{ auth()->user()->name }}! 👋</h3>
+                <p class="text-sm text-gray-500 mt-1">Berikut adalah ringkasan aktivitas bengkel
+                    {{ $bengkel->nama ?? 'bengkel' }} hari ini.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('toolman.sirkulasi.peminjaman') }}"
+                <a href="{{ route('toolman.peminjaman.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
-                    Acc Peminjaman (3 Pending)
+                    Acc Peminjaman ({{ $requestBaru }} Pending)
                 </a>
                 <a href="{{ route('toolman.pengadaan.create') }}"
                     class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg shadow-sm transition-colors">
@@ -39,8 +40,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Sedang Dipinjam</p>
-                    <p class="text-2xl font-bold text-gray-900">12 <span
-                            class="text-sm font-normal text-gray-500">Alat</span></p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $sedangDipinjam }} <span
+                            class="text-sm font-normal text-gray-500">Item</span></p>
                 </div>
             </div>
 
@@ -55,7 +56,7 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Request Baru</p>
-                    <p class="text-2xl font-bold text-gray-900">3 <span
+                    <p class="text-2xl font-bold text-gray-900">{{ $requestBaru }} <span
                             class="text-sm font-normal text-gray-500">Antrean</span></p>
                 </div>
             </div>
@@ -70,8 +71,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Barang Rusak</p>
-                    <p class="text-2xl font-bold text-gray-900">4 <span
-                            class="text-sm font-normal text-gray-500">Inventaris</span></p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $barangRusak }} <span
+                            class="text-sm font-normal text-gray-500">Item</span></p>
                 </div>
             </div>
 
@@ -85,8 +86,8 @@
                 </div>
                 <div class="ml-4">
                     <p class="text-sm font-medium text-gray-500">Stok Menipis</p>
-                    <p class="text-2xl font-bold text-gray-900">2 <span
-                            class="text-sm font-normal text-gray-500">Bahan</span></p>
+                    <p class="text-2xl font-bold text-gray-900">{{ $stokMenipis }} <span
+                            class="text-sm font-normal text-gray-500">Barang</span></p>
                 </div>
             </div>
         </div>
@@ -94,11 +95,11 @@
         <!-- Data Tables Grid -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
 
-            <!-- Table 1: Barang Kembali Hari Ini -->
+            <!-- Table 1: Barang Kembali Hari Ini / Sedang Dipinjam -->
             <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col">
                 <div class="px-5 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
                     <h4 class="font-semibold text-gray-800">Jadwal Pengembalian Hari Ini</h4>
-                    <a href="{{ route('toolman.sirkulasi.pengembalian') }}"
+                    <a href="{{ route('toolman.pengembalian.index') }}"
                         class="text-sm font-medium text-primary-600 hover:text-primary-700">Lihat Semua &rarr;</a>
                 </div>
                 <div class="overflow-x-auto">
@@ -111,40 +112,45 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-sm">
-                            <!-- Dummy Row 1 -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-900">Budi Santoso</p>
-                                    <p class="text-xs text-gray-500">XI TKJ 1</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-800">Crimping Tool</p>
-                                    <p class="text-xs text-gray-500">INV-TKJ-001</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                                        Belum Kembali
-                                    </span>
-                                </td>
-                            </tr>
-                            <!-- Dummy Row 2 -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-900">Pak Yono</p>
-                                    <p class="text-xs text-gray-500">Guru Produktif</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-800">Proyektor Epson</p>
-                                    <p class="text-xs text-gray-500">INV-TKJ-015</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <span
-                                        class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Sudah Kembali
-                                    </span>
-                                </td>
-                            </tr>
+                            @forelse ($jadwalPengembalian as $pinjam)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-5 py-3">
+                                        <p class="font-medium text-gray-900">{{ $pinjam->user->name ?? '-' }}</p>
+                                        <p class="text-xs text-gray-500">
+                                            {{ $pinjam->user->isGuru() ? 'Guru' : $pinjam->user->nomor_identitas ?? 'Siswa' }}
+                                        </p>
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @foreach ($pinjam->detailPeminjamans as $detail)
+                                            <p class="font-medium text-gray-800">{{ $detail->barang->nama ?? '-' }}
+                                                ({{ $detail->jumlah }} {{ $detail->barang->satuan ?? 'unit' }})</p>
+                                            <p class="text-xs text-gray-500 font-mono">
+                                                {{ $detail->barang->kode_barang ?? '' }}</p>
+                                        @endforeach
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        @if (
+                                            $pinjam->status === 'terlambat' ||
+                                                ($pinjam->batas_kembali && \Carbon\Carbon::parse($pinjam->batas_kembali)->isPast()))
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                                Terlambat
+                                            </span>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                Sedang Dipinjam
+                                            </span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-5 py-6 text-center text-gray-500 text-sm">
+                                        Tidak ada peminjaman aktif yang menunggu pengembalian saat ini.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
@@ -161,46 +167,41 @@
                     <table class="w-full text-left border-collapse">
                         <thead>
                             <tr class="border-b border-gray-200 bg-white text-xs uppercase text-gray-500">
-                                <th class="px-5 py-3 font-medium">Nama Bahan</th>
+                                <th class="px-5 py-3 font-medium">Nama Bahan / Alat</th>
                                 <th class="px-5 py-3 font-medium">Sisa Stok</th>
                                 <th class="px-5 py-3 font-medium">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 text-sm">
-                            <!-- Dummy Row 1 -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-900">Kabel UTP Cat6 (Belden)</p>
-                                    <p class="text-xs text-gray-500">Satuan: Roll</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <p class="font-bold text-red-600">0.2 Roll</p>
-                                    <p class="text-xs text-gray-500">Batas min: 1 Roll</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <button
-                                        class="text-xs font-medium text-primary-600 border border-primary-600 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors">
-                                        + List RAB
-                                    </button>
-                                </td>
-                            </tr>
-                            <!-- Dummy Row 2 -->
-                            <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-5 py-3">
-                                    <p class="font-medium text-gray-900">Konektor RJ-45</p>
-                                    <p class="text-xs text-gray-500">Satuan: Box</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <p class="font-bold text-orange-500">1 Box</p>
-                                    <p class="text-xs text-gray-500">Batas min: 3 Box</p>
-                                </td>
-                                <td class="px-5 py-3">
-                                    <button
-                                        class="text-xs font-medium text-primary-600 border border-primary-600 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors">
-                                        + List RAB
-                                    </button>
-                                </td>
-                            </tr>
+                            @forelse ($peringatanStok as $item)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-5 py-3">
+                                        <p class="font-medium text-gray-900">{{ $item->nama }}</p>
+                                        <p class="text-xs text-gray-500">Satuan: {{ $item->satuan }} &bull;
+                                            {{ $item->jenis_barang === 'bhp' ? 'Bahan Habis Pakai' : 'Inventaris' }}</p>
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        <p
+                                            class="font-bold {{ $item->stok_tersedia <= 0 ? 'text-red-600' : 'text-orange-500' }}">
+                                            {{ $item->stok_tersedia }} {{ $item->satuan }}
+                                        </p>
+                                        <p class="text-xs text-gray-500">Batas min: {{ $item->minimum_stok }}
+                                            {{ $item->satuan }}</p>
+                                    </td>
+                                    <td class="px-5 py-3">
+                                        <a href="{{ route('toolman.pengadaan.create') }}"
+                                            class="inline-block text-xs font-medium text-primary-600 border border-primary-600 rounded-lg px-2 py-1 hover:bg-primary-50 transition-colors">
+                                            + List RAB
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-5 py-6 text-center text-gray-500 text-sm">
+                                        Semua stok barang dan bahan saat ini dalam kondisi aman.
+                                    </td>
+                                </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>

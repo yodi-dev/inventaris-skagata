@@ -72,7 +72,11 @@
                             d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
                         </path>
                     </svg>
-                    Tiket Peminjaman
+                    <span>Tiket Peminjaman</span>
+                    @if (auth()->check() &&
+                            auth()->user()->peminjamans()->whereIn('status', ['active', 'terlambat'])->exists())
+                        <span class="w-2 h-2 bg-blue-500 rounded-full animate-pulse ml-0.5"></span>
+                    @endif
                 </a>
             </nav>
 
@@ -96,15 +100,22 @@
                 <div class="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
                 <!-- User Profile Info -->
-                <a href="{{ route('profile.edit', ['role' => 'peminjam']) }}"
+                <a href="{{ route('profile.edit') }}"
                     class="flex items-center space-x-2 p-1 rounded-xl hover:bg-gray-100 transition-colors">
                     <div class="text-right hidden sm:block">
-                        <p class="text-xs font-bold text-gray-900 leading-tight">Budi Santoso</p>
-                        <p class="text-[11px] text-gray-500 font-medium">Siswa &bull; XI TKJ 1</p>
+                        <p class="text-xs font-bold text-gray-900 leading-tight">
+                            {{ auth()->user()->name ?? 'Pengguna' }}</p>
+                        <p class="text-[11px] text-gray-500 font-medium">
+                            @if (auth()->check() && auth()->user()->isGuru())
+                                Guru &bull; Tenaga Pendidik
+                            @else
+                                Siswa &bull; {{ auth()->user()->bengkel->kode ?? 'SMKN 3' }}
+                            @endif
+                        </p>
                     </div>
                     <div
                         class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-xs border border-primary-200 shadow-2xs">
-                        B
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                     </div>
                 </a>
 
@@ -134,7 +145,16 @@
     <footer class="bg-white border-t border-gray-200 py-5 text-center text-xs text-gray-500 hidden md:block">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
             <p>&copy; 2026 SMK Negeri 3 Yogyakarta. Sistem Inventaris & Sirkulasi Bengkel (Sibenka).</p>
-            <p class="text-gray-400 text-[11px]">Bengkel Aktif: <strong>Teknik Komputer & Jaringan (TKJ)</strong></p>
+            <p class="text-gray-400 text-[11px]">
+                Bengkel:
+                <strong class="text-gray-700">
+                    @if (auth()->check() && auth()->user()->isGuru())
+                        Akses Guru (Multi-Bengkel)
+                    @else
+                        {{ auth()->user()->bengkel->nama ?? 'SMKN 3 Yogyakarta' }}
+                    @endif
+                </strong>
+            </p>
         </div>
     </footer>
 
@@ -176,14 +196,16 @@
                         d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z">
                     </path>
                 </svg>
-                <!-- Dot indicator for active loan -->
-                <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                @if (auth()->check() &&
+                        auth()->user()->peminjamans()->whereIn('status', ['active', 'terlambat'])->exists())
+                    <span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-blue-500 rounded-full animate-pulse"></span>
+                @endif
             </div>
             <span class="text-[10px] mt-0.5">Tiket Saya</span>
         </a>
 
         <!-- Profil -->
-        <a href="{{ route('profile.edit', ['role' => 'peminjam']) }}"
+        <a href="{{ route('profile.edit') }}"
             class="flex-1 flex flex-col items-center justify-center py-1 rounded-lg transition-colors {{ request()->is('profile*') || request()->is('peminjam/profile*') ? 'text-primary-600 font-bold' : 'text-gray-500 hover:text-gray-800' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -9,6 +9,8 @@ class Bengkel extends Model
 {
     use HasFactory;
 
+    protected $table = 'bengkels';
+
     protected $fillable = [
         'id',
         'kode',
@@ -19,6 +21,11 @@ class Bengkel extends Model
     public function users()
     {
         return $this->hasMany(User::class);
+    }
+
+    public function lokasiPenyimpanans()
+    {
+        return $this->hasMany(LokasiPenyimpanan::class);
     }
 
     public function barangs()

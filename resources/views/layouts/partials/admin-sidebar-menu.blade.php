@@ -1,7 +1,10 @@
-﻿<!-- Navigation Menu -->
+<!-- Navigation Menu -->
 <nav class="flex-1 overflow-y-auto py-4 px-3 space-y-1">
 
-    @if (request()->is('superadmin*') || request('role') === 'superadmin' || (isset($role) && $role === 'superadmin'))
+    @if (
+        (auth()->check() && auth()->user()->role === 'waka') ||
+            request()->is('superadmin*') ||
+            (isset($role) && $role === 'superadmin'))
         <!-- MENU SUPER ADMIN (WAKA SARPRAS) -->
         <a href="/superadmin/dashboard"
             class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/dashboard') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
@@ -117,8 +120,8 @@
         <a href="/toolman/pengadaan"
             class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/pengadaan*') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
             <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6">
+                </path>
             </svg>
             Pengadaan (RAB)
         </a>

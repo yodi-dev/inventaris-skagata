@@ -29,8 +29,9 @@
         <div>
             <label for="email" class="block text-sm font-medium text-gray-700">Alamat Email</label>
             <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus
-                autocomplete="username"
+                autocomplete="email" list="email-history"
                 class="mt-1 block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 shadow-sm transition duration-150 sm:text-sm">
+            <datalist id="email-history"></datalist>
             <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-500 text-sm" />
         </div>
 
@@ -76,4 +77,70 @@
             </a>
         </div>
     @endif
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const emailInput = document.getElementById('email');
+            const datalist = document.getElementById('email-history');
+            const form = emailInput ? emailInput.closest('form') : null;
+            const STORAGE_KEY = 'sibenka_email_history';
+
+            if (!emailInput || !datalist) return;
+
+            // 1. Ambil riwayat email tersimpan dari localStorage
+            function getStoredEmails() {
+                try {
+                    const raw = localStorage.getItem(STORAGE_KEY);
+                    return raw ? JSON.parse(raw) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            // 2. Render riwayat ke elemen <datalist>
+            function populateDatalist() {
+                const emails = getStoredEmails();
+                datalist.innerHTML = '';
+                emails.forEach(function(email) {
+                    if (email && typeof email === 'string') {
+                        const opt = document.createElement('option');
+                        opt.value = email;
+                        datalist.appendChild(opt);
+                    }
+                });
+            }
+
+            // 3. Simpan email saat formulir disubmit
+            function saveEmail(email) {
+                if (!email) return;
+                const trimmed = email.trim();
+                if (!trimmed || !trimmed.includes('@')) return;
+
+                let emails = getStoredEmails().filter(function(item) {
+                    return item.toLowerCase() !== trimmed.toLowerCase();
+                });
+
+                emails.unshift(trimmed);
+
+                // Simpan hingga 10 riwayat alamat email terakhir
+                if (emails.length > 10) {
+                    emails = emails.slice(0, 10);
+                }
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(emails));
+                } catch (e) {
+                    // Penanganan jika storage dibatasi oleh browser
+                }
+            }
+
+            populateDatalist();
+
+            if (form) {
+                form.addEventListener('submit', function() {
+                    saveEmail(emailInput.value);
+                });
+            }
+        });
+    </script>
 @endsection

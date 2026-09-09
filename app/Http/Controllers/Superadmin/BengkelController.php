@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Superadmin;
 
@@ -9,7 +9,20 @@ class BengkelController extends Controller
 {
     public function index()
     {
-        return view('superadmin.bengkel.index');
+        $bengkels = \App\Models\Bengkel::with(['users' => function ($q) {
+            $q->where('role', 'toolman')->take(1);
+        }])
+            ->withCount([
+                'barangs as inventaris_count' => function ($query) {
+                    $query->where('jenis_barang', 'inventaris');
+                },
+                'barangs as bhp_count' => function ($query) {
+                    $query->where('jenis_barang', 'bhp');
+                }
+            ])
+            ->get();
+
+        return view('superadmin.bengkel.index', compact('bengkels'));
     }
 
     public function create()

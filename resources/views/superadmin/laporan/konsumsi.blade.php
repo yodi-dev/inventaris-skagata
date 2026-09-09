@@ -35,45 +35,49 @@
 
         <!-- Filter Card -->
         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
-            <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <form action="{{ route('superadmin.laporan.konsumsi') }}" method="GET"
+                class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <!-- Filter Tanggal Mulai -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                    <input type="date" name="start_date"
+                    <input type="date" name="start_date" value="{{ request('start_date') }}"
+                        onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all">
                 </div>
 
                 <!-- Filter Tanggal Akhir -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                    <input type="date" name="end_date"
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all">
                 </div>
 
                 <!-- Filter Bengkel -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Bengkel / Jurusan</label>
-                    <select name="bengkel"
+                    <select name="bengkel" onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all bg-white">
                         <option value="">Semua Bengkel</option>
-                        <option value="tkj">Teknik Komputer Jaringan</option>
-                        <option value="tkr">Teknik Kendaraan Ringan</option>
-                        <option value="av">Audio Video</option>
+                        @foreach ($bengkels as $bengkel)
+                            <option value="{{ $bengkel->id }}" {{ request('bengkel') == $bengkel->id ? 'selected' : '' }}>
+                                {{ $bengkel->nama }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
-                <!-- Tombol Terapkan -->
-                <div>
-                    <button type="submit"
-                        class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                            </path>
-                        </svg>
-                        Terapkan Filter
-                    </button>
-                </div>
+                @if (request()->anyFilled(['start_date', 'end_date', 'bengkel']))
+                    <div class="col-span-1 md:col-span-3 mt-1 flex justify-end">
+                        <a href="{{ route('superadmin.laporan.konsumsi') }}"
+                            class="text-xs text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Hapus Semua Filter
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
 
@@ -91,111 +95,48 @@
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y divide-gray-100">
-
-                        <!-- Row 1: Meteran (Kabel) -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">15 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Kabel UTP Cat 6</div>
-                                <div class="text-xs text-gray-500">BHP-TKJ-021</div>
-                            </td>
-                            <td class="py-3 px-4">TKJ</td>
-                            <td class="py-3 px-4 text-center">
-                                <span class="inline-flex items-center gap-1 font-medium text-amber-600">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4">
-                                        </path>
-                                    </svg>
-                                    50 Meter
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="text-gray-900">Ujian Praktek Jaringan (Kelas XII)</div>
-                                <div class="text-xs text-gray-500">Oleh: Bpk. Budi Santoso (Guru)</div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 2: Liter (Oli) -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">14 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Oli Mesin 10W-40</div>
-                                <div class="text-xs text-gray-500">BHP-TKR-105</div>
-                            </td>
-                            <td class="py-3 px-4">TKR</td>
-                            <td class="py-3 px-4 text-center">
-                                <span class="inline-flex items-center gap-1 font-medium text-amber-600">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M20 12H4">
-                                        </path>
-                                    </svg>
-                                    4 Liter
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="text-gray-900">Praktek Servis Berkala</div>
-                                <div class="text-xs text-gray-500">Oleh: Siswa Kelompok 2</div>
-                            </td>
-                        </tr>
-
-                        <!-- Row 3: Pcs / Roll (Timah) -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">12 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Timah Solder 0.8mm</div>
-                                <div class="text-xs text-gray-500">BHP-AV-044</div>
-                            </td>
-                            <td class="py-3 px-4">Audio Video</td>
-                            <td class="py-3 px-4 text-center">
-                                <span class="inline-flex items-center gap-1 font-medium text-amber-600">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
-                                            d="M20 12H4"></path>
-                                    </svg>
-                                    2 Roll
-                                </span>
-                            </td>
-                            <td class="py-3 px-4">
-                                <div class="text-gray-900">Praktek Merakit Amplifier</div>
-                                <div class="text-xs text-gray-500">Oleh: Ibu Siti (Toolman)</div>
-                            </td>
-                        </tr>
-
+                        @forelse ($konsumsi as $item)
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-3 px-4 whitespace-nowrap">{{ $item->created_at->translatedFormat('d M Y') }}
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="font-medium text-gray-900">{{ $item->barang->nama ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $item->barang->kode_barang ?? '-' }}</div>
+                                </td>
+                                <td class="py-3 px-4">{{ $item->barang->bengkel->nama ?? '-' }}</td>
+                                <td class="py-3 px-4 text-center">
+                                    <span class="inline-flex items-center gap-1 font-medium text-amber-600">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3"
+                                                d="M20 12H4"></path>
+                                        </svg>
+                                        {{ abs($item->jumlah) }} {{ $item->barang->satuan ?? 'unit' }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4">
+                                    <div class="text-gray-900">{{ $item->keterangan ?? '-' }}</div>
+                                    @if ($item->user)
+                                        <div class="text-xs text-gray-500 mt-0.5">Oleh: {{ $item->user->name }}</div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="5" class="py-6 px-4 text-center text-gray-500">
+                                    Tidak ada data konsumsi bahan yang ditemukan.
+                                </td>
+                            </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
 
             <!-- Pagination -->
-            <div class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Menampilkan <span class="font-medium">1</span> sampai <span class="font-medium">3</span> dari
-                            <span class="font-medium">45</span> hasil
-                        </p>
-                    </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <a href="#"
-                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Previous
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-green-50 text-green-700 text-sm font-medium">
-                                1
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                                2
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Next
-                            </a>
-                        </nav>
-                    </div>
+            @if ($konsumsi->hasPages())
+                <div class="px-6 py-4 bg-white border-t border-gray-200">
+                    {{ $konsumsi->links() }}
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 @endsection

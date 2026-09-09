@@ -1,6 +1,6 @@
 <!-- Pengaturan Profil & Logout di bawah Sidebar -->
 <div class="p-4 border-t border-gray-200 space-y-2 shrink-0">
-    <a href="{{ request()->is('superadmin*') || request('role') === 'superadmin' || (isset($role) && $role === 'superadmin') ? '/profile?role=superadmin' : '/profile?role=toolman' }}"
+    <a href="{{ route('profile.edit') }}"
         class="flex items-center px-3 py-2 text-sm font-medium text-gray-700 rounded-lg hover:bg-gray-100 transition-colors {{ request()->is('profile*') ? 'bg-gray-100 text-gray-900 font-semibold' : '' }}">
         <svg class="w-5 h-5 mr-3 text-gray-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

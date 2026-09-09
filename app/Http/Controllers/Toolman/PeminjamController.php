@@ -1,20 +1,84 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Toolman;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bengkel;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class PeminjamController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('toolman.peminjam.index');
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+
+        $tab = $request->input('tab', 'pending'); // 'pending' | 'active' | 'suspended'
+        $search = $request->input('search');
+        $roleFilter = $request->input('role'); // 'siswa' | 'guru'
+
+        // Base query untuk peminjam bengkel (Siswa bengkel ini + Guru)
+        $baseQuery = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            });
+
+        // Metrik
+        $totalCount = (clone $baseQuery)->count();
+        $pendingCount = (clone $baseQuery)->where('status', 'menunggu_acc')->count();
+        $activeCount = (clone $baseQuery)->where('status', 'aktif')->count();
+        $suspendedCount = (clone $baseQuery)->where('status', 'suspend')->count();
+
+        // Query data sesuai tab aktif
+        $query = clone $baseQuery;
+
+        if ($tab === 'pending') {
+            $query->where('status', 'menunggu_acc');
+        } elseif ($tab === 'active') {
+            $query->where('status', 'aktif');
+        } elseif ($tab === 'suspended') {
+            $query->where('status', 'suspend');
+        }
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('nomor_identitas', 'like', "%{$search}%");
+            });
+        }
+
+        if ($roleFilter && in_array($roleFilter, ['siswa', 'guru'])) {
+            $query->where('jenis_peminjam', $roleFilter);
+        }
+
+        $peminjams = $query->orderBy('name')->paginate(10)->withQueryString();
+
+        return view('toolman.peminjam.index', compact(
+            'peminjams',
+            'bengkel',
+            'tab',
+            'totalCount',
+            'pendingCount',
+            'activeCount',
+            'suspendedCount'
+        ));
     }
 
     public function show($id)
     {
-        return view('toolman.peminjam.show', compact('id'));
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+
+        $peminjam = User::with(['bengkel', 'peminjamans' => function ($q) use ($bengkelId) {
+            $q->where('bengkel_id', $bengkelId)->with('detailPeminjamans.barang')->latest();
+        }])->where('role', 'peminjam')->findOrFail($id);
+
+        return view('toolman.peminjam.show', compact('peminjam', 'bengkel'));
     }
 
     public function approveUser($id)

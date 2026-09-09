@@ -11,6 +11,7 @@ return new class extends Migration
         Schema::create('barangs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('bengkel_id')->constrained('bengkels')->cascadeOnDelete();
+            $table->foreignId('lokasi_penyimpanan_id')->nullable()->constrained('lokasi_penyimpanans')->nullOnDelete();
             $table->string('kode_barang');
             $table->string('nama');
             $table->enum('jenis_barang', ['inventaris', 'bhp']);

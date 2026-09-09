@@ -9,6 +9,8 @@ class Pengadaan extends Model
 {
     use HasFactory;
 
+    protected $table = 'pengadaans';
+
     protected $fillable = [
         'bengkel_id',
         'dibuat_oleh',
@@ -19,6 +21,11 @@ class Pengadaan extends Model
         'diajukan_pada',
         'direview_oleh',
         'direview_pada',
+    ];
+
+    protected $casts = [
+        'diajukan_pada' => 'datetime',
+        'direview_pada' => 'datetime',
     ];
 
     public function bengkel()
