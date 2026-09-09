@@ -3,6 +3,16 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
 use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanController;
+use App\Http\Controllers\Toolman\DashboardController as ToolmanDashboardController;
+use App\Http\Controllers\Toolman\BarangController as ToolmanBarangController;
+use App\Http\Controllers\Toolman\PeminjamanController as ToolmanPeminjamanController;
+use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianController;
+use App\Http\Controllers\Toolman\PengadaanController as ToolmanPengadaanController;
+use App\Http\Controllers\Toolman\PeminjamController as ToolmanPeminjamController;
+use App\Http\Controllers\Toolman\MutasiController as ToolmanMutasiController;
+use App\Http\Controllers\Peminjam\KatalogController as PeminjamKatalogController;
+use App\Http\Controllers\Peminjam\TiketController as PeminjamTiketController;
+use App\Http\Controllers\Peminjam\PengajuanController as PeminjamPengajuanController;
 
 
 // Halaman awal langsung arahkan ke login
@@ -74,71 +84,33 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
 // 3. ROUTE ADMIN BENGKEL (TOOLMAN)
 // ==========================================
 Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('toolman.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [ToolmanDashboardController::class, 'index'])->name('dashboard');
 
     // Manajemen Barang
-    Route::get('/barang', function () {
-        return view('toolman.barang.index');
-    })->name('barang.index');
-
-    Route::get('/barang/create', function () {
-        return view('toolman.barang.create');
-    })->name('barang.create');
-
-    Route::get('/barang/edit', function () {
-        return view('toolman.barang.edit');
-    })->name('barang.edit');
+    Route::get('/barang', [ToolmanBarangController::class, 'index'])->name('barang.index');
+    Route::get('/barang/create', [ToolmanBarangController::class, 'create'])->name('barang.create');
+    Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
 
     // Sirkulasi Peminjaman
-    Route::get('/peminjaman', function () {
-        return view('toolman.peminjaman.index');
-    })->name('peminjaman.index');
-
-    Route::get('/peminjaman/{id}', function ($id) {
-        return view('toolman.peminjaman.show', compact('id'));
-    })->name('peminjaman.show');
+    Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
+    Route::get('/peminjaman/{id}', [ToolmanPeminjamanController::class, 'show'])->name('peminjaman.show');
 
     // Sirkulasi Pengembalian
-    Route::get('/pengembalian', function () {
-        return view('toolman.pengembalian.index');
-    })->name('pengembalian.index');
-
-    Route::get('/pengembalian/{id}/check', function ($id) {
-        return view('toolman.pengembalian.check', compact('id'));
-    })->name('pengembalian.check');
+    Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');
+    Route::get('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'check'])->name('pengembalian.check');
 
     // Pengadaan (RAB)
-    Route::get('/pengadaan', function () {
-        return view('toolman.pengadaan.index');
-    })->name('pengadaan.index');
-
-    Route::get('/pengadaan/create', function () {
-        return view('toolman.pengadaan.create');
-    })->name('pengadaan.create');
-
-    Route::get('/pengadaan/{id}', function ($id) {
-        return view('toolman.pengadaan.show', compact('id'));
-    })->name('pengadaan.show');
-
-    Route::get('/pengadaan/{id}/edit', function ($id) {
-        return view('toolman.pengadaan.edit', compact('id'));
-    })->name('pengadaan.edit');
+    Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');
+    Route::get('/pengadaan/create', [ToolmanPengadaanController::class, 'create'])->name('pengadaan.create');
+    Route::get('/pengadaan/{id}', [ToolmanPengadaanController::class, 'show'])->name('pengadaan.show');
+    Route::get('/pengadaan/{id}/edit', [ToolmanPengadaanController::class, 'edit'])->name('pengadaan.edit');
 
     // Manajemen Peminjam
-    Route::get('/peminjam', function () {
-        return view('toolman.peminjam.index');
-    })->name('peminjam.index');
-
-    Route::get('/peminjam/{id}', function ($id) {
-        return view('toolman.peminjam.show', compact('id'));
-    })->name('peminjam.show');
+    Route::get('/peminjam', [ToolmanPeminjamController::class, 'index'])->name('peminjam.index');
+    Route::get('/peminjam/{id}', [ToolmanPeminjamController::class, 'show'])->name('peminjam.show');
 
     // Riwayat Stok / Mutasi
-    Route::get('/mutasi', function () {
-        return view('toolman.mutasi.index');
-    })->name('mutasi.index');
+    Route::get('/mutasi', [ToolmanMutasiController::class, 'index'])->name('mutasi.index');
 
     // Backward-compatible aliases
     Route::get('/sirkulasi/peminjaman', function () {
@@ -164,21 +136,14 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
 // 4. ROUTE PEMINJAM (GURU & SISWA)
 // ==========================================
 Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam'])->group(function () {
-    Route::get('/katalog', function () {
-        return view('peminjam.katalog.index');
-    })->name('katalog.index');
+    Route::get('/katalog', [PeminjamKatalogController::class, 'index'])->name('katalog.index');
 
-    Route::get('/pengajuan/create', function () {
-        return view('peminjam.pengajuan.create');
-    })->name('pengajuan.create');
+    Route::get('/pengajuan/create', [PeminjamPengajuanController::class, 'create'])->name('pengajuan.create');
+    Route::post('/pengajuan', [PeminjamPengajuanController::class, 'store'])->name('pengajuan.store');
 
-    Route::get('/tiket', function () {
-        return view('peminjam.tiket.index');
-    })->name('tiket.index');
-
-    Route::get('/tiket/{id}', function ($id) {
-        return view('peminjam.tiket.show', compact('id'));
-    })->name('tiket.show');
+    Route::get('/tiket', [PeminjamTiketController::class, 'index'])->name('tiket.index');
+    Route::get('/tiket/{id}', [PeminjamTiketController::class, 'show'])->name('tiket.show');
+    Route::post('/tiket/{id}/kembalikan', [PeminjamTiketController::class, 'ajukanPengembalian'])->name('tiket.kembalikan');
 
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
