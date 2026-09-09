@@ -96,15 +96,22 @@
                 <div class="h-6 w-px bg-gray-200 hidden sm:block"></div>
 
                 <!-- User Profile Info -->
-                <a href="{{ route('profile.edit', ['role' => 'peminjam']) }}"
+                <a href="{{ route('profile.edit') }}"
                     class="flex items-center space-x-2 p-1 rounded-xl hover:bg-gray-100 transition-colors">
                     <div class="text-right hidden sm:block">
-                        <p class="text-xs font-bold text-gray-900 leading-tight">Budi Santoso</p>
-                        <p class="text-[11px] text-gray-500 font-medium">Siswa &bull; XI TKJ 1</p>
+                        <p class="text-xs font-bold text-gray-900 leading-tight">
+                            {{ auth()->user()->name ?? 'Pengguna' }}</p>
+                        <p class="text-[11px] text-gray-500 font-medium">
+                            @if (auth()->check() && auth()->user()->isGuru())
+                                Guru &bull; Pendidik
+                            @else
+                                Siswa &bull; {{ auth()->user()->bengkel->kode ?? 'SMKN 3' }}
+                            @endif
+                        </p>
                     </div>
                     <div
                         class="w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-primary-100 text-primary-700 font-bold flex items-center justify-center text-xs border border-primary-200 shadow-2xs">
-                        B
+                        {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                     </div>
                 </a>
 
@@ -183,7 +190,7 @@
         </a>
 
         <!-- Profil -->
-        <a href="{{ route('profile.edit', ['role' => 'peminjam']) }}"
+        <a href="{{ route('profile.edit') }}"
             class="flex-1 flex flex-col items-center justify-center py-1 rounded-lg transition-colors {{ request()->is('profile*') || request()->is('peminjam/profile*') ? 'text-primary-600 font-bold' : 'text-gray-500 hover:text-gray-800' }}">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

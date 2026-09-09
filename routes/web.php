@@ -34,54 +34,38 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
     Route::get('/laporan/konsumsi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'konsumsi'])->name('laporan.konsumsi');
 
     // Master Data Bengkel
-    Route::get('/bengkel', function () {
-        return view('superadmin.bengkel.index');
-    })->name('bengkel.index');
-
-    Route::get('/bengkel/create', function () {
-        return view('superadmin.bengkel.create');
-    })->name('bengkel.create');
-
-    Route::get('/bengkel/edit', function () {
-        return view('superadmin.bengkel.edit');
-    })->name('bengkel.edit');
+    Route::get('/bengkel', [\App\Http\Controllers\Superadmin\BengkelController::class, 'index'])->name('bengkel.index');
+    Route::get('/bengkel/create', [\App\Http\Controllers\Superadmin\BengkelController::class, 'create'])->name('bengkel.create');
+    Route::get('/bengkel/edit/{id}', [\App\Http\Controllers\Superadmin\BengkelController::class, 'edit'])->name('bengkel.edit');
 
     // Master Data Toolman
-    Route::get('/toolman', function () {
-        return view('superadmin.toolman.index');
-    })->name('toolman.index');
-
-    Route::get('/toolman/create', function () {
-        return view('superadmin.toolman.create');
-    })->name('toolman.create');
-
-    Route::get('/toolman/edit', function () {
-        return view('superadmin.toolman.edit');
-    })->name('toolman.edit');
+    Route::get('/toolman', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'index'])->name('toolman.index');
+    Route::get('/toolman/create', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'create'])->name('toolman.create');
+    Route::get('/toolman/edit/{id}', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'edit'])->name('toolman.edit');
 
     // Backward-compatible aliases for legacy master routes
     Route::get('/master/bengkel', function () {
-        return view('superadmin.bengkel.index');
+        return redirect()->route('superadmin.bengkel.index');
     })->name('master.bengkel');
     Route::get('/master/bengkel/create', function () {
-        return view('superadmin.bengkel.create');
+        return redirect()->route('superadmin.bengkel.create');
     })->name('master.bengkel.create');
-    Route::get('/master/bengkel/edit', function () {
-        return view('superadmin.bengkel.edit');
+    Route::get('/master/bengkel/edit/{id}', function ($id) {
+        return redirect()->route('superadmin.bengkel.edit', $id);
     })->name('master.bengkel.edit');
     Route::get('/master/toolman', function () {
-        return view('superadmin.toolman.index');
+        return redirect()->route('superadmin.toolman.index');
     })->name('master.toolman');
     Route::get('/master/toolman/create', function () {
-        return view('superadmin.toolman.create');
+        return redirect()->route('superadmin.toolman.create');
     })->name('master.toolman.create');
-    Route::get('/master/toolman/edit', function () {
-        return view('superadmin.toolman.edit');
+    Route::get('/master/toolman/edit/{id}', function ($id) {
+        return redirect()->route('superadmin.toolman.edit', $id);
     })->name('master.toolman.edit');
 
     // Profil Waka Sarpras
     Route::get('/profile', function () {
-        return redirect()->route('profile.edit', ['role' => 'superadmin']);
+        return redirect()->route('profile.edit');
     })->name('profile');
 });
 
@@ -171,7 +155,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
 
     // Profil Toolman
     Route::get('/profile', function () {
-        return redirect()->route('profile.edit', ['role' => 'toolman']);
+        return redirect()->route('profile.edit');
     })->name('profile');
 });
 
@@ -197,22 +181,13 @@ Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam
     })->name('tiket.show');
 
     Route::get('/profile', function () {
-        return redirect()->route('profile.edit', ['role' => 'peminjam']);
+        return redirect()->route('profile.edit');
     })->name('profile');
 });
 
 // Route untuk halaman edit profil dengan deteksi role dinamis
-Route::get('/profile', function () {
-    $role = request('role');
-    if (!$role) {
-        $referer = request()->header('referer') ?? '';
-        if (str_contains($referer, 'superadmin') || (auth()->check() && auth()->user()->role === 'waka')) {
-            $role = 'superadmin';
-        } elseif (str_contains($referer, 'toolman') || (auth()->check() && auth()->user()->role === 'toolman')) {
-            $role = 'toolman';
-        } else {
-            $role = 'peminjam';
-        }
-    }
-    return view('profile.edit', compact('role'));
-})->middleware('auth')->name('profile.edit');
+Route::middleware('auth')->group(function () {
+    Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [\App\Http\Controllers\ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [\App\Http\Controllers\ProfileController::class, 'destroy'])->name('profile.destroy');
+});

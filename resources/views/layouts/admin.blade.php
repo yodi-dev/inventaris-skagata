@@ -131,23 +131,29 @@
                 </h2>
             </div>
 
-            <!-- Header Profile Section Dynamically Changing -->
-            <div
-                class="flex items-center space-x-3 sm:space-x-4 cursor-pointer hover:opacity-80 transition-opacity shrink-0">
+            <!-- Header Profile Section -->
+            <a href="{{ route('profile.edit') }}"
+                class="flex items-center space-x-3 sm:space-x-4 hover:opacity-80 transition-opacity shrink-0">
                 <div class="hidden sm:block text-right">
-                    @if (request()->is('superadmin*') || request('role') === 'superadmin' || (isset($role) && $role === 'superadmin'))
-                        <p class="text-sm font-medium text-gray-900">Waka Sarpras</p>
+                    @if (
+                        (auth()->check() && auth()->user()->role === 'waka') ||
+                            request()->is('superadmin*') ||
+                            (isset($role) && $role === 'superadmin'))
+                        <p class="text-sm font-semibold text-gray-900 leading-tight">
+                            {{ auth()->user()->name ?? 'Waka Sarpras' }}</p>
                         <p class="text-xs text-gray-500">Super Administrator</p>
                     @else
-                        <p class="text-sm font-medium text-gray-900">Admin Toolman</p>
-                        <p class="text-xs text-gray-500">Bengkel TKJ</p>
+                        <p class="text-sm font-semibold text-gray-900 leading-tight">
+                            {{ auth()->user()->name ?? 'Admin Toolman' }}</p>
+                        <p class="text-xs text-gray-500">Toolman &bull; {{ auth()->user()->bengkel->nama ?? 'Bengkel' }}
+                        </p>
                     @endif
                 </div>
                 <div
                     class="h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-bold border border-primary-200 text-sm sm:text-base shrink-0 shadow-xs">
-                    {{ request()->is('superadmin*') || request('role') === 'superadmin' || (isset($role) && $role === 'superadmin') ? 'W' : 'A' }}
+                    {{ strtoupper(substr(auth()->user()->name ?? ((auth()->check() && auth()->user()->role === 'waka') || request()->is('superadmin*') ? 'W' : 'A'), 0, 1)) }}
                 </div>
-            </div>
+            </a>
         </header>
 
         <!-- Content Body -->
