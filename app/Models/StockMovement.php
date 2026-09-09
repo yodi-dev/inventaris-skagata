@@ -22,6 +22,10 @@ class StockMovement extends Model
         'created_at',
     ];
 
+    protected $casts = [
+        'created_at' => 'datetime',
+    ];
+
     public function barang()
     {
         return $this->belongsTo(Barang::class);

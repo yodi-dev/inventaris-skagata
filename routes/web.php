@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardController;
+use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanController;
+
 
 // Halaman awal langsung arahkan ke login
 Route::get('/', function () {
@@ -17,27 +20,18 @@ require __DIR__ . '/auth.php';
 // 2. ROUTE SUPER ADMIN (WAKA SARPRAS)
 // ==========================================
 Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka'])->group(function () {
-    Route::get('/dashboard', function () {
-        return view('superadmin.dashboard');
-    })->name('dashboard');
+    Route::get('/dashboard', [SuperadminDashboardController::class, 'index'])->name('dashboard');
+
 
     // Pengadaan (RAB)
-    Route::get('/pengadaan', function () {
-        return view('superadmin.pengadaan.index');
-    })->name('pengadaan.index');
+    Route::get('/pengadaan', [SuperadminPengadaanController::class, 'index'])->name('pengadaan.index');
+    Route::get('/pengadaan/{id}', [SuperadminPengadaanController::class, 'show'])->name('pengadaan.show');
+    Route::post('/pengadaan/{id}/review', [SuperadminPengadaanController::class, 'review'])->name('pengadaan.review');
 
-    Route::get('/pengadaan/{id}', function ($id) {
-        return view('superadmin.pengadaan.show', compact('id'));
-    })->name('pengadaan.show');
 
     // Laporan
-    Route::get('/laporan/mutasi', function () {
-        return view('superadmin.laporan.mutasi');
-    })->name('laporan.mutasi');
-
-    Route::get('/laporan/konsumsi', function () {
-        return view('superadmin.laporan.konsumsi');
-    })->name('laporan.konsumsi');
+    Route::get('/laporan/mutasi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'mutasi'])->name('laporan.mutasi');
+    Route::get('/laporan/konsumsi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'konsumsi'])->name('laporan.konsumsi');
 
     // Master Data Bengkel
     Route::get('/bengkel', function () {

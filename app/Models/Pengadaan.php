@@ -23,6 +23,11 @@ class Pengadaan extends Model
         'direview_pada',
     ];
 
+    protected $casts = [
+        'diajukan_pada' => 'datetime',
+        'direview_pada' => 'datetime',
+    ];
+
     public function bengkel()
     {
         return $this->belongsTo(Bengkel::class);

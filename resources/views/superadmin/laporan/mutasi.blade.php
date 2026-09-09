@@ -34,45 +34,49 @@
 
         <!-- Filter Card -->
         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm mb-6">
-            <form action="" method="GET" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+            <form action="{{ route('superadmin.laporan.mutasi') }}" method="GET"
+                class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
                 <!-- Filter Tanggal Mulai -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Mulai</label>
-                    <input type="date" name="start_date"
+                    <input type="date" name="start_date" value="{{ request('start_date') }}"
+                        onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all">
                 </div>
 
                 <!-- Filter Tanggal Akhir -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
-                    <input type="date" name="end_date"
+                    <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all">
                 </div>
 
                 <!-- Filter Bengkel -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Bengkel / Jurusan</label>
-                    <select name="bengkel"
+                    <select name="bengkel" onchange="this.form.submit()"
                         class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-sm outline-none transition-all bg-white">
                         <option value="">Semua Bengkel</option>
-                        <option value="tkj">Teknik Komputer Jaringan</option>
-                        <option value="tkr">Teknik Kendaraan Ringan</option>
-                        <option value="av">Audio Video</option>
+                        @foreach ($bengkels as $bengkel)
+                            <option value="{{ $bengkel->id }}" {{ request('bengkel') == $bengkel->id ? 'selected' : '' }}>
+                                {{ $bengkel->nama }}
+                            </option>
+                        @endforeach
                     </select>
                 </div>
 
-                <!-- Tombol Terapkan -->
-                <div>
-                    <button type="submit"
-                        class="w-full inline-flex justify-center items-center gap-2 px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-medium transition-colors shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                            </path>
-                        </svg>
-                        Terapkan Filter
-                    </button>
-                </div>
+                @if (request()->anyFilled(['start_date', 'end_date', 'bengkel']))
+                    <div class="col-span-1 md:col-span-3 mt-1 flex justify-end">
+                        <a href="{{ route('superadmin.laporan.mutasi') }}"
+                            class="text-xs text-red-600 hover:text-red-800 font-medium inline-flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Hapus Semua Filter
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
 
@@ -87,119 +91,89 @@
                             <th class="py-3 px-4 font-semibold">Bengkel</th>
                             <th class="py-3 px-4 font-semibold">Jenis Mutasi</th>
                             <th class="py-3 px-4 font-semibold text-center">Jumlah</th>
-                            <th class="py-3 px-4 font-semibold">Kondisi Akhir</th>
+                            <th class="py-3 px-4 font-semibold">Keterangan</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-700 divide-y divide-gray-100">
 
-                        <!-- Row 1: Penambahan Aset -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">12 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Router Mikrotik RB750</div>
-                                <div class="text-xs text-gray-500">INV-TKJ-001</div>
-                            </td>
-                            <td class="py-3 px-4">TKJ</td>
-                            <td class="py-3 px-4">
-                                <!-- Semantic Info/Blue -->
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-blue-50 text-blue-700 text-xs font-medium ring-1 ring-inset ring-blue-700/10">
-                                    Barang Masuk Baru
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-center font-medium">+5</td>
-                            <td class="py-3 px-4">
-                                <!-- Semantic Success/Green -->
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-green-50 text-green-700 text-xs font-medium ring-1 ring-inset ring-green-600/20">
-                                    Baik
-                                </span>
-                            </td>
-                        </tr>
+                        @forelse($movements as $movement)
+                            @php
+                                $jenisMap = [
+                                    'stok_masuk' => ['label' => 'Barang Masuk Baru', 'color' => 'blue', 'sign' => '+'],
+                                    'peminjaman' => ['label' => 'Peminjaman', 'color' => 'indigo', 'sign' => '-'],
+                                    'pengembalian_baik' => [
+                                        'label' => 'Kembali (Baik)',
+                                        'color' => 'green',
+                                        'sign' => '+',
+                                    ],
+                                    'pengembalian_rusak' => [
+                                        'label' => 'Kembali (Rusak)',
+                                        'color' => 'amber',
+                                        'sign' => '+',
+                                    ],
+                                    'barang_hilang' => ['label' => 'Barang Hilang', 'color' => 'red', 'sign' => '-'],
+                                    'bhp_keluar' => ['label' => 'BHP Digunakan', 'color' => 'indigo', 'sign' => '-'],
+                                    'perbaikan' => ['label' => 'Perbaikan/Servis', 'color' => 'amber', 'sign' => '0'],
+                                    'penyesuaian' => ['label' => 'Penyesuaian Stok', 'color' => 'gray', 'sign' => ''],
+                                ];
+                                $tipe = $jenisMap[$movement->jenis] ?? [
+                                    'label' => str_replace('_', ' ', $movement->jenis),
+                                    'color' => 'gray',
+                                    'sign' => '',
+                                ];
 
-                        <!-- Row 2: Barang Rusak -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">10 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Multitester Analog</div>
-                                <div class="text-xs text-gray-500">INV-AV-045</div>
-                            </td>
-                            <td class="py-3 px-4">Audio Video</td>
-                            <td class="py-3 px-4">
-                                <!-- Semantic Warning/Amber -->
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-amber-50 text-amber-700 text-xs font-medium ring-1 ring-inset ring-amber-600/20">
-                                    Perubahan Kondisi
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-center font-medium text-gray-400">0</td>
-                            <td class="py-3 px-4">
-                                <!-- Semantic Danger/Red -->
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-red-50 text-red-700 text-xs font-medium ring-1 ring-inset ring-red-600/10">
-                                    Rusak Berat
-                                </span>
-                            </td>
-                        </tr>
+                                $sign = $tipe['sign'];
+                                if ($sign == '+') {
+                                    $qtyClass = 'text-green-600';
+                                } elseif ($sign == '-') {
+                                    $qtyClass = 'text-red-600';
+                                } else {
+                                    $qtyClass = 'text-gray-600';
+                                }
 
-                        <!-- Row 3: Penghapusan/Afkir -->
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="py-3 px-4 whitespace-nowrap">05 Okt 2023</td>
-                            <td class="py-3 px-4">
-                                <div class="font-medium text-gray-900">Mesin Bor Duduk</div>
-                                <div class="text-xs text-gray-500">INV-TKR-012</div>
-                            </td>
-                            <td class="py-3 px-4">TKR</td>
-                            <td class="py-3 px-4">
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-700 text-xs font-medium ring-1 ring-inset ring-gray-500/10">
-                                    Penghapusan (Afkir)
-                                </span>
-                            </td>
-                            <td class="py-3 px-4 text-center font-medium text-red-600">-1</td>
-                            <td class="py-3 px-4">
-                                <span
-                                    class="inline-flex items-center px-2 py-1 rounded-md bg-gray-100 text-gray-500 text-xs font-medium">
-                                    Tidak Layak
-                                </span>
-                            </td>
-                        </tr>
+                                $qtyDisplay = $sign . $movement->jumlah;
+                            @endphp
+                            <tr class="hover:bg-slate-50 transition-colors">
+                                <td class="py-3 px-4 whitespace-nowrap">
+                                    {{ $movement->created_at->translatedFormat('d M Y') }}</td>
+                                <td class="py-3 px-4">
+                                    <div class="font-medium text-gray-900">{{ $movement->barang->nama ?? '-' }}</div>
+                                    <div class="text-xs text-gray-500">{{ $movement->barang->kode_barang ?? '-' }}</div>
+                                </td>
+                                <td class="py-3 px-4">{{ $movement->barang->bengkel->nama ?? '-' }}</td>
+                                <td class="py-3 px-4">
+                                    <span
+                                        class="inline-flex items-center px-2 py-1 rounded-md bg-{{ $tipe['color'] }}-50 text-{{ $tipe['color'] }}-700 text-xs font-medium ring-1 ring-inset ring-{{ $tipe['color'] }}-700/10">
+                                        {{ $tipe['label'] }}
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 text-center font-medium {{ $qtyClass }}">{{ $qtyDisplay }}</td>
+                                <td class="py-3 px-4 text-xs text-gray-500">
+                                    {{ $movement->keterangan ?? '-' }}
+                                    @if ($movement->user)
+                                        <div class="mt-0.5 text-[10px] text-gray-400">Oleh: {{ $movement->user->name }}
+                                        </div>
+                                    @endif
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="6" class="py-6 px-4 text-center text-gray-500">
+                                    Tidak ada data pergerakan stok yang ditemukan.
+                                </td>
+                            </tr>
+                        @endforelse
 
                     </tbody>
                 </table>
             </div>
 
-            <!-- Pagination (Dummy) -->
-            <div class="bg-white px-4 py-3 border-t border-gray-200 flex items-center justify-between sm:px-6">
-                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
-                    <div>
-                        <p class="text-sm text-gray-700">
-                            Menampilkan <span class="font-medium">1</span> sampai <span class="font-medium">3</span> dari
-                            <span class="font-medium">97</span> hasil
-                        </p>
-                    </div>
-                    <div>
-                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
-                            <a href="#"
-                                class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Previous
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-green-50 text-green-700 text-sm font-medium">
-                                1
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50">
-                                2
-                            </a>
-                            <a href="#"
-                                class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                                Next
-                            </a>
-                        </nav>
-                    </div>
+            <!-- Pagination -->
+            @if ($movements->hasPages())
+                <div class="px-6 py-4 bg-white border-t border-gray-200">
+                    {{ $movements->links() }}
                 </div>
-            </div>
+            @endif
         </div>
     </div>
 @endsection
