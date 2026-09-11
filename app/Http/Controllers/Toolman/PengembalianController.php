@@ -15,10 +15,10 @@ class PengembalianController extends Controller
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
-        // Ambil peminjaman yang sedang aktif / terlambat dengan barang inventaris
+        // Ambil peminjaman yang sedang active / terlambat / menunggu pengecekan dengan barang inventaris
         $query = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang'])
             ->where('bengkel_id', $bengkelId)
-            ->whereIn('status', ['aktif', 'terlambat'])
+            ->whereIn('status', ['active', 'terlambat', 'menunggu_pengecekan'])
             ->whereHas('detailPeminjamans.barang', function ($q) {
                 $q->where('jenis_barang', 'inventaris');
             })

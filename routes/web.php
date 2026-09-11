@@ -89,11 +89,16 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     // Manajemen Barang
     Route::get('/barang', [ToolmanBarangController::class, 'index'])->name('barang.index');
     Route::get('/barang/create', [ToolmanBarangController::class, 'create'])->name('barang.create');
+    Route::post('/barang', [ToolmanBarangController::class, 'store'])->name('barang.store');
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
+    Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
+    Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
 
     // Sirkulasi Peminjaman
     Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
     Route::get('/peminjaman/{id}', [ToolmanPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::post('/peminjaman/{id}/approve', [ToolmanPeminjamanController::class, 'approve'])->name('peminjaman.approve');
+    Route::post('/peminjaman/{id}/reject', [ToolmanPeminjamanController::class, 'reject'])->name('peminjaman.reject');
 
     // Sirkulasi Pengembalian
     Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');

@@ -6,7 +6,7 @@
 @section('content')
     @php
         $totalSirkulasi = $peminjam->peminjamans->count();
-        $pinjamanAktif = $peminjam->peminjamans->whereIn('status', ['pending', 'aktif', 'terlambat'])->count();
+        $pinjamanAktif = $peminjam->peminjamans->whereIn('status', ['pending', 'active', 'terlambat'])->count();
         $pinjamanSelesai = $peminjam->peminjamans->where('status', 'selesai')->count();
         $pinjamanTerlambat = $peminjam->peminjamans->where('status', 'terlambat')->count();
 
@@ -216,7 +216,7 @@
                                         'class' => 'bg-amber-50 text-amber-700 border-amber-200',
                                         'dot' => 'bg-amber-500 animate-pulse',
                                     ],
-                                    'disetujui', 'aktif' => [
+                                    'active', 'disetujui', 'aktif' => [
                                         'label' => 'Aktif Dipinjam',
                                         'class' => 'bg-blue-50 text-blue-700 border-blue-200',
                                         'dot' => 'bg-blue-500',

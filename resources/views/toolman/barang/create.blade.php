@@ -89,8 +89,34 @@
             </div>
         </div>
 
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (isset($errors) && $errors->any())
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 space-y-1">
+                <div class="font-bold flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Terdapat kesalahan pada isian form:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs text-red-700 pl-7 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form Wrapper -->
-        <form action="{{ route('toolman.barang.index') }}" method="GET" class="space-y-6">
+        <form action="{{ route('toolman.barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+            @csrf
 
             <!-- SECTION 1: Pilih Tipe Barang (Interactive Segmented Cards) -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">

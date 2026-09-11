@@ -402,7 +402,7 @@
                                         $activeLoansCount = $user
                                             ->peminjamans()
                                             ->where('bengkel_id', $bengkel->id)
-                                            ->whereIn('status', ['pending', 'aktif', 'terlambat'])
+                                            ->whereIn('status', ['pending', 'active', 'terlambat'])
                                             ->count();
                                     @endphp
                                     <tr class="hover:bg-gray-50 transition-colors">

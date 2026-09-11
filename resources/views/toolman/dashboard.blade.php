@@ -14,6 +14,16 @@
                     {{ $bengkel->nama ?? 'bengkel' }} hari ini.</p>
             </div>
             <div class="flex flex-wrap gap-2">
+                @if (($menungguPengecekan ?? 0) > 0)
+                    <a href="{{ route('toolman.pengembalian.index') }}"
+                        class="inline-flex items-center px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
+                        </svg>
+                        Cek Fisik ({{ $menungguPengecekan }})
+                    </a>
+                @endif
                 <a href="{{ route('toolman.peminjaman.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -27,6 +37,24 @@
                 </a>
             </div>
         </div>
+
+        @if (($pendingUserCount ?? 0) > 0)
+            <div class="bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-xl flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <svg class="h-5 w-5 text-amber-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    <p class="text-sm text-amber-800">
+                        Terdapat <span class="font-bold">{{ $pendingUserCount }} akun peminjam baru</span> yang sedang menunggu persetujuan aktivasi akun Anda.
+                    </p>
+                </div>
+                <a href="{{ route('toolman.peminjam.index', ['tab' => 'pending']) }}"
+                    class="text-xs font-semibold text-amber-900 hover:text-amber-700 underline shrink-0 ml-4">
+                    Verifikasi Peminjam &rarr;
+                </a>
+            </div>
+        @endif
 
         <!-- Quick Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -129,7 +157,12 @@
                                         @endforeach
                                     </td>
                                     <td class="px-5 py-3">
-                                        @if (
+                                        @if ($pinjam->status === 'menunggu_pengecekan')
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                                Menunggu Cek
+                                            </span>
+                                        @elseif (
                                             $pinjam->status === 'terlambat' ||
                                                 ($pinjam->batas_kembali && \Carbon\Carbon::parse($pinjam->batas_kembali)->isPast()))
                                             <span
