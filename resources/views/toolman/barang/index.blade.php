@@ -172,7 +172,12 @@
                                     </a>
                                     @if ($barang->stok_dipinjam == 0)
                                         <form action="{{ route('toolman.barang.destroy', $barang->id) }}" method="POST" class="inline"
-                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus barang {{ $barang->nama }} ({{ $barang->kode_barang }})?')">
+                                            data-confirm="true"
+                                            data-title="Hapus Barang Master"
+                                            data-message="Apakah Anda yakin ingin menghapus barang <b>{{ addslashes($barang->nama) }}</b> ({{ $barang->kode_barang }})?"
+                                            data-submessage="Tindakan ini permanen dan tidak dapat dibatalkan."
+                                            data-type="danger"
+                                            data-confirm-text="Ya, Hapus Barang">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"

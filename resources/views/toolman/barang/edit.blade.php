@@ -186,7 +186,12 @@
         @endif
 
         <!-- Form Wrapper -->
-        <form action="{{ route('toolman.barang.update', $barang->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('toolman.barang.update', $barang->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6"
+            data-confirm="true"
+            data-title="Konfirmasi Perbarui Data Barang"
+            data-message="Apakah Anda yakin ingin menyimpan perubahan data dan penyesuaian stok untuk barang <b>{{ addslashes($barang->nama) }}</b>?"
+            data-type="primary"
+            data-confirm-text="Ya, Perbarui Barang">
             @csrf
             @method('PUT')
 

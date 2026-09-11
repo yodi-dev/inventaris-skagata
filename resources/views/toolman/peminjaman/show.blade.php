@@ -232,13 +232,32 @@
                         </p>
                     </div>
                     <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                        <button type="button"
-                            onclick="openRejectModal({{ $peminjaman->id }}, '{{ addslashes($peminjaman->user->name ?? 'Peminjam') }}')"
-                            class="px-5 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-xl shadow-sm transition-colors">
-                            Tolak Pengajuan
-                        </button>
-                        <form action="{{ route('toolman.peminjaman.approve', $peminjaman->id) }}" method="POST"
-                            onsubmit="return confirm('Apakah Anda yakin ingin menyetujui peminjaman ini dan menyerahkan barang fisik kepada {{ addslashes($peminjaman->user->name ?? 'Peminjam') }}?');">
+                        <!-- Form Tolak Modal -->
+                        <form action="{{ route('toolman.peminjaman.reject', $peminjaman->id) }}" method="POST" class="inline"
+                              data-confirm="true"
+                              data-title="Tolak Permohonan Peminjaman"
+                              data-message="Berikan alasan penolakan tiket <b>#PINJAM-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }}</b> milik <b>{{ addslashes($peminjaman->user->name ?? 'Peminjam') }}</b>:"
+                              data-type="danger"
+                              data-confirm-text="Tolak Pengajuan"
+                              data-with-input="true"
+                              data-input-name="alasan"
+                              data-input-label="Alasan Penolakan (Wajib):"
+                              data-input-placeholder="Contoh: Alat sedang dalam perbaikan berkala..."
+                              data-input-required="true">
+                            @csrf
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                                Tolak Pengajuan
+                            </button>
+                        </form>
+
+                        <!-- Form Approve & Serahkan Modal -->
+                        <form action="{{ route('toolman.peminjaman.approve', $peminjaman->id) }}" method="POST" class="inline"
+                              data-confirm="true"
+                              data-title="Setujui Peminjaman & Serahkan Barang"
+                              data-message="Apakah Anda yakin ingin menyetujui peminjaman tiket <b>#PINJAM-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }}</b> untuk <b>{{ addslashes($peminjaman->user->name ?? 'Peminjam') }}</b>? Pastikan barang fisik telah diserahkan di bengkel."
+                              data-type="success"
+                              data-confirm-text="Ya, Setujui & Serahkan">
                             @csrf
                             <button type="submit"
                                 class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">

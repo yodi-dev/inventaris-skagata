@@ -91,7 +91,33 @@ class DashboardController extends Controller
             ->take(6)
             ->get();
 
-        // 6. Aktivitas Mutasi / Sirkulasi Terbaru
+        // 6. Antrean Permohonan Peminjaman Menunggu Persetujuan (Quick Approval)
+        $antreanPeminjaman = Peminjaman::with([
+                'user',
+                'detailPeminjamans' => function ($q) {
+                    $q->with(['barang' => function ($b) {
+                        $b->select('id', 'bengkel_id', 'kode_barang', 'nama', 'jenis_barang', 'satuan', 'stok_tersedia');
+                    }]);
+                }
+            ])
+            ->where('bengkel_id', $bengkelId)
+            ->whereIn('status', ['pending', 'menunggu_acc'])
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // 7. Calon Peminjam Baru Menunggu Aktivasi Akun
+        $calonPeminjamPending = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhereNull('bengkel_id');
+            })
+            ->where('status', 'menunggu_acc')
+            ->latest()
+            ->take(5)
+            ->get();
+
+        // 8. Aktivitas Mutasi / Sirkulasi Terbaru
         $aktivitasTerbaru = StockMovement::with(['barang', 'user'])
             ->whereHas('barang', function ($q) use ($bengkelId) {
                 $q->where('bengkel_id', $bengkelId);
@@ -114,6 +140,8 @@ class DashboardController extends Controller
                     'total_peminjaman_aktif' => $totalPeminjamanAktif,
                     'pending_user_count' => $pendingUserCount,
                 ],
+                'antrean_peminjaman' => $antreanPeminjaman,
+                'calon_peminjam_pending' => $calonPeminjamPending,
                 'jadwal_pengembalian' => $jadwalPengembalian,
                 'peringatan_stok' => $peringatanStok,
                 'aktivitas_terbaru' => $aktivitasTerbaru,
@@ -129,6 +157,8 @@ class DashboardController extends Controller
             'menungguPengecekan',
             'totalPeminjamanAktif',
             'pendingUserCount',
+            'antreanPeminjaman',
+            'calonPeminjamPending',
             'jadwalPengembalian',
             'peringatanStok',
             'aktivitasTerbaru'

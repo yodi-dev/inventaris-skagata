@@ -339,7 +339,11 @@
                                         </td>
                                         <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
                                             <form action="{{ route('toolman.peminjam.reject', $user->id) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Apakah Anda yakin ingin menolak pendaftaran akun {{ addslashes($user->name) }}? Data pendaftaran akan dihapus.');">
+                                                data-confirm="true"
+                                                data-title="Tolak Pendaftaran Calon Peminjam"
+                                                data-message="Apakah Anda yakin ingin menolak pendaftaran akun <b>{{ addslashes($user->name) }}</b>? Data pendaftaran akan dihapus permanen."
+                                                data-type="danger"
+                                                data-confirm-text="Ya, Tolak Pendaftaran">
                                                 @csrf
                                                 <button type="submit"
                                                     class="px-3.5 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors">
@@ -347,7 +351,11 @@
                                                 </button>
                                             </form>
                                             <form action="{{ route('toolman.peminjam.approve', $user->id) }}" method="POST" class="inline"
-                                                onsubmit="return confirm('Apakah Anda yakin ingin menyetujui pendaftaran akun {{ addslashes($user->name) }}?');">
+                                                data-confirm="true"
+                                                data-title="Setujui Pendaftaran Akun"
+                                                data-message="Apakah Anda yakin ingin menyetujui dan mengaktifkan akun <b>{{ addslashes($user->name) }}</b> ({{ $user->email }})?"
+                                                data-type="success"
+                                                data-confirm-text="Ya, Setujui Akun">
                                                 @csrf
                                                 <button type="submit"
                                                     class="px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">

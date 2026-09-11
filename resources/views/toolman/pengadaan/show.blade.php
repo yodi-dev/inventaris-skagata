@@ -121,7 +121,12 @@
 
                 @if ($pengadaan->status === 'draft')
                     <form action="{{ route('toolman.pengadaan.destroy', $pengadaan->id) }}" method="POST" class="inline"
-                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus draf usulan RAB ini?');">
+                        data-confirm="true"
+                        data-title="Hapus Draf Usulan RAB"
+                        data-message="Apakah Anda yakin ingin menghapus draf usulan <b>{{ addslashes($pengadaan->judul) }}</b>?"
+                        data-submessage="Tindakan ini permanen dan berkas draf akan dihapus."
+                        data-type="danger"
+                        data-confirm-text="Ya, Hapus Draf">
                         @csrf
                         @method('DELETE')
                         <button type="submit"
@@ -134,7 +139,11 @@
                         Edit Draf
                     </a>
                     <form action="{{ route('toolman.pengadaan.submit', $pengadaan->id) }}" method="POST" class="inline"
-                        onsubmit="return confirm('Apakah Anda yakin ingin mengajukan usulan RAB ini ke Waka Sarpras?');">
+                        data-confirm="true"
+                        data-title="Kirim Usulan RAB ke Waka Sarpras"
+                        data-message="Kirim usulan <b>{{ addslashes($pengadaan->judul) }}</b> dengan total {{ $pengadaan->detailPengadaans->count() }} item barang ke Waka Sarpras untuk ditinjau dan disetujui?"
+                        data-type="primary"
+                        data-confirm-text="Ya, Ajukan Sekarang">
                         @csrf
                         <button type="submit"
                             class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
@@ -156,7 +165,11 @@
                     </a>
                 @elseif ($pengadaan->status === 'approved')
                     <form action="{{ route('toolman.pengadaan.receive', $pengadaan->id) }}" method="POST" class="inline"
-                        onsubmit="return confirm('Konfirmasi penerimaan barang fisik: Seluruh kuota barang pada usulan ini akan otomatis ditambahkan ke stok inventaris bengkel dan dicatat pada mutasi stok masuk. Lanjutkan?');">
+                        data-confirm="true"
+                        data-title="Konfirmasi Penerimaan Fisik Barang"
+                        data-message="Konfirmasi penerimaan barang fisik: Seluruh kuota barang pada usulan <b>#RAB-{{ str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) }}</b> akan otomatis ditambahkan ke stok inventaris bengkel dan dicatat pada riwayat mutasi stok masuk. Lanjutkan?"
+                        data-type="success"
+                        data-confirm-text="Ya, Terima & Tambah Stok">
                         @csrf
                         <button type="submit"
                             class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">

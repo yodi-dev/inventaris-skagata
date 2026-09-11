@@ -254,8 +254,25 @@
                         class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                         Simpan Perubahan
                     </button>
-                    <button type="submit" name="action" value="submit"
-                        onclick="return confirm('Apakah Anda yakin ingin mengirimkan kembali usulan RAB ini ke Waka Sarpras?');"
+                    <button type="button"
+                        @click="window.openConfirmModal({
+                            title: 'Kirim Kembali Usulan ke Waka Sarpras',
+                            message: 'Apakah Anda yakin ingin mengirimkan kembali usulan perbaikan RAB ini ke Waka Sarpras?',
+                            type: 'primary',
+                            confirmText: 'Ya, Kirimkan',
+                            onConfirm: () => {
+                                const form = $el.closest('form');
+                                let actionInput = form.querySelector('input[name=action]');
+                                if (!actionInput) {
+                                    actionInput = document.createElement('input');
+                                    actionInput.type = 'hidden';
+                                    actionInput.name = 'action';
+                                    form.appendChild(actionInput);
+                                }
+                                actionInput.value = 'submit';
+                                form.submit();
+                            }
+                        })"
                         class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

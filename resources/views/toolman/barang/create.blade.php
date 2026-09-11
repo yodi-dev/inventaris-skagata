@@ -115,7 +115,12 @@
         @endif
 
         <!-- Form Wrapper -->
-        <form action="{{ route('toolman.barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('toolman.barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6"
+            data-confirm="true"
+            data-title="Konfirmasi Tambah Barang Baru"
+            data-message="Pastikan data klasifikasi, kuantitas stok, dan lokasi penyimpanan barang sudah sesuai sebelum disimpan ke master inventaris bengkel."
+            data-type="primary"
+            data-confirm-text="Ya, Simpan Barang">
             @csrf
 
             <!-- SECTION 1: Pilih Tipe Barang (Interactive Segmented Cards) -->

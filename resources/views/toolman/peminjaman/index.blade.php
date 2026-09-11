@@ -176,15 +176,31 @@
                         </a>
                         @if (in_array($pinjam->status, ['pending', 'menunggu_acc']))
                             <!-- Tombol Tolak Pengajuan -->
-                            <button type="button"
-                                onclick="openRejectModal({{ $pinjam->id }}, '{{ addslashes($pinjam->user->name ?? 'Peminjam') }}')"
-                                class="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg shadow-sm transition-colors">
-                                Tolak Pengajuan
-                            </button>
+                            <form action="{{ route('toolman.peminjaman.reject', $pinjam->id) }}" method="POST" class="inline"
+                                  data-confirm="true"
+                                  data-title="Tolak Permohonan Peminjaman"
+                                  data-message="Berikan alasan penolakan tiket <b>#PINJAM-{{ str_pad($pinjam->id, 4, '0', STR_PAD_LEFT) }}</b> milik <b>{{ addslashes($pinjam->user->name ?? 'Peminjam') }}</b>:"
+                                  data-type="danger"
+                                  data-confirm-text="Tolak Permohonan"
+                                  data-with-input="true"
+                                  data-input-name="alasan"
+                                  data-input-label="Alasan Penolakan (Wajib):"
+                                  data-input-placeholder="Contoh: Alat sedang dalam perbaikan berkala / jadwal bentrok..."
+                                  data-input-required="true">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                    Tolak Pengajuan
+                                </button>
+                            </form>
 
                             <!-- Form Approve & Serahkan -->
-                            <form action="{{ route('toolman.peminjaman.approve', $pinjam->id) }}" method="POST"
-                                onsubmit="return confirm('Apakah Anda yakin ingin menyetujui peminjaman ini dan menyerahkan barang fisik kepada {{ addslashes($pinjam->user->name ?? 'Peminjam') }}?');">
+                            <form action="{{ route('toolman.peminjaman.approve', $pinjam->id) }}" method="POST" class="inline"
+                                  data-confirm="true"
+                                  data-title="Setujui Peminjaman & Serahkan Barang"
+                                  data-message="Apakah Anda yakin ingin menyetujui peminjaman tiket <b>#PINJAM-{{ str_pad($pinjam->id, 4, '0', STR_PAD_LEFT) }}</b> untuk <b>{{ addslashes($pinjam->user->name ?? 'Peminjam') }}</b>? Pastikan ketersediaan fisik alat & bahan sebelum diserahkan."
+                                  data-type="success"
+                                  data-confirm-text="Ya, Setujui & Serahkan">
                                 @csrf
                                 <button type="submit"
                                     class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
