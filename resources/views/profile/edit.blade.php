@@ -129,11 +129,11 @@
             <div class="h-28 sm:h-32 {{ $bannerBg }} relative"></div>
 
             <div class="px-5 sm:px-8 pb-6">
-                {{-- Baris Avatar & Identitas: Avatar overlap, teks tetap di atas latar putih bersih --}}
-                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 -mt-12 sm:-mt-14 mb-6">
-                    <div class="flex flex-col sm:flex-row sm:items-end gap-4">
-                        {{-- Avatar --}}
-                        <div class="relative shrink-0">
+                {{-- Baris Avatar & Identitas: Avatar overlap ke banner, informasi teks 100% di area putih --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+                        {{-- Avatar: SATU-SATUNYA elemen dengan negative margin --}}
+                        <div class="-mt-12 sm:-mt-16 shrink-0 z-10 self-start sm:self-auto">
                             <div
                                 class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white shadow-md font-black text-2xl sm:text-3xl flex items-center justify-center {{ $avatarBg }} ring-1 ring-black/5">
                                 {{ $initials }}
@@ -141,7 +141,7 @@
                         </div>
 
                         {{-- Nama & Status (100% berada di latar putih tanpa tertabrak banner gelap) --}}
-                        <div class="pt-2 sm:pt-0 sm:pb-1">
+                        <div class="pt-0 sm:pt-4">
                             <div class="flex flex-wrap items-center gap-2.5">
                                 <h1 class="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                                     {{ $user->name }}
@@ -157,7 +157,7 @@
                     </div>
 
                     {{-- Role Badge Modern --}}
-                    <div class="sm:pb-1 self-start sm:self-auto">
+                    <div class="pt-0 sm:pt-4 self-start sm:self-auto">
                         <span
                             class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wide border shadow-2xs {{ $badgeClass }}">
                             @if ($currentRole === 'superadmin')
