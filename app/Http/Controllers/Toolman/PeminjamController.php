@@ -83,16 +83,100 @@ class PeminjamController extends Controller
 
     public function approveUser($id)
     {
-        // Approve registrasi
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $targetUser = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            })
+            ->findOrFail($id);
+
+        if ($targetUser->status !== 'menunggu_acc') {
+            return redirect()->back()->with('error', "Pengguna {$targetUser->name} sudah tidak dalam status menunggu approval (status saat ini: {$targetUser->status}).");
+        }
+
+        $targetUser->update([
+            'status' => 'aktif',
+        ]);
+
+        return redirect()->route('toolman.peminjam.index', ['tab' => 'active'])
+            ->with('success', "Pendaftaran {$targetUser->name} berhasil disetujui! Akun kini aktif dan dapat meminjam alat/bahan.");
     }
 
-    public function suspendUser($id)
+    public function rejectUser(Request $request, $id)
     {
-        // Suspend user
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $targetUser = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            })
+            ->findOrFail($id);
+
+        if ($targetUser->status !== 'menunggu_acc') {
+            return redirect()->back()->with('error', "Pengguna {$targetUser->name} sudah tidak dalam status menunggu approval.");
+        }
+
+        $name = $targetUser->name;
+        $targetUser->delete();
+
+        return redirect()->route('toolman.peminjam.index', ['tab' => 'pending'])
+            ->with('success', "Pendaftaran akun {$name} telah ditolak.");
     }
 
-    public function activateUser($id)
+    public function suspendUser(Request $request, $id)
     {
-        // Reactivate user
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $targetUser = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            })
+            ->findOrFail($id);
+
+        if ($targetUser->id === $user->id) {
+            return redirect()->back()->with('error', "Anda tidak dapat menangguhkan akun sendiri.");
+        }
+
+        if ($targetUser->status === 'suspend') {
+            return redirect()->back()->with('error', "Akun {$targetUser->name} sudah dalam status ditangguhkan (suspend).");
+        }
+
+        $targetUser->update([
+            'status' => 'suspend',
+        ]);
+
+        return redirect()->route('toolman.peminjam.index', ['tab' => 'suspended'])
+            ->with('success', "Akun {$targetUser->name} berhasil ditangguhkan (suspend). Akses peminjaman dinonaktifkan.");
+    }
+
+    public function activateUser(Request $request, $id)
+    {
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $targetUser = User::where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            })
+            ->findOrFail($id);
+
+        if ($targetUser->status === 'aktif') {
+            return redirect()->back()->with('error', "Akun {$targetUser->name} sudah dalam status aktif.");
+        }
+
+        $targetUser->update([
+            'status' => 'aktif',
+        ]);
+
+        return redirect()->route('toolman.peminjam.index', ['tab' => 'active'])
+            ->with('success', "Akun {$targetUser->name} berhasil dipulihkan! Peminjam kini dapat membuat pengajuan alat/bahan kembali.");
     }
 }

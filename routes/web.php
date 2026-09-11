@@ -114,6 +114,10 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     // Manajemen Peminjam
     Route::get('/peminjam', [ToolmanPeminjamController::class, 'index'])->name('peminjam.index');
     Route::get('/peminjam/{id}', [ToolmanPeminjamController::class, 'show'])->name('peminjam.show');
+    Route::post('/peminjam/{id}/approve', [ToolmanPeminjamController::class, 'approveUser'])->name('peminjam.approve');
+    Route::post('/peminjam/{id}/reject', [ToolmanPeminjamController::class, 'rejectUser'])->name('peminjam.reject');
+    Route::post('/peminjam/{id}/suspend', [ToolmanPeminjamController::class, 'suspendUser'])->name('peminjam.suspend');
+    Route::post('/peminjam/{id}/activate', [ToolmanPeminjamController::class, 'activateUser'])->name('peminjam.activate');
 
     // Riwayat Stok / Mutasi
     Route::get('/mutasi', [ToolmanMutasiController::class, 'index'])->name('mutasi.index');
