@@ -103,6 +103,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     // Sirkulasi Pengembalian
     Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');
     Route::get('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'check'])->name('pengembalian.check');
+    Route::post('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'processCheck'])->name('pengembalian.process-check');
 
     // Pengadaan (RAB)
     Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');
