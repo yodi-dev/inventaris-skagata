@@ -121,6 +121,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
 
     // Riwayat Stok / Mutasi
     Route::get('/mutasi', [ToolmanMutasiController::class, 'index'])->name('mutasi.index');
+    Route::get('/mutasi/export', [ToolmanMutasiController::class, 'export'])->name('mutasi.export');
 
     // Backward-compatible aliases
     Route::get('/sirkulasi/peminjaman', function () {
