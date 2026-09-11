@@ -141,6 +141,24 @@ Route::prefix('peminjam')->name('peminjam.')->group(function () {
 });
 
 // Route untuk halaman edit profil (Bisa ditaruh di luar group role atau di dalam middleware auth)
+<<<<<<< Updated upstream
 Route::get('/profile', function () {
     return view('profile.edit');
+=======
+// Route untuk halaman edit profil dengan deteksi role dinamis
+Route::get('/profile', function () {
+    return view('profile.edit');
+    $role = request('role');
+    if (!$role) {
+        $referer = request()->header('referer') ?? '';
+        if (str_contains($referer, 'superadmin')) {
+            $role = 'superadmin';
+        } elseif (str_contains($referer, 'toolman')) {
+            $role = 'toolman';
+        } else {
+            $role = 'peminjam';
+        }
+    }
+    return view('profile.edit', compact('role'));
+>>>>>>> Stashed changes
 })->name('profile.edit');
