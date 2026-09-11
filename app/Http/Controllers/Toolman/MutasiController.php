@@ -39,9 +39,17 @@ class MutasiController extends Controller
     }
 
     /**
-     * Ekspor riwayat mutasi stok ke file CSV untuk pelaporan & audit.
+     * Ekspor riwayat mutasi stok ke file Excel (.xls) untuk pelaporan & audit formal.
      */
     public function export(Request $request)
+    {
+        return $this->exportExcel($request);
+    }
+
+    /**
+     * Ekspor riwayat mutasi stok ke file Excel (.xls) dengan styling tabel penuh.
+     */
+    public function exportExcel(Request $request)
     {
         $user = auth()->user();
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
@@ -51,83 +59,118 @@ class MutasiController extends Controller
         $movements = $query->get();
 
         $bengkelSlug = $bengkel ? str_replace(' ', '_', strtolower($bengkel->nama)) : 'bengkel';
-        $filename = "log_mutasi_{$bengkelSlug}_" . date('Ymd_His') . ".csv";
+        $filename = "Laporan_Mutasi_{$bengkelSlug}_" . date('Ymd_His') . ".xls";
+
+        $filters = $this->resolveFilterLabels($request);
+        $totalRecords = $movements->count();
+        $totalMasuk = $movements->whereIn('jenis', ['stok_masuk', 'pengembalian_baik'])->sum('jumlah');
+        $totalKeluar = $movements->whereIn('jenis', ['peminjaman', 'bhp_keluar'])->sum('jumlah');
+        $totalMasalah = $movements->whereIn('jenis', ['pengembalian_rusak', 'barang_hilang'])->sum('jumlah');
 
         $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'application/vnd.ms-excel; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
         ];
 
-        $callback = function () use ($movements) {
-            $file = fopen('php://output', 'w');
-            // Menambahkan UTF-8 BOM agar terbaca sempurna di Microsoft Excel
-            fputs($file, "\xEF\xBB\xBF");
+        return response()->view('toolman.mutasi.export_excel', compact(
+            'movements',
+            'bengkel',
+            'user',
+            'totalRecords',
+            'totalMasuk',
+            'totalKeluar',
+            'totalMasalah',
+            'filters'
+        ), 200, $headers);
+    }
 
-            // Header Kolom CSV
-            fputcsv($file, [
-                'No',
-                'ID Log',
-                'Tanggal',
-                'Waktu',
-                'Kode Barang',
-                'Nama Barang',
-                'Tipe Barang',
-                'Jenis Mutasi',
-                'Perubahan Qty',
-                'Satuan',
-                'Petugas / Pemroses',
-                'Keterangan',
-                'Referensi Transaksi',
-            ]);
+    /**
+     * Tampilan cetak ramah printer (A4 Landscape) berstandar laporan resmi instansi.
+     */
+    public function print(Request $request)
+    {
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
-            $no = 1;
-            foreach ($movements as $m) {
-                $sign = match ($m->jenis) {
-                    'stok_masuk', 'pengembalian_baik' => '+',
-                    'peminjaman', 'bhp_keluar', 'barang_hilang' => '-',
-                    default => '',
-                };
+        $query = $this->buildMovementQuery($request, $bengkelId);
+        $movements = $query->get();
 
-                $jenisLabel = match ($m->jenis) {
-                    'stok_masuk' => 'Stok Masuk',
-                    'peminjaman' => 'Peminjaman',
-                    'pengembalian_baik' => 'Pengembalian (Baik)',
-                    'pengembalian_rusak' => 'Pengembalian (Rusak)',
-                    'barang_hilang' => 'Barang Hilang',
-                    'bhp_keluar' => 'BHP Keluar',
-                    'perbaikan' => 'Perbaikan Alat',
-                    'penyesuaian' => 'Penyesuaian Stok',
-                    default => ucfirst(str_replace('_', ' ', $m->jenis)),
-                };
+        $filters = $this->resolveFilterLabels($request);
+        $totalRecords = $movements->count();
+        $totalMasuk = $movements->whereIn('jenis', ['stok_masuk', 'pengembalian_baik'])->sum('jumlah');
+        $totalKeluar = $movements->whereIn('jenis', ['peminjaman', 'bhp_keluar'])->sum('jumlah');
+        $totalMasalah = $movements->whereIn('jenis', ['pengembalian_rusak', 'barang_hilang'])->sum('jumlah');
 
-                $refText = ($m->referensi_tipe && $m->referensi_id)
-                    ? ucfirst($m->referensi_tipe) . " #{$m->referensi_id}"
-                    : '-';
+        return view('toolman.mutasi.print', compact(
+            'movements',
+            'bengkel',
+            'user',
+            'totalRecords',
+            'totalMasuk',
+            'totalKeluar',
+            'totalMasalah',
+            'filters'
+        ));
+    }
 
-                fputcsv($file, [
-                    $no++,
-                    '#LOG-' . str_pad($m->id, 5, '0', STR_PAD_LEFT),
-                    $m->created_at->format('Y-m-d'),
-                    $m->created_at->format('H:i') . ' WIB',
-                    $m->barang->kode_barang ?? '-',
-                    $m->barang->nama ?? 'Barang Terhapus',
-                    ($m->barang && $m->barang->jenis_barang === 'bhp') ? 'BHP' : 'Inventaris',
-                    $jenisLabel,
-                    $sign . $m->jumlah,
-                    $m->barang->satuan ?? 'unit',
-                    $m->user->name ?? 'Sistem Otomatis',
-                    $m->keterangan ?? '-',
-                    $refText,
-                ]);
+    /**
+     * Menerjemahkan parameter request menjadi label teks yang rapi dan mudah dibaca.
+     */
+    protected function resolveFilterLabels(Request $request): array
+    {
+        $period = $request->input('period');
+        if ($period === 'today') {
+            $periodLabel = 'Hari Ini (' . today()->format('d/m/Y') . ')';
+        } elseif ($period === 'week') {
+            $periodLabel = '7 Hari Terakhir (' . now()->subDays(7)->format('d/m/Y') . ' s/d ' . now()->format('d/m/Y') . ')';
+        } elseif ($period === 'month') {
+            $periodLabel = '30 Hari Terakhir (' . now()->subDays(30)->format('d/m/Y') . ' s/d ' . now()->format('d/m/Y') . ')';
+        } else {
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            if ($startDate && $endDate) {
+                $periodLabel = date('d/m/Y', strtotime($startDate)) . ' s/d ' . date('d/m/Y', strtotime($endDate));
+            } elseif ($startDate) {
+                $periodLabel = 'Sejak ' . date('d/m/Y', strtotime($startDate));
+            } elseif ($endDate) {
+                $periodLabel = 'Hingga ' . date('d/m/Y', strtotime($endDate));
+            } else {
+                $periodLabel = 'Semua Riwayat Terdata';
             }
+        }
 
-            fclose($file);
+        $jenis = $request->input('jenis');
+        $jenisLabel = match ($jenis) {
+            'stok_masuk' => 'Stok Masuk (Pengadaan / Tambah)',
+            'peminjaman' => 'Peminjaman Aset',
+            'pengembalian_baik' => 'Pengembalian (Kondisi Baik)',
+            'pengembalian_rusak' => 'Pengembalian (Kondisi Rusak)',
+            'barang_hilang' => 'Barang Hilang (Penyusutan)',
+            'bhp_keluar' => 'BHP Keluar (Konsumsi)',
+            'perbaikan' => 'Perbaikan Alat',
+            'penyesuaian' => 'Penyesuaian Stok (Opname)',
+            default => 'Semua Jenis Mutasi',
         };
 
-        return new StreamedResponse($callback, 200, $headers);
+        $tipe = $request->input('tipe');
+        $tipeLabel = match ($tipe) {
+            'bhp', 'habis_pakai' => 'Bahan Habis Pakai (BHP)',
+            'inventaris' => 'Barang Inventaris',
+            default => 'Semua Tipe Aset (Inventaris & BHP)',
+        };
+
+        $search = trim($request->input('search', ''));
+
+        return [
+            'period' => $periodLabel,
+            'jenis' => $jenisLabel,
+            'tipe' => $tipeLabel,
+            'search' => $search !== '' ? "\"{$search}\"" : '-',
+        ];
     }
 
     /**
@@ -135,7 +178,7 @@ class MutasiController extends Controller
      */
     protected function buildMovementQuery(Request $request, $bengkelId)
     {
-        $query = StockMovement::with(['barang', 'user'])
+        $query = StockMovement::with(['barang.lokasiPenyimpanan', 'user'])
             ->whereHas('barang', function ($q) use ($bengkelId) {
                 $q->where('bengkel_id', $bengkelId);
             })
