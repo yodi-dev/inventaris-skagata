@@ -6,6 +6,24 @@
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6 pb-12">
 
+        @if (session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+        @endif
+
         <!-- Breadcrumb & Top Bar -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -20,12 +38,12 @@
                 <div class="flex flex-wrap items-center gap-3">
                     <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Detail Tiket Peminjaman
                         #{{ $peminjaman->id }}</h3>
-                    @if ($peminjaman->status === 'menunggu_acc')
+                    @if ($peminjaman->status === 'pending' || $peminjaman->status === 'menunggu_acc')
                         <span
                             class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-800">
                             Menunggu Persetujuan
                         </span>
-                    @elseif ($peminjaman->status === 'aktif')
+                    @elseif ($peminjaman->status === 'active' || $peminjaman->status === 'aktif')
                         <span
                             class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-800">
                             Sedang Dipinjam
@@ -203,5 +221,149 @@
             </div>
         </div>
 
+        <!-- Action / Processing Status Card -->
+        @if (in_array($peminjaman->status, ['pending', 'menunggu_acc']))
+            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h4 class="text-base font-bold text-gray-900">Konfirmasi Persetujuan Peminjaman</h4>
+                        <p class="text-sm text-gray-500 mt-1">
+                            Pastikan ketersediaan fisik alat & bahan di bengkel sebelum menyerahkannya kepada peminjam.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
+                        <!-- Form Tolak Modal -->
+                        <form action="{{ route('toolman.peminjaman.reject', $peminjaman->id) }}" method="POST" class="inline"
+                              data-confirm="true"
+                              data-title="Tolak Permohonan Peminjaman"
+                              data-message="Berikan alasan penolakan tiket <b>#PINJAM-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }}</b> milik <b>{{ addslashes($peminjaman->user->name ?? 'Peminjam') }}</b>:"
+                              data-type="danger"
+                              data-confirm-text="Tolak Pengajuan"
+                              data-with-input="true"
+                              data-input-name="alasan"
+                              data-input-label="Alasan Penolakan (Wajib):"
+                              data-input-placeholder="Contoh: Alat sedang dalam perbaikan berkala..."
+                              data-input-required="true">
+                            @csrf
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                                Tolak Pengajuan
+                            </button>
+                        </form>
+
+                        <!-- Form Approve & Serahkan Modal -->
+                        <form action="{{ route('toolman.peminjaman.approve', $peminjaman->id) }}" method="POST" class="inline"
+                              data-confirm="true"
+                              data-title="Setujui Peminjaman & Serahkan Barang"
+                              data-message="Apakah Anda yakin ingin menyetujui peminjaman tiket <b>#PINJAM-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }}</b> untuk <b>{{ addslashes($peminjaman->user->name ?? 'Peminjam') }}</b>? Pastikan barang fisik telah diserahkan di bengkel."
+                              data-type="success"
+                              data-confirm-text="Ya, Setujui & Serahkan">
+                            @csrf
+                            <button type="submit"
+                                class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Approve & Serahkan Barang
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        @else
+            <!-- Informasi Proses Tiket -->
+            <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-3">
+                <h4 class="text-sm font-bold text-gray-800 uppercase tracking-wider border-b border-gray-100 pb-3 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Informasi Pemrosesan Tiket
+                </h4>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <span class="text-gray-500">Diproses Oleh:</span>
+                        <p class="font-semibold text-gray-900 mt-0.5">{{ $peminjaman->diprosesOleh->name ?? 'Toolman' }}</p>
+                    </div>
+                    <div>
+                        <span class="text-gray-500">Waktu Diproses:</span>
+                        <p class="font-semibold text-gray-900 mt-0.5">
+                            {{ $peminjaman->diproses_pada ? \Carbon\Carbon::parse($peminjaman->diproses_pada)->translatedFormat('d F Y, H:i') . ' WIB' : '-' }}
+                        </p>
+                    </div>
+                </div>
+                @if ($peminjaman->status === 'ditolak' && $peminjaman->alasan_penolakan)
+                    <div class="mt-3 p-4 bg-red-50 border border-red-200 rounded-xl text-sm">
+                        <p class="font-bold text-red-800 flex items-center gap-2">
+                            <svg class="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                            Alasan Penolakan:
+                        </p>
+                        <p class="text-red-700 mt-1 pl-6">{{ $peminjaman->alasan_penolakan }}</p>
+                    </div>
+                @endif
+            </div>
+        @endif
+
     </div>
+
+    <!-- Modal Tolak Pengajuan -->
+    <div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeRejectModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="rejectForm" method="POST" action="">
+                    @csrf
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="sm:flex sm:items-start gap-4">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10 text-red-600">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg font-bold text-gray-900" id="modal-title">Tolak Pengajuan Peminjaman</h3>
+                                <p class="text-sm text-gray-500 mt-1" id="rejectPeminjamName">
+                                    Berikan alasan penolakan agar peminjam dapat memahami alasan pembatalan.
+                                </p>
+                                <div class="mt-4">
+                                    <label for="alasan_penolakan" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                                        Alasan Penolakan <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea name="alasan_penolakan" id="alasan_penolakan" rows="3" required
+                                        placeholder="Contoh: Alat sedang proses maintenance berkala atau peruntukan praktikum belum disetujui guru pembimbing."
+                                        class="w-full text-sm border-gray-300 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 p-3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3.5 flex flex-row-reverse gap-3">
+                        <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                            Konfirmasi Tolak
+                        </button>
+                        <button type="button" onclick="closeRejectModal()"
+                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-xl transition-colors">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openRejectModal(id, peminjamName) {
+            const form = document.getElementById('rejectForm');
+            form.action = "{{ url('/toolman/peminjaman') }}/" + id + "/reject";
+            document.getElementById('rejectPeminjamName').innerText = "Pengajuan oleh: " + peminjamName + ". Masukkan alasan penolakan:";
+            document.getElementById('alasan_penolakan').value = '';
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+    </script>
 @endsection

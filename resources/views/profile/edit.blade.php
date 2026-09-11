@@ -25,25 +25,25 @@
         $statusAkun = ucfirst($user->status ?? 'Aktif');
     }
 
-    // Color theme & labels per role
+    // Color theme & labels per role (Harmonis dengan identitas SMKN 3 Yogyakarta)
     if ($currentRole === 'superadmin') {
         $roleBadge = 'Waka Sarpras · Super Admin';
         $subinfo = 'Wakil Kepala Sekolah Bidang Sarana & Prasarana';
         $identifierLabel = 'NIP Pegawai Negeri';
         $bengkelLabel = 'Unit Kerja';
         $bengkelValue = 'Seluruh Bengkel SMKN 3 Yogyakarta';
-        $bannerBg = 'bg-gradient-to-r from-slate-900 via-emerald-950 to-green-900';
-        $avatarBg = 'bg-green-700 text-white';
-        $badgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/80';
+        $bannerBg = 'bg-gradient-to-r from-slate-900 via-emerald-950 to-primary-900';
+        $avatarBg = 'bg-primary-600 text-white';
+        $badgeClass = 'bg-primary-50 text-primary-700 border-primary-200/80';
     } elseif ($currentRole === 'toolman') {
         $roleBadge = 'Toolman · ' . ($user->bengkel->nama ?? 'Bengkel');
         $subinfo = 'Penanggung Jawab Bengkel ' . ($user->bengkel->nama ?? '-');
         $identifierLabel = 'NIP / NUPTK Petugas';
         $bengkelLabel = 'Bengkel Tanggung Jawab';
         $bengkelValue = $user->bengkel->nama ?? 'Belum Ditentukan';
-        $bannerBg = 'bg-gradient-to-r from-slate-900 via-blue-950 to-blue-900';
-        $avatarBg = 'bg-blue-700 text-white';
-        $badgeClass = 'bg-blue-50 text-blue-800 border-blue-200/80';
+        $bannerBg = 'bg-gradient-to-r from-slate-900 via-emerald-950 to-primary-900';
+        $avatarBg = 'bg-primary-600 text-white';
+        $badgeClass = 'bg-primary-50 text-primary-700 border-primary-200/80';
     } else {
         $isGuru = method_exists($user, 'isGuru') ? $user->isGuru() : ($user->jenis_peminjam ?? '') === 'guru';
         $roleBadge = $isGuru ? 'Guru / Pendidik' : 'Siswa · ' . ($user->bengkel->kode ?? 'SMKN 3');
@@ -53,9 +53,9 @@
         $identifierLabel = $isGuru ? 'NIP / NUPTK Guru' : 'NISN / NIS Siswa';
         $bengkelLabel = 'Bengkel / Jurusan';
         $bengkelValue = $user->bengkel->nama ?? ($isGuru ? 'Lintas Jurusan' : 'Belum Ditentukan');
-        $bannerBg = 'bg-gradient-to-r from-emerald-800 via-emerald-700 to-teal-800';
-        $avatarBg = 'bg-emerald-600 text-white';
-        $badgeClass = 'bg-emerald-50 text-emerald-800 border-emerald-200/80';
+        $bannerBg = 'bg-gradient-to-r from-slate-900 via-emerald-950 to-primary-900';
+        $avatarBg = 'bg-primary-600 text-white';
+        $badgeClass = 'bg-primary-50 text-primary-700 border-primary-200/80';
     }
 @endphp
 
@@ -71,29 +71,28 @@
         pwdConfirm: '',
         showOld: false,
         showNew: false
-    }" x-cloak class="max-w-4xl mx-auto space-y-5 sm:space-y-6 pb-10">
+    }" x-cloak class="max-w-4xl mx-auto space-y-6 pb-12">
 
         {{-- Flash Messages --}}
         @if (session('status') === 'profile-updated')
             <div
-                class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-xs">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-xs">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
                 <div>
                     <p class="font-bold">Profil Berhasil Disimpan</p>
-                    <p class="text-xs text-emerald-700 mt-0.5">Informasi akun Anda telah berhasil diperbarui pada sistem.
-                    </p>
+                    <p class="text-xs text-emerald-700 mt-0.5">Informasi akun Anda telah berhasil diperbarui pada sistem.</p>
                 </div>
             </div>
         @endif
 
         @if (session('status') === 'password-updated')
             <div
-                class="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-xs">
-                <div class="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-900 text-sm flex items-center gap-3 shadow-xs">
+                <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                     </svg>
@@ -106,7 +105,7 @@
         @endif
 
         @if ($errors->any())
-            <div class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-xs">
+            <div class="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-900 text-sm shadow-xs">
                 <div class="flex items-center gap-2 font-bold mb-1">
                     <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -123,75 +122,79 @@
         @endif
 
         {{-- ====================================================== --}}
-        {{-- HERO PROFILE CARD                                        --}}
+        {{-- HERO PROFILE CARD (BERSIH, KONTRAS TINGGI, HARMONIS)   --}}
         {{-- ====================================================== --}}
-        <div class="bg-white rounded-3xl border border-gray-200/80 shadow-xs overflow-hidden">
+        <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             {{-- Dekoratif banner atas --}}
-            <div class="h-20 sm:h-24 {{ $bannerBg }}"></div>
+            <div class="h-28 sm:h-32 {{ $bannerBg }} relative"></div>
 
-            <div class="px-5 sm:px-7 pb-6 -mt-10 sm:-mt-12">
-                <div class="flex flex-col sm:flex-row sm:items-end justify-between gap-3 mb-5">
-                    {{-- Avatar & Identitas Singkat --}}
-                    <div class="flex items-end gap-3 sm:gap-4">
-                        <div class="relative">
+            <div class="px-5 sm:px-8 pb-6">
+                {{-- Baris Avatar & Identitas: Avatar overlap ke banner, informasi teks 100% di area putih --}}
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+                    <div class="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5">
+                        {{-- Avatar: SATU-SATUNYA elemen dengan negative margin --}}
+                        <div class="-mt-12 sm:-mt-16 shrink-0 z-10 self-start sm:self-auto">
                             <div
-                                class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white shadow-md font-black text-2xl sm:text-3xl flex items-center justify-center {{ $avatarBg }}">
+                                class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl border-4 border-white shadow-md font-black text-2xl sm:text-3xl flex items-center justify-center {{ $avatarBg }} ring-1 ring-black/5">
                                 {{ $initials }}
                             </div>
                         </div>
 
-                        <div class="mb-1.5">
-                            <div class="flex flex-wrap items-center gap-2">
-                                <h1 class="text-lg sm:text-2xl font-black text-gray-900 leading-tight">
+                        {{-- Nama & Status (100% berada di latar putih tanpa tertabrak banner gelap) --}}
+                        <div class="pt-0 sm:pt-4">
+                            <div class="flex flex-wrap items-center gap-2.5">
+                                <h1 class="text-xl sm:text-2xl font-bold text-gray-900 leading-tight">
                                     {{ $user->name }}
                                 </h1>
                                 <span
-                                    class="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    class="inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
                                     <span>{{ $statusAkun }}</span>
                                 </span>
                             </div>
-                            <p class="text-xs sm:text-sm text-gray-500 mt-0.5">{{ $subinfo }}</p>
+                            <p class="text-xs sm:text-sm text-gray-500 mt-1 font-medium">{{ $subinfo }}</p>
                         </div>
                     </div>
 
-                    {{-- Role Badge Modern (Bersih tanpa emoji) --}}
-                    <span
-                        class="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold tracking-wide border shadow-2xs mt-1 sm:mt-0 {{ $badgeClass }}">
-                        @if ($currentRole === 'superadmin')
-                            <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                            </svg>
-                        @elseif ($currentRole === 'toolman')
-                            <svg class="w-4 h-4 text-blue-700 shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
-                        @else
-                            <svg class="w-4 h-4 text-emerald-700 shrink-0" fill="none" stroke="currentColor"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 14l9-5-9-5-9 5 9 5z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
-                            </svg>
-                        @endif
-                        <span>{{ $roleBadge }}</span>
-                    </span>
+                    {{-- Role Badge Modern --}}
+                    <div class="pt-0 sm:pt-4 self-start sm:self-auto">
+                        <span
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg text-xs font-bold tracking-wide border shadow-2xs {{ $badgeClass }}">
+                            @if ($currentRole === 'superadmin')
+                                <svg class="w-4 h-4 text-primary-700 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                                </svg>
+                            @elseif ($currentRole === 'toolman')
+                                <svg class="w-4 h-4 text-primary-700 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                            @else
+                                <svg class="w-4 h-4 text-primary-700 shrink-0" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l9-5-9-5-9 5 9 5z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z" />
+                                </svg>
+                            @endif
+                            <span>{{ $roleBadge }}</span>
+                        </span>
+                    </div>
                 </div>
 
                 {{-- Statistik Cepat --}}
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 pt-4 border-t border-gray-100">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-gray-100">
                     @foreach ($stats as $stat)
-                        <div class="bg-slate-50 border border-gray-200/70 rounded-2xl p-3.5 text-center sm:text-left">
+                        <div class="bg-gray-50/80 border border-gray-200/80 rounded-xl p-3.5 text-center sm:text-left transition-colors hover:bg-gray-50">
                             <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide truncate">
                                 {{ $stat['label'] }}</p>
-                            <p class="text-base sm:text-xl font-black text-gray-900 mt-0.5 leading-tight">
+                            <p class="text-base sm:text-xl font-bold text-gray-900 mt-0.5 leading-tight">
                                 {{ $stat['value'] }}</p>
                         </div>
                     @endforeach
@@ -200,15 +203,14 @@
         </div>
 
         {{-- ====================================================== --}}
-        {{-- TAB NAVIGATION                                           --}}
+        {{-- TAB NAVIGATION                                         --}}
         {{-- ====================================================== --}}
         <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
             <button type="button" @click="activeTab = 'profile'"
                 class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shrink-0 flex items-center gap-2 border"
                 :class="activeTab === 'profile'
-                    ?
-                    'bg-green-700 text-white border-green-700 shadow-sm' :
-                    'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'">
+                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -218,9 +220,8 @@
             <button type="button" @click="activeTab = 'security'"
                 class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shrink-0 flex items-center gap-2 border"
                 :class="activeTab === 'security'
-                    ?
-                    'bg-green-700 text-white border-green-700 shadow-sm' :
-                    'bg-white border-gray-200 text-gray-600 hover:bg-gray-50'">
+                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
+                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -230,11 +231,11 @@
         </div>
 
         {{-- ====================================================== --}}
-        {{-- TAB: INFORMASI AKUN                                      --}}
+        {{-- TAB: INFORMASI AKUN                                    --}}
         {{-- ====================================================== --}}
         <div x-show="activeTab === 'profile'" x-transition>
             <form method="POST" action="{{ route('profile.update') }}"
-                class="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-5 sm:p-7 space-y-6">
+                class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-7 space-y-6">
                 @csrf
                 @method('patch')
 
@@ -252,7 +253,7 @@
                             Lengkap</label>
                         <input type="text" name="name" value="{{ old('name', $user->name) }}" required
                             placeholder="Nama lengkap sesuai data sekolah"
-                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none">
+                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
                     </div>
 
                     {{-- Identifier (NIP/NIS) --}}
@@ -271,7 +272,7 @@
                             </span>
                         </div>
                         <input type="text" value="{{ $user->nomor_identitas ?? '-' }}" readonly
-                            class="w-full text-xs sm:text-sm font-mono border border-gray-200 rounded-xl py-3 px-3.5 bg-gray-100 text-gray-500 cursor-not-allowed select-all outline-none">
+                            class="w-full text-xs sm:text-sm font-mono border border-gray-200 rounded-xl py-2.5 px-3.5 bg-gray-100 text-gray-500 cursor-not-allowed select-all outline-none">
                         <p class="text-[10px] text-gray-400 mt-1">Identitas resmi dikelola oleh pihak sekolah.</p>
                     </div>
 
@@ -281,7 +282,7 @@
                             Email</label>
                         <input type="email" name="email" value="{{ old('email', $user->email) }}" required
                             placeholder="email@smkn3yk.sch.id"
-                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none">
+                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
                     </div>
 
                     {{-- No. HP --}}
@@ -290,7 +291,7 @@
                             HP</label>
                         <input type="text" name="nomor_wa" value="{{ old('nomor_wa', $user->nomor_wa) }}"
                             placeholder="08xxxxxxxxxx"
-                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none">
+                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
                         <p class="text-[10px] text-gray-400 mt-1">Digunakan untuk notifikasi dan konfirmasi peminjaman.</p>
                     </div>
 
@@ -300,16 +301,16 @@
                             <span>{{ $bengkelLabel }}</span>
                         </label>
                         <input type="text" value="{{ $bengkelValue }}" readonly
-                            class="w-full text-xs sm:text-sm font-medium border border-gray-200 rounded-xl py-3 px-3.5 bg-gray-100 text-gray-700 cursor-not-allowed select-all outline-none">
+                            class="w-full text-xs sm:text-sm font-medium border border-gray-200 rounded-xl py-2.5 px-3.5 bg-gray-100 text-gray-700 cursor-not-allowed select-all outline-none">
                     </div>
 
                 </div>
 
                 {{-- Info Tambahan Berbasis Role --}}
                 @if ($currentRole === 'peminjam')
-                    <div class="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-4.5 text-xs space-y-2.5">
-                        <div class="flex items-center gap-2 font-bold text-emerald-900">
-                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor"
+                    <div class="bg-primary-50/60 border border-primary-200/80 rounded-xl p-4 text-xs space-y-2.5">
+                        <div class="flex items-center gap-2 font-bold text-primary-950">
+                            <svg class="w-4 h-4 text-primary-600 shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 14l9-5-9-5-9 5 9 5z" />
@@ -333,9 +334,9 @@
                         </div>
                     </div>
                 @elseif ($currentRole === 'toolman')
-                    <div class="bg-blue-50/80 border border-blue-200/80 rounded-2xl p-4.5 text-xs space-y-2.5">
-                        <div class="flex items-center gap-2 font-bold text-blue-900">
-                            <svg class="w-4 h-4 text-blue-600 shrink-0" fill="none" stroke="currentColor"
+                    <div class="bg-primary-50/60 border border-primary-200/80 rounded-xl p-4 text-xs space-y-2.5">
+                        <div class="flex items-center gap-2 font-bold text-primary-950">
+                            <svg class="w-4 h-4 text-primary-600 shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
@@ -359,9 +360,9 @@
                         </div>
                     </div>
                 @else
-                    <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-4.5 text-xs space-y-2.5">
+                    <div class="bg-gray-50 border border-gray-200 rounded-xl p-4 text-xs space-y-2.5">
                         <div class="flex items-center gap-2 font-bold text-gray-900">
-                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor"
+                            <svg class="w-4 h-4 text-primary-600 shrink-0" fill="none" stroke="currentColor"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
@@ -381,9 +382,9 @@
                     </div>
                 @endif
 
-                <div class="flex justify-end pt-2 border-t border-gray-100">
+                <div class="flex justify-end pt-3 border-t border-gray-100">
                     <button type="submit"
-                        class="w-full sm:w-auto px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-green-700 hover:bg-green-800 active:scale-[0.98] shadow-xs transition-all flex items-center justify-center gap-2">
+                        class="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 active:scale-[0.98] shadow-sm transition-all flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7" />
                         </svg>
@@ -395,11 +396,11 @@
         </div>
 
         {{-- ====================================================== --}}
-        {{-- TAB: KEAMANAN & PASSWORD                                 --}}
+        {{-- TAB: KEAMANAN & PASSWORD                               --}}
         {{-- ====================================================== --}}
         <div x-show="activeTab === 'security'" x-transition>
             <form method="POST" action="{{ route('password.update') }}"
-                class="bg-white rounded-3xl border border-gray-200/80 shadow-xs p-5 sm:p-7 space-y-6">
+                class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-7 space-y-6">
                 @csrf
                 @method('put')
 
@@ -418,7 +419,7 @@
                         <div class="relative">
                             <input :type="showOld ? 'text' : 'password'" name="current_password" required
                                 placeholder="Masukkan kata sandi lama..."
-                                class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 pl-3.5 pr-11 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none">
+                                class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 pl-3.5 pr-11 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
                             <button type="button" @click="showOld = !showOld"
                                 class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                 :title="showOld ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'">
@@ -445,7 +446,7 @@
                         <div class="relative">
                             <input :type="showNew ? 'text' : 'password'" name="password" x-model="pwdNew" required
                                 minlength="8" placeholder="Minimal 8 karakter..."
-                                class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 pl-3.5 pr-11 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none">
+                                class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 pl-3.5 pr-11 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
                             <button type="button" @click="showNew = !showNew"
                                 class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                 :title="showNew ? 'Sembunyikan kata sandi' : 'Lihat kata sandi'">
@@ -477,12 +478,9 @@
                             </div>
                             <p class="text-[10px] text-gray-400">
                                 <span x-show="pwdNew.length === 0">Minimal 8 karakter.</span>
-                                <span x-show="pwdNew.length > 0 && pwdNew.length < 6" class="text-rose-500">Terlalu
-                                    pendek</span>
-                                <span x-show="pwdNew.length >= 6 && pwdNew.length < 8" class="text-amber-600">Hampir
-                                    cukup…</span>
-                                <span x-show="pwdNew.length >= 8" class="text-emerald-600 font-medium">Sangat baik &
-                                    kuat</span>
+                                <span x-show="pwdNew.length > 0 && pwdNew.length < 6" class="text-rose-500">Terlalu pendek</span>
+                                <span x-show="pwdNew.length >= 6 && pwdNew.length < 8" class="text-amber-600">Hampir cukup…</span>
+                                <span x-show="pwdNew.length >= 8" class="text-emerald-600 font-medium">Sangat baik & kuat</span>
                             </p>
                         </div>
                     </div>
@@ -493,7 +491,7 @@
                             Sandi Baru</label>
                         <input :type="showNew ? 'text' : 'password'" name="password_confirmation" x-model="pwdConfirm"
                             required placeholder="Ketik ulang kata sandi baru..."
-                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-3 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-green-500 focus:border-green-500 font-medium transition-all outline-none"
+                            class="w-full text-xs sm:text-sm border border-gray-300 rounded-xl py-2.5 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none"
                             :class="pwdConfirm && pwdNew !== pwdConfirm ?
                                 'border-rose-400 focus:ring-rose-400 focus:border-rose-400' : ''">
                         <p x-show="pwdConfirm && pwdNew !== pwdConfirm"
@@ -503,7 +501,7 @@
                 </div>
 
                 {{-- Info Sesi Aktif --}}
-                <div class="max-w-xl bg-slate-50 border border-gray-200 rounded-2xl p-4 text-xs space-y-1">
+                <div class="max-w-xl bg-gray-50/80 border border-gray-200 rounded-xl p-4 text-xs space-y-1">
                     <p class="font-bold text-gray-800 flex items-center gap-1.5">
                         <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -511,13 +509,12 @@
                         </svg>
                         Sesi Login Terverifikasi
                     </p>
-                    <p class="text-gray-500">Sistem Informasi Manajemen Inventaris & Bengkel SMKN 3 Yogyakarta (Sibenka)
-                    </p>
+                    <p class="text-gray-500">Sistem Informasi Manajemen Inventaris & Bengkel SMKN 3 Yogyakarta (Sibenka)</p>
                 </div>
 
-                <div class="flex justify-end pt-2 border-t border-gray-100">
+                <div class="flex justify-end pt-3 border-t border-gray-100">
                     <button type="submit"
-                        class="w-full sm:w-auto px-6 py-3 rounded-xl text-xs sm:text-sm font-bold text-white bg-gray-900 hover:bg-black active:scale-[0.98] shadow-xs transition-all flex items-center justify-center gap-2">
+                        class="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 active:scale-[0.98] shadow-sm transition-all flex items-center justify-center gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />

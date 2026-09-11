@@ -1,12 +1,12 @@
 @extends('layouts.admin')
 
-@section('title', 'Riwayat Perubahan Stok')
+@section('title', 'Riwayat Mutasi & Pergerakan Stok')
 @section('header_title', 'Riwayat Perubahan Stok & Mutasi')
 
 @section('content')
     <div class="max-w-7xl mx-auto space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <!-- Header & Action Buttons -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
             <div>
                 <div class="flex items-center gap-2 mb-1">
                     <span
@@ -14,25 +14,113 @@
                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
                         {{ $bengkel->nama ?? 'Bengkel Aktif' }}
                     </span>
+                    <span class="text-xs text-gray-400">&bull; Kode: {{ $bengkel->kode ?? 'BGL' }}</span>
                 </div>
-                <h3 class="text-xl font-bold text-gray-900">Log Mutasi & Pergerakan Stok</h3>
-                <p class="text-sm text-gray-500 mt-1">Audit log otomatis dari setiap transaksi stok masuk, peminjaman,
-                    pengembalian, dan bahan habis pakai.</p>
+                <h3 class="text-2xl font-bold text-gray-900 tracking-tight">Log Mutasi & Pergerakan Stok</h3>
+                <p class="text-xs text-gray-500 mt-1">Audit log otomatis dari setiap transaksi stok masuk, peminjaman,
+                    pengembalian fisik, dan bahan habis pakai (PRD 3.10).</p>
             </div>
 
-            <div
-                class="text-xs text-gray-500 bg-white px-3 py-2 rounded-lg border border-gray-200 shadow-sm self-start sm:self-auto">
-                Total tercatat: <span class="font-bold text-gray-900">{{ $movements->total() }}</span> mutasi
+            <div class="flex flex-wrap items-center gap-2">
+                <!-- Tombol Cetak Dokumen Resmi (Format A4 Cetak Formal) -->
+                <a href="{{ route('toolman.mutasi.print', request()->query()) }}" target="_blank"
+                    class="inline-flex items-center px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                    title="Buka lembar cetak dokumen resmi berstandar dinas (format A4 landscape)">
+                    <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                        </path>
+                    </svg>
+                    Cetak Log
+                </a>
+
+                <!-- Tombol Ekspor Excel (.xls) Berwarna & Terformat Penuh -->
+                <a href="{{ route('toolman.mutasi.export-excel', request()->query()) }}"
+                    class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors"
+                    title="Unduh laporan dalam format spreadsheet Microsoft Excel dengan kartu ringkasan dan styling penuh">
+                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Ekspor Excel (.xls)
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 Kartu Metrik Ringkasan Mutasi Bengkel -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 print:hidden">
+            <!-- Total Log Mutasi -->
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Catatan Log</p>
+                    <p class="text-2xl font-bold text-gray-900 mt-1">{{ number_format($stats['total_records']) }}</p>
+                    <p class="text-[11px] text-gray-400 mt-0.5">Semua audit transaksi</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Stok Masuk (+) -->
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wider">Total Stok Masuk</p>
+                    <p class="text-2xl font-bold text-emerald-900 mt-1">+{{ number_format($stats['total_masuk']) }}</p>
+                    <p class="text-[11px] text-emerald-600/80 mt-0.5">Pengadaan & fisik baru</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Sirkulasi Keluar (-) -->
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider">Sirkulasi Keluar</p>
+                    <p class="text-2xl font-bold text-blue-900 mt-1">-{{ number_format($stats['total_keluar']) }}</p>
+                    <p class="text-[11px] text-blue-600/80 mt-0.5">Pinjaman aktif & BHP keluar</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                    </svg>
+                </div>
+            </div>
+
+            <!-- Masalah Fisik (Rusak / Hilang) -->
+            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold text-rose-600 uppercase tracking-wider">Rusak & Hilang</p>
+                    <p class="text-2xl font-bold text-rose-900 mt-1">{{ number_format($stats['total_masalah']) }}</p>
+                    <p class="text-[11px] text-rose-600/80 mt-0.5">Kerusakan fisik / hilang</p>
+                </div>
+                <div class="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                        </path>
+                    </svg>
+                </div>
             </div>
         </div>
 
         <!-- Filter Form Controls -->
         <form method="GET" action="{{ route('toolman.mutasi.index') }}"
-            class="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-                <!-- Search Barang -->
-                <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Cari Barang</label>
+            class="bg-white p-4 sm:p-5 rounded-xl border border-gray-200 shadow-sm space-y-4 print:hidden">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+                <!-- Search Barang & Catatan -->
+                <div class="lg:col-span-2">
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Cari Log Mutasi</label>
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -41,65 +129,86 @@
                             </svg>
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Nama atau kode barang..."
+                            placeholder="Nama barang, kode, keterangan, atau pemroses..."
                             class="block w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
                     </div>
                 </div>
 
-                <!-- Jenis Mutasi -->
+                <!-- Jenis Mutasi (PRD 3.10) -->
                 <div>
                     <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Jenis Mutasi</label>
                     <select name="jenis" onchange="this.form.submit()"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
                         <option value="">Semua Jenis Mutasi</option>
-                        <option value="stok_masuk" {{ request('jenis') === 'stok_masuk' ? 'selected' : '' }}>Stok Masuk /
-                            Pengadaan</option>
-                        <option value="peminjaman" {{ request('jenis') === 'peminjaman' ? 'selected' : '' }}>Peminjaman
-                            Keluar</option>
-                        <option value="pengembalian_baik" {{ request('jenis') === 'pengembalian_baik' ? 'selected' : '' }}>
-                            Pengembalian Baik</option>
-                        <option value="pengembalian_rusak"
-                            {{ request('jenis') === 'pengembalian_rusak' ? 'selected' : '' }}>Pengembalian Rusak</option>
-                        <option value="bhp_keluar" {{ request('jenis') === 'bhp_keluar' ? 'selected' : '' }}>Pengeluaran BHP
-                        </option>
-                        <option value="penyesuaian" {{ request('jenis') === 'penyesuaian' ? 'selected' : '' }}>Penyesuaian /
-                            Koreksi</option>
+                        <option value="stok_masuk" {{ request('jenis') === 'stok_masuk' ? 'selected' : '' }}>Stok Masuk / Pengadaan</option>
+                        <option value="peminjaman" {{ request('jenis') === 'peminjaman' ? 'selected' : '' }}>Peminjaman Keluar</option>
+                        <option value="pengembalian_baik" {{ request('jenis') === 'pengembalian_baik' ? 'selected' : '' }}>Pengembalian Baik</option>
+                        <option value="pengembalian_rusak" {{ request('jenis') === 'pengembalian_rusak' ? 'selected' : '' }}>Pengembalian Rusak</option>
+                        <option value="barang_hilang" {{ request('jenis') === 'barang_hilang' ? 'selected' : '' }}>Barang Hilang</option>
+                        <option value="bhp_keluar" {{ request('jenis') === 'bhp_keluar' ? 'selected' : '' }}>Pengeluaran BHP</option>
+                        <option value="perbaikan" {{ request('jenis') === 'perbaikan' ? 'selected' : '' }}>Perbaikan Alat</option>
+                        <option value="penyesuaian" {{ request('jenis') === 'penyesuaian' ? 'selected' : '' }}>Penyesuaian / Opname</option>
                     </select>
                 </div>
 
-                <!-- Tanggal Mulai -->
+                <!-- Tipe Barang -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Mulai Tanggal</label>
-                    <input type="date" name="start_date" value="{{ request('start_date') }}"
-                        onchange="this.form.submit()"
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Tipe Barang</label>
+                    <select name="tipe" onchange="this.form.submit()"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
+                        <option value="">Semua Tipe</option>
+                        <option value="inventaris" {{ request('tipe') === 'inventaris' ? 'selected' : '' }}>Inventaris (Alat Praktik)</option>
+                        <option value="bhp" {{ in_array(request('tipe'), ['bhp', 'habis_pakai']) ? 'selected' : '' }}>Habis Pakai (BHP)</option>
+                    </select>
                 </div>
 
-                <!-- Tanggal Selesai -->
+                <!-- Periode Preset -->
                 <div>
-                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Sampai Tanggal</label>
-                    <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
+                    <label class="block text-xs font-semibold text-gray-600 uppercase mb-1">Periode Waktu</label>
+                    <select name="period" onchange="this.form.submit()"
                         class="block w-full px-3 py-2 border border-gray-300 rounded-lg text-sm sm:text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
+                        <option value="">Semua Rentang</option>
+                        <option value="today" {{ request('period') === 'today' ? 'selected' : '' }}>Hari Ini</option>
+                        <option value="week" {{ request('period') === 'week' ? 'selected' : '' }}>7 Hari Terakhir</option>
+                        <option value="month" {{ request('period') === 'month' ? 'selected' : '' }}>30 Hari Terakhir</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- Hidden Submit for Enter Key Accessibility on Search Input -->
+            <!-- Rentang Tanggal Kustom (Jika tidak menggunakan preset) -->
+            @if (!request('period'))
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-gray-100">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Mulai Tanggal</label>
+                        <input type="date" name="start_date" value="{{ request('start_date') }}"
+                            onchange="this.form.submit()"
+                            class="block w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-gray-500 uppercase mb-1">Sampai Tanggal</label>
+                        <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
+                            class="block w-full px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:ring-primary-500 focus:border-primary-500 bg-white transition-colors">
+                    </div>
+                </div>
+            @endif
+
+            <!-- Hidden Submit for Enter Key Accessibility -->
             <button type="submit" class="hidden" aria-hidden="true"></button>
 
-            @if (request()->anyFilled(['search', 'jenis', 'start_date', 'end_date']))
+            @if (request()->anyFilled(['search', 'jenis', 'tipe', 'period', 'start_date', 'end_date']))
                 <!-- Status & Tombol Reset Tunggal -->
                 <div class="flex items-center justify-between pt-3 border-t border-gray-100">
                     <div class="flex items-center gap-2">
                         <span
                             class="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 font-medium">
                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            Filter aktif diterapkan
+                            Filter aktif diterapkan ({{ $movements->total() }} data ditemukan)
                         </span>
-                        <span class="text-xs text-gray-400 hidden sm:inline">&bull; Data diperbarui otomatis</span>
+                        <span class="text-xs text-gray-400 hidden sm:inline">&bull; Hasil diperbarui secara dinamis</span>
                     </div>
 
                     <a href="{{ route('toolman.mutasi.index') }}"
-                        class="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50/70 hover:bg-red-100/80 border border-red-200/80 rounded-lg transition-colors">
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
                             </path>
@@ -110,13 +219,20 @@
             @endif
         </form>
 
+        <!-- Header Cetak Khusus Print Media -->
+        <div class="hidden print:block mb-6">
+            <h2 class="text-xl font-bold text-gray-900">Laporan Riwayat Mutasi Stok Bengkel</h2>
+            <p class="text-sm text-gray-600">Unit Bengkel: {{ $bengkel->nama ?? 'Bengkel' }} ({{ $bengkel->kode ?? 'BGL' }})</p>
+            <p class="text-xs text-gray-500 mt-1">Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} WIB &bull; Oleh: {{ auth()->user()->name }}</p>
+        </div>
+
         <!-- Table Log Mutasi -->
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200 text-left">
                     <thead class="bg-gray-50 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                         <tr>
-                            <th class="px-6 py-3.5">Waktu & ID</th>
+                            <th class="px-6 py-3.5">Waktu & ID Log</th>
                             <th class="px-6 py-3.5">Barang & Kode</th>
                             <th class="px-6 py-3.5 text-center">Jenis Mutasi</th>
                             <th class="px-6 py-3.5 text-center">Perubahan Qty</th>
@@ -152,11 +268,23 @@
                                         'sign' => '',
                                         'sign_class' => 'text-orange-700 font-bold',
                                     ],
+                                    'barang_hilang' => [
+                                        'label' => 'Barang Hilang',
+                                        'class' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                        'sign' => '-',
+                                        'sign_class' => 'text-rose-700 font-bold',
+                                    ],
                                     'bhp_keluar' => [
                                         'label' => 'BHP Keluar',
                                         'class' => 'bg-amber-50 text-amber-700 border-amber-200',
                                         'sign' => '-',
                                         'sign_class' => 'text-amber-700 font-bold',
+                                    ],
+                                    'perbaikan' => [
+                                        'label' => 'Perbaikan Alat',
+                                        'class' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                                        'sign' => '±',
+                                        'sign_class' => 'text-indigo-700 font-bold',
                                     ],
                                     'penyesuaian' => [
                                         'label' => 'Penyesuaian',
@@ -190,15 +318,18 @@
                                 <td class="px-6 py-4 align-top">
                                     @if ($m->barang)
                                         <div class="font-bold text-gray-900">
-                                            {{ $m->barang->nama }}
+                                            <a href="{{ route('toolman.barang.edit', $m->barang->id) }}"
+                                                class="hover:text-primary-600 transition-colors">
+                                                {{ $m->barang->nama }}
+                                            </a>
                                         </div>
                                         <div class="flex items-center gap-1.5 mt-0.5">
                                             <span
                                                 class="font-mono text-xs text-gray-500 font-medium">{{ $m->barang->kode_barang }}</span>
                                             <span class="text-gray-300">&bull;</span>
                                             <span
-                                                class="text-[11px] px-1.5 py-0.2 rounded bg-gray-100 text-gray-600 uppercase font-semibold">
-                                                {{ $m->barang->tipe ?? 'ASET' }}
+                                                class="text-[11px] px-1.5 py-0.2 rounded {{ ($m->barang->jenis_barang ?? '') === 'bhp' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800' }} uppercase font-semibold">
+                                                {{ ($m->barang->jenis_barang ?? '') === 'bhp' ? 'BHP' : 'INVENTARIS' }}
                                             </span>
                                         </div>
                                     @else
@@ -228,7 +359,9 @@
                                 <td class="px-6 py-4 align-top whitespace-nowrap">
                                     <p class="font-medium text-gray-900 text-xs">{{ $m->user->name ?? 'Sistem Otomatis' }}
                                     </p>
-                                    <p class="text-[11px] text-gray-400">{{ $m->user->role ?? '-' }}</p>
+                                    <span class="inline-block text-[10px] font-semibold uppercase px-1.5 py-0.2 bg-gray-100 text-gray-600 rounded mt-0.5">
+                                        {{ $m->user->role ?? 'SISTEM' }}
+                                    </span>
                                 </td>
 
                                 <!-- Keterangan & Referensi -->
@@ -237,10 +370,17 @@
                                         {{ $m->keterangan ?? '-' }}
                                     </p>
                                     @if ($m->referensi_tipe && $m->referensi_id)
-                                        <span
-                                            class="inline-flex items-center text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1">
-                                            Ref: {{ ucfirst($m->referensi_tipe) }} #{{ $m->referensi_id }}
-                                        </span>
+                                        @if ($m->referensi_tipe === 'peminjaman')
+                                            <a href="{{ route('toolman.peminjaman.show', $m->referensi_id) }}"
+                                                class="inline-flex items-center text-[10px] font-mono font-bold text-primary-600 hover:text-primary-800 bg-primary-50 px-2 py-0.5 rounded mt-1 border border-primary-200 transition-colors">
+                                                Tiket Pinjam #TK-{{ str_pad($m->referensi_id, 5, '0', STR_PAD_LEFT) }} &rarr;
+                                            </a>
+                                        @else
+                                            <span
+                                                class="inline-flex items-center text-[10px] font-mono text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1">
+                                                Ref: {{ ucfirst($m->referensi_tipe) }} #{{ $m->referensi_id }}
+                                            </span>
+                                        @endif
                                     @endif
                                 </td>
                             </tr>
@@ -269,7 +409,7 @@
             </div>
 
             @if ($movements->hasPages())
-                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50">
+                <div class="px-6 py-4 border-t border-gray-200 bg-gray-50 print:hidden">
                     {{ $movements->links() }}
                 </div>
             @endif

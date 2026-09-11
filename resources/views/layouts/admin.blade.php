@@ -161,7 +161,8 @@
             @yield('content')
         </main>
 
-    </div>
+    <!-- Universal Action Verification Modal -->
+    @include('components.confirm-modal')
 
 </body>
 

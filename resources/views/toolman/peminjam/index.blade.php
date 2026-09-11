@@ -74,6 +74,24 @@
             <span x-text="toastMessage"></span>
         </div>
 
+        @if (session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+        @endif
+
         <!-- Top Header & Breadcrumb -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -320,14 +338,30 @@
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                                            <button type="button" @click="rejectUser('{{ addslashes($user->name) }}')"
-                                                class="px-3.5 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors">
-                                                Tolak
-                                            </button>
-                                            <button type="button" @click="approveUser('{{ addslashes($user->name) }}')"
-                                                class="px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
-                                                Setujui Akun
-                                            </button>
+                                            <form action="{{ route('toolman.peminjam.reject', $user->id) }}" method="POST" class="inline"
+                                                data-confirm="true"
+                                                data-title="Tolak Pendaftaran Calon Peminjam"
+                                                data-message="Apakah Anda yakin ingin menolak pendaftaran akun <b>{{ addslashes($user->name) }}</b>? Data pendaftaran akan dihapus permanen."
+                                                data-type="danger"
+                                                data-confirm-text="Ya, Tolak Pendaftaran">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="px-3.5 py-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg transition-colors">
+                                                    Tolak
+                                                </button>
+                                            </form>
+                                            <form action="{{ route('toolman.peminjam.approve', $user->id) }}" method="POST" class="inline"
+                                                data-confirm="true"
+                                                data-title="Setujui Pendaftaran Akun"
+                                                data-message="Apakah Anda yakin ingin menyetujui dan mengaktifkan akun <b>{{ addslashes($user->name) }}</b> ({{ $user->email }})?"
+                                                data-type="success"
+                                                data-confirm-text="Ya, Setujui Akun">
+                                                @csrf
+                                                <button type="submit"
+                                                    class="px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                                                    Setujui Akun
+                                                </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 @empty
@@ -402,7 +436,7 @@
                                         $activeLoansCount = $user
                                             ->peminjamans()
                                             ->where('bengkel_id', $bengkel->id)
-                                            ->whereIn('status', ['pending', 'aktif', 'terlambat'])
+                                            ->whereIn('status', ['pending', 'active', 'terlambat'])
                                             ->count();
                                     @endphp
                                     <tr class="hover:bg-gray-50 transition-colors">
@@ -641,8 +675,9 @@
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
                 <!-- Modal Panel -->
-                <div
+                <form method="POST" :action="'{{ url('/toolman/peminjam') }}/' + (selectedUser ? selectedUser.id : '') + '/suspend'"
                     class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full border border-red-100">
+                    @csrf
 
                     <div class="p-6">
                         <!-- Icon Header -->
@@ -684,7 +719,7 @@
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1.5">
                                     Alasan Pelanggaran <span class="text-red-500">*</span>
                                 </label>
-                                <select x-model="suspendReason"
+                                <select name="suspend_reason" x-model="suspendReason"
                                     class="block w-full text-sm rounded-lg border-gray-300 focus:ring-red-500 focus:border-red-500 shadow-sm">
                                     <option value="merusak">Merusak Alat Praktik Bengkel</option>
                                     <option value="hilang">Menghilangkan Alat / Komponen</option>
@@ -697,7 +732,7 @@
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1.5">
                                     Catatan Sanksi & Kesepakatan Ganti Rugi
                                 </label>
-                                <textarea x-model="suspendNotes" rows="3"
+                                <textarea name="suspend_notes" x-model="suspendNotes" rows="3"
                                     class="block w-full text-sm rounded-lg border-gray-300 focus:ring-red-500 focus:border-red-500 shadow-sm"
                                     placeholder="Contoh: Siswa wajib mengganti adaptor router yang terbakar ke ruang teknisi sebelum akun dipulihkan..."></textarea>
                                 <p class="text-[11px] text-gray-400 mt-1">
@@ -713,7 +748,7 @@
                             class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                             Batal
                         </button>
-                        <button type="button" @click="submitSuspend()"
+                        <button type="submit"
                             class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center">
                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -724,7 +759,7 @@
                         </button>
                     </div>
 
-                </div>
+                </form>
             </div>
         </div>
 
@@ -741,8 +776,9 @@
 
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
-                <div
+                <form method="POST" :action="'{{ url('/toolman/peminjam') }}/' + (selectedUser ? selectedUser.id : '') + '/activate'"
                     class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md sm:w-full border border-emerald-100">
+                    @csrf
 
                     <div class="p-6">
                         <div class="flex items-start gap-4">
@@ -787,7 +823,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Catatan Pemulihan
                                     (Opsional)</label>
-                                <input type="text" x-model="restoreNotes"
+                                <input type="text" name="restore_notes" x-model="restoreNotes"
                                     class="block w-full text-xs rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500"
                                     placeholder="Contoh: Unit pengganti sudah diserahkan ke lemari alat.">
                             </div>
@@ -799,7 +835,7 @@
                             class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                             Batal
                         </button>
-                        <button type="button" @click="submitRestore()" :disabled="!restoreConfirmed"
+                        <button type="submit" :disabled="!restoreConfirmed"
                             :class="restoreConfirmed ? 'bg-primary-600 hover:bg-primary-700 text-white' :
                                 'bg-gray-200 text-gray-400 cursor-not-allowed'"
                             class="px-5 py-2 text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center">
@@ -811,7 +847,7 @@
                         </button>
                     </div>
 
-                </div>
+                </form>
             </div>
         </div>
 

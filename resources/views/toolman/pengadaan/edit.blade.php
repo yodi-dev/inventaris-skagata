@@ -96,9 +96,22 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wider mb-1">Perhatian: Terjadi Kesalahan Pengisian</p>
+                <ul class="text-xs list-disc list-inside space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form Edit Container -->
-        <form action="{{ route('toolman.pengadaan.index') }}" method="GET"
+        <form action="{{ route('toolman.pengadaan.update', $pengadaan->id) }}" method="POST"
             class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            @csrf
+            @method('PUT')
             <!-- Section 1: Informasi Header -->
             <div class="p-6 border-b border-gray-200 space-y-5 bg-gray-50/50">
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Informasi Pengajuan</h4>
@@ -108,7 +121,7 @@
                     <div>
                         <label for="judul" class="block text-sm font-medium text-gray-700">Judul Pengajuan <span
                                 class="text-red-500">*</span></label>
-                        <input type="text" id="judul" name="judul" required value="{{ $pengadaan->judul }}"
+                        <input type="text" id="judul" name="judul" required value="{{ old('judul', $pengadaan->judul) }}"
                             class="mt-1 block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm shadow-sm font-medium">
                     </div>
 
@@ -121,12 +134,12 @@
 
                     <!-- Catatan / Keterangan -->
                     <div class="md:col-span-2">
-                        <label for="catatan" class="block text-sm font-medium text-gray-700">
+                        <label for="keterangan" class="block text-sm font-medium text-gray-700">
                             Catatan / Keterangan Kebutuhan
                         </label>
-                        <textarea id="catatan" name="catatan" rows="2"
+                        <textarea id="keterangan" name="keterangan" rows="2"
                             class="mt-1 block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm shadow-sm"
-                            placeholder="Keterangan pendukung usulan pengadaan...">{{ $pengadaan->catatan }}</textarea>
+                            placeholder="Keterangan pendukung usulan pengadaan...">{{ old('keterangan', $pengadaan->catatan) }}</textarea>
                     </div>
                 </div>
             </div>
@@ -135,17 +148,16 @@
             <div class="p-6">
                 <div class="flex justify-between items-center mb-4">
                     <div>
-                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Daftar Barang & Rincian
-                            Anggaran</h4>
-                        <p class="text-xs text-gray-500 mt-0.5">Sesuaikan item, jumlah kuantitas, atau estimasi harga
-                            satuan.</p>
+                        <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Daftar Kebutuhan Barang</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Edit dan sesuaikan jumlah maupun estimasi harga sesuai
+                            arahan revisi.</p>
                     </div>
                     <button type="button" @click="addItem()"
                         class="inline-flex items-center text-xs font-bold text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-100">
                         <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                         </svg>
-                        Tambah Baris Item
+                        Tambah Baris
                     </button>
                 </div>
 
@@ -166,29 +178,30 @@
                                 <tr class="group">
                                     <!-- Nama & Spesifikasi -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="text" x-model="item.nama" placeholder="Nama barang / alat..."
+                                        <input type="hidden" :name="'items[' + index + '][barang_id]'" :value="item.barang_id">
+                                        <input type="text" :name="'items[' + index + '][nama]'" x-model="item.nama" placeholder="Nama barang / alat..." required
                                             class="block w-full border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500 mb-1.5 font-medium">
-                                        <input type="text" x-model="item.spesifikasi"
+                                        <input type="text" :name="'items[' + index + '][spesifikasi]'" x-model="item.spesifikasi"
                                             placeholder="Spesifikasi teknis, merek, seri..."
                                             class="block w-full border-gray-300 bg-gray-50 rounded-md text-xs focus:ring-primary-500 focus:border-primary-500 text-gray-600">
                                     </td>
 
                                     <!-- Jumlah -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="number" min="1" x-model.number="item.jumlah"
+                                        <input type="number" min="1" :name="'items[' + index + '][jumlah]'" x-model.number="item.jumlah" required
                                             class="block w-full text-center border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                     </td>
 
                                     <!-- Satuan -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="text" x-model="item.satuan" placeholder="unit/pcs"
+                                        <input type="text" :name="'items[' + index + '][satuan]'" x-model="item.satuan" placeholder="unit/pcs" required
                                             class="block w-full text-center border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                     </td>
 
                                     <!-- Estimasi Satuan -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="number" min="0" step="1000"
-                                            x-model.number="item.harga_satuan"
+                                        <input type="number" min="0" step="1000" :name="'items[' + index + '][harga_satuan]'"
+                                            x-model.number="item.harga_satuan" required
                                             class="block w-full text-right border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                     </td>
 
@@ -237,13 +250,29 @@
                 </a>
 
                 <div class="flex items-center gap-3">
-                    <button type="button"
-                        onclick="alert('Perubahan draf RAB berhasil disimpan!'); window.location.href='{{ route('toolman.pengadaan.show', $pengadaan->id) }}'"
+                    <button type="submit" name="action" value="draft"
                         class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                         Simpan Perubahan
                     </button>
                     <button type="button"
-                        onclick="alert('Revisi usulan RAB telah dikirimkan kembali ke Waka Sarpras!'); window.location.href='{{ route('toolman.pengadaan.index') }}'"
+                        @click="window.openConfirmModal({
+                            title: 'Kirim Kembali Usulan ke Waka Sarpras',
+                            message: 'Apakah Anda yakin ingin mengirimkan kembali usulan perbaikan RAB ini ke Waka Sarpras?',
+                            type: 'primary',
+                            confirmText: 'Ya, Kirimkan',
+                            onConfirm: () => {
+                                const form = $el.closest('form');
+                                let actionInput = form.querySelector('input[name=action]');
+                                if (!actionInput) {
+                                    actionInput = document.createElement('input');
+                                    actionInput.type = 'hidden';
+                                    actionInput.name = 'action';
+                                    form.appendChild(actionInput);
+                                }
+                                actionInput.value = 'submit';
+                                form.submit();
+                            }
+                        })"
                         class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

@@ -89,28 +89,46 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     // Manajemen Barang
     Route::get('/barang', [ToolmanBarangController::class, 'index'])->name('barang.index');
     Route::get('/barang/create', [ToolmanBarangController::class, 'create'])->name('barang.create');
+    Route::post('/barang', [ToolmanBarangController::class, 'store'])->name('barang.store');
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
+    Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
+    Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
 
     // Sirkulasi Peminjaman
     Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
     Route::get('/peminjaman/{id}', [ToolmanPeminjamanController::class, 'show'])->name('peminjaman.show');
+    Route::post('/peminjaman/{id}/approve', [ToolmanPeminjamanController::class, 'approve'])->name('peminjaman.approve');
+    Route::post('/peminjaman/{id}/reject', [ToolmanPeminjamanController::class, 'reject'])->name('peminjaman.reject');
 
     // Sirkulasi Pengembalian
     Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');
     Route::get('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'check'])->name('pengembalian.check');
+    Route::post('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'processCheck'])->name('pengembalian.process-check');
 
     // Pengadaan (RAB)
     Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');
     Route::get('/pengadaan/create', [ToolmanPengadaanController::class, 'create'])->name('pengadaan.create');
+    Route::post('/pengadaan', [ToolmanPengadaanController::class, 'store'])->name('pengadaan.store');
     Route::get('/pengadaan/{id}', [ToolmanPengadaanController::class, 'show'])->name('pengadaan.show');
     Route::get('/pengadaan/{id}/edit', [ToolmanPengadaanController::class, 'edit'])->name('pengadaan.edit');
+    Route::put('/pengadaan/{id}', [ToolmanPengadaanController::class, 'update'])->name('pengadaan.update');
+    Route::post('/pengadaan/{id}/submit', [ToolmanPengadaanController::class, 'submit'])->name('pengadaan.submit');
+    Route::delete('/pengadaan/{id}', [ToolmanPengadaanController::class, 'destroy'])->name('pengadaan.destroy');
+    Route::post('/pengadaan/{id}/receive', [ToolmanPengadaanController::class, 'receive'])->name('pengadaan.receive');
 
     // Manajemen Peminjam
     Route::get('/peminjam', [ToolmanPeminjamController::class, 'index'])->name('peminjam.index');
     Route::get('/peminjam/{id}', [ToolmanPeminjamController::class, 'show'])->name('peminjam.show');
+    Route::post('/peminjam/{id}/approve', [ToolmanPeminjamController::class, 'approveUser'])->name('peminjam.approve');
+    Route::post('/peminjam/{id}/reject', [ToolmanPeminjamController::class, 'rejectUser'])->name('peminjam.reject');
+    Route::post('/peminjam/{id}/suspend', [ToolmanPeminjamController::class, 'suspendUser'])->name('peminjam.suspend');
+    Route::post('/peminjam/{id}/activate', [ToolmanPeminjamController::class, 'activateUser'])->name('peminjam.activate');
 
     // Riwayat Stok / Mutasi
     Route::get('/mutasi', [ToolmanMutasiController::class, 'index'])->name('mutasi.index');
+    Route::get('/mutasi/export', [ToolmanMutasiController::class, 'export'])->name('mutasi.export');
+    Route::get('/mutasi/export-excel', [ToolmanMutasiController::class, 'exportExcel'])->name('mutasi.export-excel');
+    Route::get('/mutasi/print', [ToolmanMutasiController::class, 'print'])->name('mutasi.print');
 
     // Backward-compatible aliases
     Route::get('/sirkulasi/peminjaman', function () {

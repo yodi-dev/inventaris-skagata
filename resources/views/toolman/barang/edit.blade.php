@@ -151,8 +151,49 @@
             </a>
         </div>
 
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @if (isset($errors) && $errors->any())
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 space-y-1">
+                <div class="font-bold flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Terdapat kesalahan pada isian form:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs text-red-700 pl-7 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form Wrapper -->
-        <form action="{{ route('toolman.barang.index') }}" method="GET" class="space-y-6">
+        <form action="{{ route('toolman.barang.update', $barang->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6"
+            data-confirm="true"
+            data-title="Konfirmasi Perbarui Data Barang"
+            data-message="Apakah Anda yakin ingin menyimpan perubahan data dan penyesuaian stok untuk barang <b>{{ addslashes($barang->nama) }}</b>?"
+            data-type="primary"
+            data-confirm-text="Ya, Perbarui Barang">
+            @csrf
+            @method('PUT')
 
             <!-- SECTION 1: Klasifikasi Tipe Barang -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
@@ -705,30 +746,47 @@
                             <div>
                                 <h4 class="text-lg font-bold text-gray-900">Hapus Data Barang?</h4>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    Aset <strong class="text-gray-800">Router Mikrotik RB951 (INV-TKJ-045)</strong> akan
+                                    Aset <strong class="text-gray-800">{{ $barang->nama }} ({{ $barang->kode_barang }})</strong> akan
                                     dihapus permanen dari inventaris bengkel.
                                 </p>
                             </div>
                         </div>
 
-                        <!-- Warning: Sedang dipinjam -->
-                        <div
-                            class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 leading-relaxed">
-                            <strong>Tidak Dapat Dihapus:</strong> Barang ini sedang dalam status aktif dipinjam oleh siswa
-                            (1 Unit). Anda harus menunggu pengembalian barang dan menyelesaikan tiket terlebih dahulu
-                            sebelum dapat menghapus aset ini.
-                        </div>
+                        @if ($barang->stok_dipinjam > 0)
+                            <!-- Warning: Sedang dipinjam -->
+                            <div
+                                class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 leading-relaxed">
+                                <strong>Tidak Dapat Dihapus:</strong> Barang ini sedang dalam status aktif dipinjam oleh siswa
+                                ({{ $barang->stok_dipinjam }} {{ $barang->satuan }}). Anda harus menunggu pengembalian barang dan menyelesaikan tiket terlebih dahulu
+                                sebelum dapat menghapus aset ini.
+                            </div>
+                        @else
+                            <p class="mt-4 text-xs text-gray-500">
+                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Pastikan data barang sudah tidak lagi dibutuhkan.
+                            </p>
+                        @endif
                     </div>
 
                     <div class="px-6 py-4 bg-gray-50 border-t border-gray-200 flex justify-end gap-3">
                         <button type="button" @click="showDeleteModal = false"
                             class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
-                            Tutup
+                            Batal
                         </button>
-                        <button type="button" disabled
-                            class="px-5 py-2 bg-gray-300 text-gray-500 text-xs font-bold rounded-lg shadow-sm cursor-not-allowed">
-                            Hapus Permanen
-                        </button>
+                        @if ($barang->stok_dipinjam > 0)
+                            <button type="button" disabled
+                                class="px-5 py-2 bg-gray-300 text-gray-500 text-xs font-bold rounded-lg shadow-sm cursor-not-allowed">
+                                Hapus Permanen
+                            </button>
+                        @else
+                            <form action="{{ route('toolman.barang.destroy', $barang->id) }}" method="POST" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="px-5 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                                    Hapus Permanen
+                                </button>
+                            </form>
+                        @endif
                     </div>
                 </div>
             </div>

@@ -6,6 +6,40 @@
 @section('content')
     <div class="max-w-5xl mx-auto space-y-6 pb-12">
 
+        @if (session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        @if (isset($errors) && $errors->any())
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 space-y-1">
+                <div class="font-bold flex items-center gap-2">
+                    <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span>Terdapat kesalahan pada isian form:</span>
+                </div>
+                <ul class="list-disc list-inside text-xs text-red-700 pl-7 space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Breadcrumb & Top Bar -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -62,7 +96,11 @@
         </div>
 
         <!-- Form Pengecekan -->
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+        <form method="POST" action="{{ route('toolman.pengembalian.process-check', $peminjaman->id) }}"
+            onsubmit="return confirm('Pastikan pemeriksaan fisik telah sesuai. Setelah disimpan, transaksi peminjaman akan dinyatakan selesai dan stok bengkel diperbarui. Lanjutkan?');"
+            class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            @csrf
+
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50/70 flex justify-between items-center">
                 <h4 class="font-bold text-gray-900 text-sm">Inspeksi Barang Inventaris</h4>
                 <span class="text-xs text-gray-500">Catat jumlah kondisi: Baik, Rusak, atau Hilang</span>
@@ -73,10 +111,16 @@
                     @if ($detail->barang && $detail->barang->jenis_barang === 'inventaris')
                         <div class="p-6 space-y-4" x-data="{
                             totalQty: {{ (int) $detail->jumlah }},
-                            baik: {{ (int) $detail->jumlah }},
-                            rusak: 0,
-                            hilang: 0,
-                            catatan: ''
+                            baik: {{ old("items.{$detail->id}.jumlah_baik", $detail->jumlah) }},
+                            rusak: {{ old("items.{$detail->id}.jumlah_rusak", 0) }},
+                            hilang: {{ old("items.{$detail->id}.jumlah_hilang", 0) }},
+                            catatan: '{{ addslashes(old("items.{$detail->id}.catatan", "")) }}',
+                            get currentTotal() {
+                                return (parseInt(this.baik) || 0) + (parseInt(this.rusak) || 0) + (parseInt(this.hilang) || 0);
+                            },
+                            get isValid() {
+                                return this.currentTotal === this.totalQty;
+                            }
                         }">
                             <div
                                 class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 pb-3">
@@ -90,6 +134,26 @@
                                 </div>
                             </div>
 
+                            <!-- Live Validation Feedback -->
+                            <div x-show="!isValid"
+                                class="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 font-medium flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <span>Total alokasi fisik (<strong x-text="currentTotal"></strong>) belum sama dengan jumlah dipinjam (<strong>{{ $detail->jumlah }}</strong>).</span>
+                                </div>
+                                <span class="text-red-600 font-bold" x-text="totalQty - currentTotal > 0 ? 'Kurang ' + (totalQty - currentTotal) : 'Kelebihan ' + (currentTotal - totalQty)"></span>
+                            </div>
+
+                            <div x-show="isValid"
+                                class="p-2.5 bg-green-50 border border-green-200 rounded-xl text-xs text-green-800 font-medium flex items-center gap-2">
+                                <svg class="w-4 h-4 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <span>Alokasi fisik cocok: total <strong x-text="currentTotal"></strong> {{ $detail->barang->satuan ?? 'Unit' }} terverifikasi.</span>
+                            </div>
+
                             <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                                 <!-- Kondisi Baik -->
                                 <div class="bg-green-50/60 p-4 rounded-xl border border-green-200">
@@ -97,7 +161,8 @@
                                         ✅ Kembali Baik
                                     </label>
                                     <div class="flex items-center gap-2">
-                                        <input type="number" min="0" :max="totalQty" x-model="baik"
+                                        <input type="number" min="0" :max="totalQty" x-model.number="baik"
+                                            name="items[{{ $detail->id }}][jumlah_baik]" required
                                             class="w-full text-sm font-bold text-gray-900 rounded-lg border-green-300 focus:ring-green-500 focus:border-green-500">
                                         <span
                                             class="text-xs text-green-700 font-medium">{{ $detail->barang->satuan ?? 'Unit' }}</span>
@@ -111,7 +176,8 @@
                                         ⚠️ Kembali Rusak
                                     </label>
                                     <div class="flex items-center gap-2">
-                                        <input type="number" min="0" :max="totalQty" x-model="rusak"
+                                        <input type="number" min="0" :max="totalQty" x-model.number="rusak"
+                                            name="items[{{ $detail->id }}][jumlah_rusak]" required
                                             class="w-full text-sm font-bold text-gray-900 rounded-lg border-amber-300 focus:ring-amber-500 focus:border-amber-500">
                                         <span
                                             class="text-xs text-amber-700 font-medium">{{ $detail->barang->satuan ?? 'Unit' }}</span>
@@ -125,7 +191,8 @@
                                         ❌ Hilang
                                     </label>
                                     <div class="flex items-center gap-2">
-                                        <input type="number" min="0" :max="totalQty" x-model="hilang"
+                                        <input type="number" min="0" :max="totalQty" x-model.number="hilang"
+                                            name="items[{{ $detail->id }}][jumlah_hilang]" required
                                             class="w-full text-sm font-bold text-gray-900 rounded-lg border-red-300 focus:ring-red-500 focus:border-red-500">
                                         <span
                                             class="text-xs text-red-700 font-medium">{{ $detail->barang->satuan ?? 'Unit' }}</span>
@@ -137,7 +204,7 @@
                             <div>
                                 <label class="block text-xs font-medium text-gray-700 mb-1">Catatan Tambahan Kondisi Alat
                                     (Opsional)</label>
-                                <input type="text" x-model="catatan"
+                                <input type="text" x-model="catatan" name="items[{{ $detail->id }}][catatan]"
                                     placeholder="Contoh: Port nomor 2 longgar, kabel terkelupas..."
                                     class="w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500">
                             </div>
@@ -151,12 +218,15 @@
                     class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium rounded-lg shadow-sm transition-colors">
                     Batal
                 </a>
-                <button type="button"
-                    class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors">
+                <button type="submit"
+                    class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                    </svg>
                     Simpan & Selesaikan Peminjaman
                 </button>
             </div>
-        </div>
+        </form>
 
     </div>
 @endsection

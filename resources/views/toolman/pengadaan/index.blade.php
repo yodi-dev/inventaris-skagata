@@ -28,6 +28,28 @@
             </a>
         </div>
 
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-sm flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-emerald-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-medium">{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl text-sm flex items-center justify-between shadow-sm">
+                <div class="flex items-center gap-2.5">
+                    <svg class="w-5 h-5 text-red-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-medium">{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
+
         <!-- Filter Tab Bar & Status Filter -->
         <div
             class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row items-center justify-between gap-4">
@@ -40,6 +62,7 @@
                         'pending' => 'Menunggu Approval',
                         'revisi' => 'Perlu Revisi',
                         'approved' => 'Disetujui',
+                        'selesai' => 'Selesai / Diterima',
                         'rejected' => 'Ditolak',
                     ];
                 @endphp
@@ -100,6 +123,11 @@
                                         'label' => 'Disetujui',
                                         'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                                         'dot' => 'bg-emerald-500',
+                                    ],
+                                    'selesai' => [
+                                        'label' => 'Barang Diterima',
+                                        'class' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                        'dot' => 'bg-blue-500',
                                     ],
                                     'rejected' => [
                                         'label' => 'Ditolak',
@@ -227,6 +255,17 @@
                                                 </path>
                                             </svg>
                                             {{ $rab->status === 'revisi' ? 'Revisi' : 'Edit' }}
+                                        </a>
+                                    @endif
+
+                                    @if ($rab->status === 'approved')
+                                        <a href="{{ route('toolman.pengadaan.show', $rab->id) }}"
+                                            class="inline-flex items-center px-2.5 py-1.5 bg-emerald-50 border border-emerald-200 hover:bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-lg shadow-sm transition-colors"
+                                            title="Konfirmasi Penerimaan Fisik Barang">
+                                            <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Terima Barang
                                         </a>
                                     @endif
                                 </td>

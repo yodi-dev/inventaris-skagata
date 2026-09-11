@@ -25,6 +25,24 @@
             </div>
         </div>
 
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span>{{ session('error') }}</span>
+            </div>
+        @endif
+
         <!-- Filter & Search Section -->
         <form method="GET" action="{{ route('toolman.barang.index') }}"
             class="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col sm:flex-row gap-4 items-center justify-between">
@@ -141,7 +159,7 @@
                                         </span>
                                     @endif
                                 </td>
-                                <td class="px-6 py-4 text-right space-x-2">
+                                <td class="px-6 py-4 text-right space-x-1 whitespace-nowrap">
                                     <a href="{{ route('toolman.barang.edit', $barang->id) }}"
                                         class="inline-flex text-gray-400 hover:text-primary-600 transition-colors p-1.5 rounded-md hover:bg-gray-100"
                                         title="Edit Barang">
@@ -152,6 +170,27 @@
                                             </path>
                                         </svg>
                                     </a>
+                                    @if ($barang->stok_dipinjam == 0)
+                                        <form action="{{ route('toolman.barang.destroy', $barang->id) }}" method="POST" class="inline"
+                                            data-confirm="true"
+                                            data-title="Hapus Barang Master"
+                                            data-message="Apakah Anda yakin ingin menghapus barang <b>{{ addslashes($barang->nama) }}</b> ({{ $barang->kode_barang }})?"
+                                            data-submessage="Tindakan ini permanen dan tidak dapat dibatalkan."
+                                            data-type="danger"
+                                            data-confirm-text="Ya, Hapus Barang">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="inline-flex text-gray-400 hover:text-red-600 transition-colors p-1.5 rounded-md hover:bg-red-50"
+                                                title="Hapus Barang">
+                                                <svg class="w-5 h-5 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
+                                                </svg>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
