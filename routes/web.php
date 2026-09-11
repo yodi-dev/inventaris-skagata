@@ -108,8 +108,13 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     // Pengadaan (RAB)
     Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');
     Route::get('/pengadaan/create', [ToolmanPengadaanController::class, 'create'])->name('pengadaan.create');
+    Route::post('/pengadaan', [ToolmanPengadaanController::class, 'store'])->name('pengadaan.store');
     Route::get('/pengadaan/{id}', [ToolmanPengadaanController::class, 'show'])->name('pengadaan.show');
     Route::get('/pengadaan/{id}/edit', [ToolmanPengadaanController::class, 'edit'])->name('pengadaan.edit');
+    Route::put('/pengadaan/{id}', [ToolmanPengadaanController::class, 'update'])->name('pengadaan.update');
+    Route::post('/pengadaan/{id}/submit', [ToolmanPengadaanController::class, 'submit'])->name('pengadaan.submit');
+    Route::delete('/pengadaan/{id}', [ToolmanPengadaanController::class, 'destroy'])->name('pengadaan.destroy');
+    Route::post('/pengadaan/{id}/receive', [ToolmanPengadaanController::class, 'receive'])->name('pengadaan.receive');
 
     // Manajemen Peminjam
     Route::get('/peminjam', [ToolmanPeminjamController::class, 'index'])->name('peminjam.index');

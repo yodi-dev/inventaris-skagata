@@ -34,6 +34,12 @@
                 'dot' => 'bg-emerald-600',
                 'desc' => 'Usulan RAB telah disetujui Waka Sarpras untuk realisasi belanja pengadaan.',
             ],
+            'selesai' => [
+                'label' => 'Barang Fisik Diterima (Selesai)',
+                'class' => 'bg-teal-100 text-teal-900 border-teal-300',
+                'dot' => 'bg-teal-600',
+                'desc' => 'Seluruh barang fisik telah diterima dan kuota stok telah ditambahkan ke sistem inventaris bengkel.',
+            ],
             'rejected' => [
                 'label' => 'Ditolak',
                 'class' => 'bg-red-100 text-red-900 border-red-300',
@@ -50,6 +56,29 @@
     @endphp
 
     <div class="max-w-6xl mx-auto space-y-6 pb-12">
+        <!-- Session Flash Notification -->
+        @if (session('success'))
+            <div class="p-4 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-xs font-semibold">{{ session('success') }}</span>
+                </div>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 text-red-800 rounded-xl flex items-center justify-between shadow-sm">
+                <div class="flex items-center space-x-3">
+                    <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="text-xs font-semibold">{{ session('error') }}</span>
+                </div>
+            </div>
+        @endif
+
         <!-- Breadcrumb & Top Action -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
@@ -80,26 +109,63 @@
                 </div>
             </div>
 
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
                 <a href="{{ route('toolman.pengadaan.index') }}"
                     class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                     <svg class="w-4 h-4 mr-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    Kembali ke Daftar
+                    Kembali
                 </a>
 
-                @if (in_array($pengadaan->status, ['draft', 'revisi']))
+                @if ($pengadaan->status === 'draft')
+                    <form action="{{ route('toolman.pengadaan.destroy', $pengadaan->id) }}" method="POST" class="inline"
+                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus draf usulan RAB ini?');">
+                        @csrf
+                        @method('DELETE')
+                        <button type="submit"
+                            class="inline-flex items-center px-3.5 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                            Hapus Draf
+                        </button>
+                    </form>
                     <a href="{{ route('toolman.pengadaan.edit', $pengadaan->id) }}"
-                        class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                        class="inline-flex items-center px-3.5 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
+                        Edit Draf
+                    </a>
+                    <form action="{{ route('toolman.pengadaan.submit', $pengadaan->id) }}" method="POST" class="inline"
+                        onsubmit="return confirm('Apakah Anda yakin ingin mengajukan usulan RAB ini ke Waka Sarpras?');">
+                        @csrf
+                        <button type="submit"
+                            class="inline-flex items-center px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+                            </svg>
+                            Ajukan ke Waka
+                        </button>
+                    </form>
+                @elseif ($pengadaan->status === 'revisi')
+                    <a href="{{ route('toolman.pengadaan.edit', $pengadaan->id) }}"
+                        class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                             </path>
                         </svg>
-                        {{ $pengadaan->status === 'revisi' ? 'Perbaiki Revisi Sekarang' : 'Lanjutkan Edit Draf' }}
+                        Perbaiki Revisi Sekarang
                     </a>
+                @elseif ($pengadaan->status === 'approved')
+                    <form action="{{ route('toolman.pengadaan.receive', $pengadaan->id) }}" method="POST" class="inline"
+                        onsubmit="return confirm('Konfirmasi penerimaan barang fisik: Seluruh kuota barang pada usulan ini akan otomatis ditambahkan ke stok inventaris bengkel dan dicatat pada mutasi stok masuk. Lanjutkan?');">
+                        @csrf
+                        <button type="submit"
+                            class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Konfirmasi Terima Fisik Barang
+                        </button>
+                    </form>
                 @endif
             </div>
         </div>

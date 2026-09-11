@@ -5,7 +5,7 @@
 
 @section('content')
     @php
-        $limitItemsPayload = $limitItems
+        $limitItemsPayload = collect($limitItems ?? [])
             ->map(function ($item) {
                 $rekomendasiQty =
                     $item->stok_rusak > 0
@@ -139,9 +139,21 @@
             </div>
         </div>
 
+        @if ($errors->any())
+            <div class="bg-red-50 border border-red-200 text-red-800 p-4 rounded-xl shadow-sm">
+                <p class="text-xs font-bold uppercase tracking-wider mb-1">Perhatian: Terjadi Kesalahan Pengisian</p>
+                <ul class="text-xs list-disc list-inside space-y-0.5">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form Container -->
-        <form action="{{ route('toolman.pengadaan.index') }}" method="GET"
+        <form action="{{ route('toolman.pengadaan.store') }}" method="POST"
             class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            @csrf
             <!-- Section 1: Informasi Umum Pengajuan -->
             <div class="p-6 border-b border-gray-200 space-y-5 bg-gray-50/50">
                 <h4 class="text-xs font-bold text-gray-700 uppercase tracking-wider">Informasi Umum Pengajuan</h4>
@@ -152,7 +164,7 @@
                         <label for="judul" class="block text-sm font-medium text-gray-700">Judul Pengajuan <span
                                 class="text-red-500">*</span></label>
                         <input type="text" id="judul" name="judul" required
-                            value="Pengadaan Alat & Bahan Praktik {{ $bengkel->nama ?? 'Bengkel' }} {{ date('Y') }}"
+                            value="{{ old('judul', 'Pengadaan Alat & Bahan Praktik ' . ($bengkel->nama ?? 'Bengkel') . ' ' . date('Y')) }}"
                             class="mt-1 block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm shadow-sm"
                             placeholder="Contoh: Pengadaan Alat Praktik Jaringan Genap 2026">
                     </div>
@@ -177,7 +189,7 @@
                         </label>
                         <textarea id="keterangan" name="keterangan" rows="2"
                             class="mt-1 block w-full rounded-lg border-gray-300 focus:border-primary-500 focus:ring-primary-500 text-sm shadow-sm"
-                            placeholder="Berikan keterangan urgensi atau penjelasan kebutuhan alat/bahan..."></textarea>
+                            placeholder="Berikan keterangan urgensi atau penjelasan kebutuhan alat/bahan...">{{ old('keterangan') }}</textarea>
                     </div>
                 </div>
             </div>
@@ -217,9 +229,11 @@
                                 <tr class="group" :class="item.is_alert ? 'bg-amber-50/20' : ''">
                                     <!-- Nama & Spesifikasi -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="text" x-model="item.nama" placeholder="Nama barang / alat..."
+                                        <input type="hidden" :name="'items[' + index + '][barang_id]'" :value="item.barang_id">
+                                        <input type="text" :name="'items[' + index + '][nama]'" x-model="item.nama"
+                                            placeholder="Nama barang / alat..." required
                                             class="block w-full border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500 mb-1.5 font-medium">
-                                        <input type="text" x-model="item.spesifikasi"
+                                        <input type="text" :name="'items[' + index + '][spesifikasi]'" x-model="item.spesifikasi"
                                             placeholder="Spesifikasi teknis, merek, seri..."
                                             class="block w-full border-gray-300 bg-gray-50 rounded-md text-xs focus:ring-primary-500 focus:border-primary-500 text-gray-600">
                                         <template x-if="item.info_stok">
@@ -230,13 +244,13 @@
 
                                     <!-- Jumlah -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="number" min="1" x-model.number="item.jumlah"
+                                        <input type="number" min="1" :name="'items[' + index + '][jumlah]'" x-model.number="item.jumlah" required
                                             class="block w-full text-center border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                     </td>
 
                                     <!-- Satuan -->
                                     <td class="px-4 py-3 align-top">
-                                        <input type="text" x-model="item.satuan" placeholder="unit/pcs"
+                                        <input type="text" :name="'items[' + index + '][satuan]'" x-model="item.satuan" placeholder="unit/pcs" required
                                             class="block w-full text-center border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                     </td>
 
@@ -245,8 +259,8 @@
                                         <div class="relative">
                                             <span
                                                 class="absolute inset-y-0 left-0 pl-2 flex items-center pointer-events-none text-xs text-gray-400">Rp</span>
-                                            <input type="number" min="0" step="1000"
-                                                x-model.number="item.harga_satuan"
+                                            <input type="number" min="0" step="1000" :name="'items[' + index + '][harga_satuan]'"
+                                                x-model.number="item.harga_satuan" required
                                                 class="block w-full pl-7 text-right border-gray-300 rounded-md text-sm focus:ring-primary-500 focus:border-primary-500">
                                         </div>
                                     </td>
@@ -296,13 +310,12 @@
                 </a>
 
                 <div class="flex items-center gap-3">
-                    <button type="button"
-                        onclick="alert('Draf usulan RAB tersimpan!'); window.location.href='{{ route('toolman.pengadaan.index') }}'"
+                    <button type="submit" name="action" value="draft"
                         class="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg shadow-sm transition-colors">
                         Simpan sebagai Draf
                     </button>
-                    <button type="button"
-                        onclick="alert('Pengajuan RAB berhasil dikirim ke Waka Sarpras!'); window.location.href='{{ route('toolman.pengadaan.index') }}'"
+                    <button type="submit" name="action" value="submit"
+                        onclick="return confirm('Apakah Anda yakin ingin mengajukan usulan RAB ini ke Waka Sarpras?');"
                         class="px-5 py-2 bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors flex items-center">
                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
