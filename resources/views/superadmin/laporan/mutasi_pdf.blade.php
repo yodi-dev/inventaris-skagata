@@ -140,7 +140,7 @@
             margin-bottom: 2px;
         }
         .kop-logo {
-            width: 60px;
+            width: 70px;
             text-align: center;
             vertical-align: middle;
         }
@@ -395,12 +395,10 @@
             <table class="kop-table">
                 <tr>
                     <td class="kop-logo">
-                        <div style="width: 48px; height: 48px; border-radius: 50%; background: #1e3a8a; color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12pt; margin: 0 auto;">
-                            S3Y
-                        </div>
+                        <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" style="width: 58px; height: auto; max-height: 65px; object-fit: contain; margin: 0 auto; display: block;">
                     </td>
                     <td class="kop-text">
-                        <div class="kop-instansi">PEMERINTAH DAERAH DAERAH ISTIMEWA YOGYAKARTA</div>
+                        <div class="kop-instansi">PEMERINTAH DAERAH ISTIMEWA YOGYAKARTA</div>
                         <div class="kop-instansi">DINAS PENDIDIKAN, PEMUDA, DAN OLAHRAGA</div>
                         <div class="kop-sekolah">SMK NEGERI 3 YOGYAKARTA</div>
                         <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 | Telepon (0274) 513507 | Laman: smkn3jogja.sch.id</div>

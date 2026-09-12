@@ -36,6 +36,7 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
     // Pengadaan (RAB)
     Route::get('/pengadaan', [SuperadminPengadaanController::class, 'index'])->name('pengadaan.index');
     Route::get('/pengadaan/{id}', [SuperadminPengadaanController::class, 'show'])->name('pengadaan.show');
+    Route::get('/pengadaan/{id}/print', [SuperadminPengadaanController::class, 'print'])->name('pengadaan.print');
     Route::post('/pengadaan/{id}/review', [SuperadminPengadaanController::class, 'review'])->name('pengadaan.review');
 
 
