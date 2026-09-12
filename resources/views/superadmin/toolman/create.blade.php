@@ -4,7 +4,7 @@
 @section('header_title', 'Master Data Akun Toolman')
 
 @section('content')
-    <div class="max-w-5xl mx-auto space-y-6 pb-12">
+    <div class="space-y-6 max-w-5xl">
 
         <!-- Breadcrumb & Top Navigation -->
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -12,15 +12,15 @@
                 <nav class="flex items-center space-x-2 text-xs text-gray-500 mb-2">
                     <a href="{{ route('superadmin.dashboard') }}" class="hover:text-primary-600 transition-colors">Dashboard</a>
                     <span>/</span>
-                    <a href="{{ route('superadmin.master.toolman') }}" class="hover:text-primary-600 transition-colors">Akun Toolman</a>
+                    <a href="{{ route('superadmin.toolman.index') }}" class="hover:text-primary-600 transition-colors">Akun Toolman</a>
                     <span>/</span>
                     <span class="text-gray-800 font-semibold">Tambah Akun Baru</span>
                 </nav>
                 <h1 class="text-2xl font-bold text-gray-900 tracking-tight">Tambah Akun Staf Toolman Baru</h1>
-                <p class="text-sm text-gray-500 mt-1">Lengkapi formulir ringkas berikut untuk mendaftarkan akun pengelola bengkel.</p>
+                <p class="text-sm text-gray-500 mt-1">Lengkapi formulir berikut untuk mendaftarkan staf penanggung jawab bengkel.</p>
             </div>
 
-            <a href="{{ route('superadmin.master.toolman') }}"
+            <a href="{{ route('superadmin.toolman.index') }}"
                 class="inline-flex items-center gap-2 px-4 py-2 bg-white hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium border border-gray-300 shadow-sm transition-colors self-start sm:self-auto">
                 <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
@@ -29,22 +29,42 @@
             </a>
         </div>
 
+        <!-- Alert Kesalahan Validasi -->
+        @if ($errors->any())
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-800 text-sm shadow-xs">
+                <div class="font-bold flex items-center gap-2 mb-1.5">
+                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                    </svg>
+                    Mohon periksa kembali formulir Anda:
+                </div>
+                <ul class="list-disc list-inside space-y-1 text-xs pl-7">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         <!-- Form Card -->
-        <form id="formTambahToolman" action="{{ route('superadmin.master.toolman') }}" method="GET"
+        <form id="formTambahToolman" action="{{ route('superadmin.toolman.store') }}" method="POST"
             class="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden"
             x-data="{
                 showPassword: false,
                 autoGeneratePass() {
                     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
                     let pass = '';
-                    for(let i=0; i<10; i++) {
+                    for (let i = 0; i < 10; i++) {
                         pass += chars.charAt(Math.floor(Math.random() * chars.length));
                     }
-                    document.getElementById('password').value = pass;
-                    document.getElementById('password_confirmation').value = pass;
+                    const p = document.getElementById('password');
+                    const pc = document.getElementById('password_confirmation');
+                    if (p) p.value = pass;
+                    if (pc) pc.value = pass;
                     this.showPassword = true;
                 }
             }">
+            @csrf
 
             <!-- SECTION 1: Data Pribadi & Penempatan Bengkel -->
             <div class="p-6 sm:p-8 border-b border-gray-200 space-y-6">
@@ -64,57 +84,68 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
                     <!-- Nama Lengkap -->
                     <div class="md:col-span-2">
-                        <label for="nama_lengkap" class="block text-sm font-semibold text-gray-700 mb-1">
+                        <label for="name" class="block text-sm font-semibold text-gray-700 mb-1">
                             Nama Lengkap beserta Gelar <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" id="nama_lengkap" name="nama_lengkap" required
+                        <input type="text" id="name" name="name" required value="{{ old('name') }}"
                             placeholder="Contoh: Ahmad Riyadi, S.Kom."
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm placeholder:text-gray-400">
-                        <p class="text-xs text-gray-400 mt-1">Nama ini akan tampil sebagai penanggung jawab sirkulasi alat dan inventaris.</p>
+                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm placeholder:text-gray-400 @error('name') border-red-500 @enderror">
+                        @error('name')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Nama ini akan tampil sebagai penanggung jawab sirkulasi alat dan inventaris.</p>
+                        @enderror
                     </div>
 
                     <!-- NIP / NUPTK -->
                     <div>
-                        <label for="nip" class="block text-sm font-semibold text-gray-700 mb-1">
+                        <label for="nomor_identitas" class="block text-sm font-semibold text-gray-700 mb-1">
                             NIP / NUPTK <span class="text-xs font-normal text-gray-400">(Opsional)</span>
                         </label>
-                        <input type="text" id="nip" name="nip"
+                        <input type="text" id="nomor_identitas" name="nomor_identitas" value="{{ old('nomor_identitas') }}"
                             placeholder="Contoh: 19800512 200501 1 003"
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-mono">
-                        <p class="text-xs text-gray-400 mt-1">Kosongkan jika staf honorer / belum memiliki NIP.</p>
+                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-mono @error('nomor_identitas') border-red-500 @enderror">
+                        @error('nomor_identitas')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Kosongkan jika staf berstatus honorer atau belum memiliki NIP.</p>
+                        @enderror
                     </div>
 
                     <!-- Nomor WhatsApp / Kontak -->
                     <div>
-                        <label for="no_telepon" class="block text-sm font-semibold text-gray-700 mb-1">
+                        <label for="nomor_wa" class="block text-sm font-semibold text-gray-700 mb-1">
                             Nomor WhatsApp Aktif <span class="text-red-500">*</span>
                         </label>
-                        <div class="relative">
-                            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400 text-xs font-bold">
-                                +62
-                            </div>
-                            <input type="tel" id="no_telepon" name="no_telepon" required
-                                placeholder="812-3456-7890"
-                                class="w-full pl-12 rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm">
-                        </div>
-                        <p class="text-xs text-gray-400 mt-1">Digunakan untuk kontak koordinasi pengajuan barang dan darurat.</p>
+                        <input type="tel" id="nomor_wa" name="nomor_wa" required value="{{ old('nomor_wa') }}"
+                            placeholder="Contoh: 081234567890"
+                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm @error('nomor_wa') border-red-500 @enderror">
+                        @error('nomor_wa')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Digunakan untuk kontak koordinasi pengajuan barang dan darurat.</p>
+                        @enderror
                     </div>
 
                     <!-- Penugasan Bengkel Utama -->
                     <div class="md:col-span-2">
-                        <label for="bengkel_penempatan" class="block text-sm font-semibold text-gray-700 mb-1">
-                            Bengkel / Jurusan Penugasan <span class="text-red-500">*</span>
+                        <label for="bengkel_id" class="block text-sm font-semibold text-gray-700 mb-1">
+                            Bengkel Penugasan <span class="text-red-500">*</span>
                         </label>
-                        <select id="bengkel_penempatan" name="bengkel_penempatan" required
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm">
-                            <option value="" disabled selected>-- Pilih Bengkel / Jurusan Tempat Bertugas --</option>
-                            <option value="TKJ">Teknik Komputer Jaringan (BGK-TKJ)</option>
-                            <option value="TKR">Teknik Kendaraan Ringan (BGK-TKR)</option>
-                            <option value="AV">Teknik Audio Video (BGK-AV)</option>
-                            <option value="TITL">Teknik Instalasi Tenaga Listrik (BGK-TITL)</option>
-                            <option value="BOGA">Tata Boga / Kuliner (BGK-BGA)</option>
+                        <select id="bengkel_id" name="bengkel_id" required
+                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm @error('bengkel_id') border-red-500 @enderror">
+                            <option value="" disabled {{ old('bengkel_id') ? '' : 'selected' }}>-- Pilih Bengkel Tempat Bertugas --</option>
+                            @foreach ($bengkels as $bengkel)
+                                <option value="{{ $bengkel->id }}" {{ old('bengkel_id') == $bengkel->id ? 'selected' : '' }}>
+                                    {{ $bengkel->nama }} {{ ($bengkel->kode ?? $bengkel->kode_bengkel) ? '('.($bengkel->kode ?? $bengkel->kode_bengkel).')' : '' }}
+                                </option>
+                            @endforeach
                         </select>
-                        <p class="text-xs text-gray-400 mt-1">Akun ini memiliki hak akses inventaris dan sirkulasi pada bengkel terpilih.</p>
+                        @error('bengkel_id')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Akun ini memiliki hak akses inventaris dan sirkulasi pada bengkel terpilih.</p>
+                        @enderror
                     </div>
                 </div>
             </div>
@@ -131,13 +162,13 @@
                         </div>
                         <div>
                             <h3 class="text-base font-bold text-gray-900">Kredensial Login Aplikasi</h3>
-                            <p class="text-xs text-gray-500">Username dan password yang digunakan staf toolman untuk masuk ke sistem.</p>
+                            <p class="text-xs text-gray-500">Email dan kata sandi yang digunakan staf toolman untuk masuk ke sistem.</p>
                         </div>
                     </div>
 
                     <!-- Tombol Acak Password -->
                     <button type="button" @click="autoGeneratePass()"
-                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold rounded-lg transition-colors">
+                        class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
@@ -159,42 +190,36 @@
                                         d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
                                 </svg>
                             </div>
-                            <input type="email" id="email" name="email" required
+                            <input type="email" id="email" name="email" required value="{{ old('email') }}"
                                 placeholder="nama.toolman@smkn3yk.sch.id"
-                                class="w-full pl-10 rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-medium">
+                                class="w-full pl-10 rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-medium @error('email') border-red-500 @enderror">
                         </div>
-                        <p class="text-xs text-gray-400 mt-1">Disarankan menggunakan email institusi sekolah resmi (@smkn3yk.sch.id).</p>
+                        @error('email')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Gunakan alamat email aktif yang belum pernah terdaftar di sistem.</p>
+                        @enderror
                     </div>
 
                     <!-- Password Baru -->
                     <div>
                         <div class="flex items-center justify-between mb-1">
                             <label for="password" class="block text-sm font-semibold text-gray-700">
-                                Password Akun <span class="text-red-500">*</span>
+                                Password Login <span class="text-red-500">*</span>
                             </label>
                             <button type="button" @click="showPassword = !showPassword"
-                                class="text-xs text-gray-500 hover:text-green-700 transition-colors">
+                                class="text-xs text-gray-500 hover:text-gray-700 font-medium">
                                 <span x-text="showPassword ? 'Sembunyikan' : 'Tampilkan'"></span>
                             </button>
                         </div>
-                        <div class="relative">
-                            <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required
-                                minlength="8" placeholder="Minimal 8 karakter"
-                                class="w-full pr-10 rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-mono">
-                            <div class="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer text-gray-400 hover:text-gray-600"
-                                @click="showPassword = !showPassword">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="!showPassword">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                                </svg>
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" x-show="showPassword" style="display: none;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"></path>
-                                </svg>
-                            </div>
-                        </div>
+                        <input :type="showPassword ? 'text' : 'password'" id="password" name="password" required
+                            minlength="8" placeholder="Minimal 8 karakter"
+                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm shadow-sm font-mono @error('password') border-red-500 @enderror">
+                        @error('password')
+                            <p class="text-xs text-red-600 mt-1">{{ $message }}</p>
+                        @else
+                            <p class="text-xs text-gray-400 mt-1">Minimal 8 karakter kombinasi huruf, angka, atau simbol.</p>
+                        @enderror
                     </div>
 
                     <!-- Konfirmasi Password -->
@@ -216,7 +241,7 @@
                 </div>
 
                 <div class="flex items-center gap-3 w-full sm:w-auto justify-end order-1 sm:order-2">
-                    <a href="{{ route('superadmin.master.toolman') }}"
+                    <a href="{{ route('superadmin.toolman.index') }}"
                         class="px-4 py-2.5 bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-sm font-medium rounded-lg transition-colors shadow-sm text-center">
                         Batal
                     </a>
@@ -225,7 +250,7 @@
                         Reset
                     </button>
                     <button type="submit"
-                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-semibold shadow transition-all hover:shadow-md">
+                        class="inline-flex items-center justify-center gap-2 px-6 py-2.5 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-semibold shadow transition-all hover:shadow-md cursor-pointer">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                         </svg>
@@ -236,31 +261,6 @@
 
         </form>
 
-        <!-- Script Simulasi Form -->
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                const form = document.getElementById('formTambahToolman');
-                form.addEventListener('submit', function(e) {
-                    e.preventDefault();
-
-                    const pass = document.getElementById('password').value;
-                    const passConf = document.getElementById('password_confirmation').value;
-
-                    if (pass !== passConf) {
-                        alert('⚠️ Perhatian: Konfirmasi password tidak cocok dengan password yang dimasukkan.');
-                        return;
-                    }
-
-                    const nama = document.getElementById('nama_lengkap').value || 'Staf Toolman';
-                    const bengkel = document.getElementById('bengkel_penempatan').value || 'Bengkel Terpilih';
-                    const email = document.getElementById('email').value || '-';
-
-                    alert(`✅ Sukses (Prototipe UI):\nAkun Toolman "${nama}" (${bengkel})\nEmail: ${email}\n\nBerhasil disimulasikan dibuat! Mengalihkan kembali ke data akun toolman...`);
-
-                    window.location.href = "{{ route('superadmin.master.toolman') }}";
-                });
-            });
-        </script>
-
     </div>
 @endsection
+

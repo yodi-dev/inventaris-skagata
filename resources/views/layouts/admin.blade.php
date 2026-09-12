@@ -160,6 +160,7 @@
         <main class="flex-1 overflow-y-auto bg-slate-50 p-4 sm:p-6 min-w-0 w-full">
             @yield('content')
         </main>
+    </div>
 
     <!-- Universal Action Verification Modal -->
     @include('components.confirm-modal')
