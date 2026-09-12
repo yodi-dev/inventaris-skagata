@@ -1,0 +1,290 @@
+@extends('layouts.admin')
+
+@section('title', 'Persetujuan Peminjaman')
+@section('header_title', 'Sirkulasi - Persetujuan Peminjaman')
+
+@section('content')
+    <div class="max-w-7xl mx-auto space-y-6">
+
+        @if (session('success'))
+            <div class="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-green-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span class="font-medium">{{ session('success') }}</span>
+            </div>
+        @endif
+
+        @if (session('error'))
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="font-medium">{{ session('error') }}</span>
+            </div>
+        @endif
+
+        <!-- Header & Tabs -->
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div>
+                <h3 class="text-xl font-bold text-gray-900">Antrean Persetujuan</h3>
+                <p class="text-sm text-gray-500 mt-1">Cek dan verifikasi pengajuan alat & bahan di
+                    {{ $bengkel->nama ?? 'bengkel' }}.</p>
+            </div>
+
+            <!-- Search -->
+            <form method="GET" action="{{ route('toolman.peminjaman.index') }}" class="w-full sm:w-72">
+                <input type="hidden" name="tab" value="{{ $tab }}">
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / NIS..."
+                        class="block w-full pl-9 pr-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500">
+                </div>
+            </form>
+        </div>
+
+        <!-- Tabs Navigation -->
+        <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-6" aria-label="Tabs">
+                <a href="{{ route('toolman.peminjaman.index', ['tab' => 'pending']) }}"
+                    class="{{ $tab === 'pending' ? 'border-primary-500 text-primary-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-3 px-1 border-b-2 text-sm transition-colors">
+                    Menunggu Persetujuan ({{ $pendingCount }})
+                </a>
+                <a href="{{ route('toolman.peminjaman.index', ['tab' => 'riwayat']) }}"
+                    class="{{ $tab === 'riwayat' ? 'border-primary-500 text-primary-600 font-semibold' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} whitespace-nowrap py-3 px-1 border-b-2 text-sm transition-colors">
+                    Riwayat Persetujuan ({{ $riwayatCount }})
+                </a>
+            </nav>
+        </div>
+
+        <!-- List of Request Tickets -->
+        <div class="space-y-5">
+            @forelse ($peminjamans as $pinjam)
+                <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                    <!-- Ticket Header -->
+                    <div
+                        class="px-5 py-3 border-b border-gray-200 bg-gray-50 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                        <div class="flex items-center space-x-3">
+                            <div
+                                class="h-10 w-10 rounded-full {{ $pinjam->user && $pinjam->user->isGuru() ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700' }} flex items-center justify-center font-bold">
+                                {{ strtoupper(substr($pinjam->user->name ?? 'U', 0, 1)) }}
+                            </div>
+                            <div>
+                                <h4 class="text-sm font-bold text-gray-900">{{ $pinjam->user->name ?? '-' }}</h4>
+                                <p class="text-xs text-gray-500">
+                                    {{ $pinjam->user && $pinjam->user->isGuru() ? 'Guru' : 'Siswa - ' . ($pinjam->user->nomor_identitas ?? '-') }}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="text-left sm:text-right">
+                            @if ($pinjam->status === 'pending' || $pinjam->status === 'menunggu_acc')
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                                    Menunggu Acc
+                                </span>
+                            @elseif ($pinjam->status === 'active' || $pinjam->status === 'aktif')
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                    Sedang Dipinjam
+                                </span>
+                            @elseif ($pinjam->status === 'selesai')
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">
+                                    Selesai
+                                </span>
+                            @elseif ($pinjam->status === 'ditolak')
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                    Ditolak
+                                </span>
+                            @else
+                                <span
+                                    class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800 capitalize">
+                                    {{ $pinjam->status }}
+                                </span>
+                            @endif
+                            <p class="text-xs text-gray-500 mt-1">
+                                Diajukan: {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->diffForHumans() }}
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Ticket Body -->
+                    <div class="px-5 py-4">
+                        <h5 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Rincian Permintaan:
+                        </h5>
+                        <div class="border border-gray-200 rounded-lg overflow-hidden">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-4 py-2 text-left font-medium text-gray-600">Nama Barang</th>
+                                        <th class="px-4 py-2 text-center font-medium text-gray-600">Jml Diminta</th>
+                                        <th class="px-4 py-2 text-center font-medium text-gray-600">Stok Tersedia</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-200 bg-white">
+                                    @foreach ($pinjam->detailPeminjamans as $detail)
+                                        <tr>
+                                            <td class="px-4 py-2 text-gray-900 font-medium">
+                                                {{ $detail->barang->nama ?? '-' }}
+                                                <span class="text-xs text-gray-500 font-normal ml-1">
+                                                    ({{ $detail->barang && $detail->barang->jenis_barang === 'bhp' ? 'Bahan Habis Pakai' : 'Inventaris' }})
+                                                </span>
+                                            </td>
+                                            <td class="px-4 py-2 text-center font-bold text-gray-900">
+                                                {{ $detail->jumlah }} {{ $detail->barang->satuan ?? 'Unit' }}
+                                            </td>
+                                            <td
+                                                class="px-4 py-2 text-center font-medium {{ ($detail->barang->stok_tersedia ?? 0) < $detail->jumlah ? 'text-red-600 font-bold' : 'text-green-600' }}">
+                                                {{ $detail->barang->stok_tersedia ?? 0 }}
+                                                {{ $detail->barang->satuan ?? 'Unit' }}
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Info Waktu & Catatan -->
+                        <div
+                            class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 bg-gray-50 p-3 rounded-lg border border-gray-100">
+                            <div>
+                                <p class="text-xs text-gray-500">Jadwal Pinjam - Batas Kembali</p>
+                                <p class="text-sm font-medium text-gray-900 mt-0.5">
+                                    {{ \Carbon\Carbon::parse($pinjam->tanggal_pinjam)->translatedFormat('d M Y, H:i') }}
+                                    &mdash;
+                                    {{ $pinjam->batas_kembali ? \Carbon\Carbon::parse($pinjam->batas_kembali)->translatedFormat('d M Y, H:i') : 'Hari ini' }}
+                                </p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-gray-500">Keperluan / Tujuan Penggunaan</p>
+                                <p class="text-sm font-medium text-gray-900 mt-0.5">{{ $pinjam->keperluan ?? '-' }}</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ticket Footer (Actions) -->
+                    <div class="px-5 py-3 border-t border-gray-200 bg-white flex flex-wrap justify-end items-center gap-3">
+                        <a href="{{ route('toolman.peminjaman.show', $pinjam->id) }}"
+                            class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors">
+                            Lihat Detail Tiket
+                        </a>
+                        @if (in_array($pinjam->status, ['pending', 'menunggu_acc']))
+                            <!-- Tombol Tolak Pengajuan -->
+                            <form action="{{ route('toolman.peminjaman.reject', $pinjam->id) }}" method="POST" class="inline"
+                                  data-confirm="true"
+                                  data-title="Tolak Permohonan Peminjaman"
+                                  data-message="Berikan alasan penolakan tiket <b>#PINJAM-{{ str_pad($pinjam->id, 4, '0', STR_PAD_LEFT) }}</b> milik <b>{{ addslashes($pinjam->user->name ?? 'Peminjam') }}</b>:"
+                                  data-type="danger"
+                                  data-confirm-text="Tolak Permohonan"
+                                  data-with-input="true"
+                                  data-input-name="alasan"
+                                  data-input-label="Alasan Penolakan (Wajib):"
+                                  data-input-placeholder="Contoh: Alat sedang dalam perbaikan berkala / jadwal bentrok..."
+                                  data-input-required="true">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 bg-white border border-red-200 text-red-600 hover:bg-red-50 text-sm font-medium rounded-lg shadow-sm transition-colors">
+                                    Tolak Pengajuan
+                                </button>
+                            </form>
+
+                            <!-- Form Approve & Serahkan -->
+                            <form action="{{ route('toolman.peminjaman.approve', $pinjam->id) }}" method="POST" class="inline"
+                                  data-confirm="true"
+                                  data-title="Setujui Peminjaman & Serahkan Barang"
+                                  data-message="Apakah Anda yakin ingin menyetujui peminjaman tiket <b>#PINJAM-{{ str_pad($pinjam->id, 4, '0', STR_PAD_LEFT) }}</b> untuk <b>{{ addslashes($pinjam->user->name ?? 'Peminjam') }}</b>? Pastikan ketersediaan fisik alat & bahan sebelum diserahkan."
+                                  data-type="success"
+                                  data-confirm-text="Ya, Setujui & Serahkan">
+                                @csrf
+                                <button type="submit"
+                                    class="px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors flex items-center gap-1.5">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                    </svg>
+                                    Approve & Serahkan
+                                </button>
+                            </form>
+                        @endif
+                    </div>
+                </div>
+            @empty
+                <div class="bg-white p-12 rounded-xl border border-gray-200 text-center">
+                    <p class="text-gray-500 text-sm">Tidak ada tiket peminjaman dalam kategori ini.</p>
+                </div>
+            @endforelse
+
+            <!-- Pagination -->
+            @if ($peminjamans->hasPages())
+                <div class="pt-2">
+                    {{ $peminjamans->links() }}
+                </div>
+            @endif
+        </div>
+    </div>
+
+    <!-- Modal Tolak Pengajuan -->
+    <div id="rejectModal" class="fixed inset-0 z-50 hidden overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" onclick="closeRejectModal()"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <form id="rejectForm" method="POST" action="">
+                    @csrf
+                    <div class="bg-white px-6 pt-6 pb-4">
+                        <div class="sm:flex sm:items-start gap-4">
+                            <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10 text-red-600">
+                                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:mt-0 sm:text-left w-full">
+                                <h3 class="text-lg font-bold text-gray-900" id="modal-title">Tolak Pengajuan Peminjaman</h3>
+                                <p class="text-sm text-gray-500 mt-1" id="rejectPeminjamName">
+                                    Berikan alasan penolakan agar peminjam dapat memahami alasan pembatalan.
+                                </p>
+                                <div class="mt-4">
+                                    <label for="alasan_penolakan" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                                        Alasan Penolakan <span class="text-red-500">*</span>
+                                    </label>
+                                    <textarea name="alasan_penolakan" id="alasan_penolakan" rows="3" required
+                                        placeholder="Contoh: Alat sedang proses maintenance berkala atau peruntukan praktikum belum disetujui guru pembimbing."
+                                        class="w-full text-sm border-gray-300 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 p-3"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-gray-50 px-6 py-3.5 flex flex-row-reverse gap-3">
+                        <button type="submit"
+                            class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-xl shadow-sm transition-colors">
+                            Konfirmasi Tolak
+                        </button>
+                        <button type="button" onclick="closeRejectModal()"
+                            class="px-4 py-2 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 text-sm font-medium rounded-xl transition-colors">
+                            Batal
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openRejectModal(id, peminjamName) {
+            const form = document.getElementById('rejectForm');
+            form.action = "{{ url('/toolman/peminjaman') }}/" + id + "/reject";
+            document.getElementById('rejectPeminjamName').innerText = "Pengajuan oleh: " + peminjamName + ". Masukkan alasan penolakan:";
+            document.getElementById('alasan_penolakan').value = '';
+            document.getElementById('rejectModal').classList.remove('hidden');
+        }
+
+        function closeRejectModal() {
+            document.getElementById('rejectModal').classList.add('hidden');
+        }
+    </script>
+@endsection

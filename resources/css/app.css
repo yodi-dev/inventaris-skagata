@@ -4,6 +4,10 @@
 @tailwind components;
 @tailwind utilities;
 
+[x-cloak] {
+    display: none !important;
+}
+
 ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -12,4 +16,44 @@
 ::-webkit-scrollbar-thumb {
     background-color: #cbd5e1;
     border-radius: 10px;
+}
+
+/* Sidebar Sliding Utilities (Hardware-Accelerated, Smooth Easing) */
+.sidebar-desktop-transition {
+    width: 16rem;
+    will-change: margin-left;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: margin-left 350ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.sidebar-desktop-open {
+    margin-left: 0;
+}
+
+.sidebar-desktop-closed {
+    margin-left: -16rem;
+}
+
+.mobile-drawer-transition {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    transition: transform 350ms cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.-translate-x-full {
+    transform: translateX(-100%);
+}
+
+.translate-x-0 {
+    transform: translateX(0);
+}
+
+.-ml-64 {
+    margin-left: -16rem;
+}
+
+.ml-0 {
+    margin-left: 0;
 }
