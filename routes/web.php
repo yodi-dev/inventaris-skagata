@@ -41,6 +41,8 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
 
     // Laporan
     Route::get('/laporan/mutasi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'mutasi'])->name('laporan.mutasi');
+    Route::get('/laporan/mutasi/excel', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportMutasiExcel'])->name('laporan.mutasi.excel');
+    Route::get('/laporan/mutasi/pdf', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportMutasiPdf'])->name('laporan.mutasi.pdf');
     Route::get('/laporan/konsumsi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'konsumsi'])->name('laporan.konsumsi');
     Route::get('/laporan/konsumsi/excel', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportExcel'])->name('laporan.konsumsi.excel');
     Route::get('/laporan/konsumsi/pdf', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportPdf'])->name('laporan.konsumsi.pdf');
