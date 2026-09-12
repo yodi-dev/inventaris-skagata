@@ -36,22 +36,34 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
     // Pengadaan (RAB)
     Route::get('/pengadaan', [SuperadminPengadaanController::class, 'index'])->name('pengadaan.index');
     Route::get('/pengadaan/{id}', [SuperadminPengadaanController::class, 'show'])->name('pengadaan.show');
+    Route::get('/pengadaan/{id}/print', [SuperadminPengadaanController::class, 'print'])->name('pengadaan.print');
     Route::post('/pengadaan/{id}/review', [SuperadminPengadaanController::class, 'review'])->name('pengadaan.review');
 
 
     // Laporan
     Route::get('/laporan/mutasi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'mutasi'])->name('laporan.mutasi');
+    Route::get('/laporan/mutasi/excel', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportMutasiExcel'])->name('laporan.mutasi.excel');
+    Route::get('/laporan/mutasi/pdf', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportMutasiPdf'])->name('laporan.mutasi.pdf');
     Route::get('/laporan/konsumsi', [\App\Http\Controllers\Superadmin\LaporanController::class, 'konsumsi'])->name('laporan.konsumsi');
+    Route::get('/laporan/konsumsi/excel', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportExcel'])->name('laporan.konsumsi.excel');
+    Route::get('/laporan/konsumsi/pdf', [\App\Http\Controllers\Superadmin\LaporanController::class, 'exportPdf'])->name('laporan.konsumsi.pdf');
 
     // Master Data Bengkel
     Route::get('/bengkel', [\App\Http\Controllers\Superadmin\BengkelController::class, 'index'])->name('bengkel.index');
     Route::get('/bengkel/create', [\App\Http\Controllers\Superadmin\BengkelController::class, 'create'])->name('bengkel.create');
+    Route::post('/bengkel', [\App\Http\Controllers\Superadmin\BengkelController::class, 'store'])->name('bengkel.store');
     Route::get('/bengkel/edit/{id}', [\App\Http\Controllers\Superadmin\BengkelController::class, 'edit'])->name('bengkel.edit');
+    Route::put('/bengkel/{id}', [\App\Http\Controllers\Superadmin\BengkelController::class, 'update'])->name('bengkel.update');
+    Route::delete('/bengkel/{id}', [\App\Http\Controllers\Superadmin\BengkelController::class, 'destroy'])->name('bengkel.destroy');
 
     // Master Data Toolman
     Route::get('/toolman', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'index'])->name('toolman.index');
     Route::get('/toolman/create', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'create'])->name('toolman.create');
+    Route::post('/toolman', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'store'])->name('toolman.store');
     Route::get('/toolman/edit/{id}', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'edit'])->name('toolman.edit');
+    Route::put('/toolman/{id}', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'update'])->name('toolman.update');
+    Route::delete('/toolman/{id}', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'destroy'])->name('toolman.destroy');
+    Route::post('/toolman/{id}/reset-password', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'resetPassword'])->name('toolman.reset-password');
 
     // Backward-compatible aliases for legacy master routes
     Route::get('/master/bengkel', function () {
