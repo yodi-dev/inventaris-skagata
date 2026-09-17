@@ -131,8 +131,8 @@
 </div>
 
 <script>
-document.addEventListener('alpine:init', () => {
-    Alpine.data('universalConfirmModal', () => ({
+function universalConfirmModal() {
+    return {
         isOpen: false,
         title: 'Konfirmasi Tindakan',
         message: 'Apakah Anda yakin ingin melanjutkan tindakan ini?',
@@ -207,8 +207,18 @@ document.addEventListener('alpine:init', () => {
 
             this.isOpen = false;
         }
-    }));
-});
+    };
+}
+
+window.universalConfirmModal = universalConfirmModal;
+
+if (window.Alpine) {
+    window.Alpine.data('universalConfirmModal', universalConfirmModal);
+} else {
+    document.addEventListener('alpine:init', () => {
+        window.Alpine.data('universalConfirmModal', universalConfirmModal);
+    });
+}
 
 // Global JavaScript helper API for easy invocation from anywhere
 window.openConfirmModal = function(options) {

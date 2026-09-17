@@ -14,7 +14,7 @@
                     hari ini.</p>
             </div>
             <div class="flex items-center gap-2 shrink-0">
-                <a href="#"
+                <a href="{{ route('superadmin.laporan.mutasi') }}"
                     class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors">
                     Unduh Laporan
                 </a>
@@ -43,7 +43,7 @@
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
                 <div>
                     <p class="text-sm font-medium text-gray-500 mb-1">Sedang Dipinjam</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $sedangDipinjam }}</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ number_format($sedangDipinjam) }}</p>
                 </div>
                 <div class="bg-blue-50 text-blue-600 p-3 rounded-xl">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -58,7 +58,7 @@
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
                 <div>
                     <p class="text-sm font-medium text-gray-500 mb-1">Kondisi Rusak</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $kondisiRusak }}</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ number_format($kondisiRusak) }}</p>
                 </div>
                 <div class="bg-red-50 text-red-500 p-3 rounded-xl">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -74,7 +74,7 @@
                 class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex items-center justify-between hover:shadow-md transition-shadow">
                 <div>
                     <p class="text-sm font-medium text-gray-500 mb-1">Stok Bahan Menipis</p>
-                    <p class="text-2xl font-bold text-gray-800">{{ $stokBhpMenipis }}</p>
+                    <p class="text-2xl font-bold text-gray-800">{{ number_format($stokBhpMenipis) }}</p>
                 </div>
                 <div class="bg-amber-50 text-amber-500 p-3 rounded-xl">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
