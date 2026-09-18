@@ -58,6 +58,62 @@
         },
         totalStokInventaris() {
             return (parseInt(this.stokBaik) || 0) + (parseInt(this.stokRusakRingan) || 0) + (parseInt(this.stokRusakBerat) || 0);
+        },
+        // Quick Tambah Lokasi Modal State & Method
+        showLokasiModal: false,
+        newLokasiKode: '',
+        newLokasiNama: '',
+        newLokasiDeskripsi: '',
+        lokasiLoading: false,
+        lokasiError: '',
+        lokasiSuccessMsg: '',
+        async submitLokasi() {
+            if (!this.newLokasiKode.trim() || !this.newLokasiNama.trim()) {
+                this.lokasiError = 'Kode dan Nama lokasi wajib diisi!';
+                return;
+            }
+            this.lokasiLoading = true;
+            this.lokasiError = '';
+            try {
+                const response = await fetch('{{ route('toolman.lokasi.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        kode: this.newLokasiKode,
+                        nama: this.newLokasiNama,
+                        deskripsi: this.newLokasiDeskripsi
+                    })
+                });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal menyimpan lokasi'));
+                }
+                const selectEl = document.getElementById('lokasi_penyimpanan_id');
+                const option = document.createElement('option');
+                option.value = data.data.id;
+                option.text = data.data.nama + ' (' + data.data.kode + ')';
+                option.selected = true;
+                selectEl.appendChild(option);
+                selectEl.value = data.data.id;
+
+                this.lokasiSuccessMsg = 'Lokasi ' + data.data.nama + ' (' + data.data.kode + ') berhasil dibuat dan langsung dipilih!';
+                this.newLokasiKode = '';
+                this.newLokasiNama = '';
+                this.newLokasiDeskripsi = '';
+                this.showLokasiModal = false;
+
+                setTimeout(() => {
+                    this.lokasiSuccessMsg = '';
+                }, 4000);
+            } catch (err) {
+                this.lokasiError = err.message;
+            } finally {
+                this.lokasiLoading = false;
+            }
         }
     }">
 
@@ -288,18 +344,47 @@
 
                     <!-- Lokasi Penyimpanan Fisik -->
                     <div>
-                        <label for="lokasi_penyimpanan_id" class="block text-sm font-medium text-gray-700 mb-1.5">
-                            Lokasi Penyimpanan <span class="text-red-500">*</span>
-                        </label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="lokasi_penyimpanan_id" class="block text-sm font-medium text-gray-700">
+                                Lokasi Penyimpanan <span class="text-red-500">*</span>
+                            </label>
+                            <button type="button" @click="showLokasiModal = true"
+                                class="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 hover:bg-primary-100/80 px-2.5 py-1 rounded-md">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                </svg>
+                                <span>Tambah Lokasi</span>
+                            </button>
+                        </div>
                         <select id="lokasi_penyimpanan_id" name="lokasi_penyimpanan_id" required
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm bg-white">
                             <option value="">-- Pilih Lokasi Penyimpanan --</option>
                             @foreach ($lokasiPenyimpanans as $lokasi)
-                                <option value="{{ $lokasi->id }}">{{ $lokasi->nama }} ({{ $lokasi->kode }})</option>
+                                <option value="{{ $lokasi->id }}" {{ old('lokasi_penyimpanan_id') == $lokasi->id ? 'selected' : '' }}>
+                                    {{ $lokasi->nama }} ({{ $lokasi->kode }})
+                                </option>
                             @endforeach
                         </select>
-                        <p class="text-[11px] text-gray-400 mt-1">Pilih lemari, rak, atau laci penyimpanan di bengkel ini.
-                        </p>
+                        <div class="flex items-center justify-between mt-1 text-[11px] text-gray-400">
+                            <span>Pilih lemari, rak, atau laci penyimpanan di bengkel ini.</span>
+                            <a href="{{ route('toolman.lokasi.index') }}" target="_blank"
+                                class="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center hover:underline">
+                                Kelola Lokasi
+                                <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                                </svg>
+                            </a>
+                        </div>
+                        
+                        <!-- Notifikasi Sukses Tambah Lokasi Cepat -->
+                        <div x-show="lokasiSuccessMsg" x-cloak x-transition
+                            class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            <span x-text="lokasiSuccessMsg"></span>
+                        </div>
                     </div>
 
                     <!-- Satuan Barang -->
@@ -625,6 +710,88 @@
             </div>
 
         </form>
+
+        <!-- ================================================================= -->
+        <!-- MODAL CEPAT: TAMBAH LOKASI PENYIMPANAN BARU                       -->
+        <!-- ================================================================= -->
+        <div x-show="showLokasiModal" x-cloak
+            class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div x-show="showLokasiModal"
+                x-transition:enter="transition ease-out duration-200 transform"
+                x-transition:enter-start="opacity-0 scale-95"
+                x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150 transform"
+                x-transition:leave-start="opacity-100 scale-100"
+                x-transition:leave-end="opacity-0 scale-95"
+                @click.away="showLokasiModal = false"
+                class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+                
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-gray-900">Tambah Lokasi Baru</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Daftarkan titik simpan di {{ $bengkel->nama ?? 'Bengkel' }}</p>
+                    </div>
+                    <button type="button" @click="showLokasiModal = false"
+                        class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Error Alert inside modal -->
+                <div x-show="lokasiError" x-cloak
+                    class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span x-text="lokasiError"></span>
+                </div>
+
+                <div class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Kode Lokasi <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="newLokasiKode" placeholder="Contoh: LOK-RAK3, LEMARI-B"
+                            class="w-full px-3 py-2 font-mono text-xs uppercase rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                        <p class="text-[10px] text-gray-400 mt-0.5">Kode harus unik di bengkel Anda (PRD 3.3).</p>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Nama Lokasi <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="newLokasiNama" placeholder="Contoh: Rak Komponen 3, Lemari Alat B"
+                            class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Keterangan / Posisi Fisik (Opsional)
+                        </label>
+                        <textarea x-model="newLokasiDeskripsi" rows="2" placeholder="Catatan posisi atau keterangan lokasi..."
+                            class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+                    <button type="button" @click="showLokasiModal = false"
+                        class="px-3.5 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="submitLokasi()" :disabled="lokasiLoading"
+                        class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
+                        <svg x-show="lokasiLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span x-text="lokasiLoading ? 'Menyimpan...' : 'Simpan & Pilih'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
 
     </div>
 @endsection

@@ -5,6 +5,7 @@ use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardCo
 use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanController;
 use App\Http\Controllers\Toolman\DashboardController as ToolmanDashboardController;
 use App\Http\Controllers\Toolman\BarangController as ToolmanBarangController;
+use App\Http\Controllers\Toolman\LokasiController as ToolmanLokasiController;
 use App\Http\Controllers\Toolman\PeminjamanController as ToolmanPeminjamanController;
 use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianController;
 use App\Http\Controllers\Toolman\PengadaanController as ToolmanPengadaanController;
@@ -105,6 +106,15 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
+
+    // Manajemen Lokasi Penyimpanan
+    Route::get('/lokasi', [ToolmanLokasiController::class, 'index'])->name('lokasi.index');
+    Route::post('/lokasi', [ToolmanLokasiController::class, 'store'])->name('lokasi.store');
+    Route::put('/lokasi/{id}', [ToolmanLokasiController::class, 'update'])->name('lokasi.update');
+    Route::delete('/lokasi/{id}', [ToolmanLokasiController::class, 'destroy'])->name('lokasi.destroy');
+    Route::get('/lokasi-penyimpanan', function () {
+        return redirect()->route('toolman.lokasi.index');
+    })->name('lokasi-penyimpanan.index');
 
     // Sirkulasi Peminjaman
     Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
