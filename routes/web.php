@@ -121,11 +121,15 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/peminjaman/{id}', [ToolmanPeminjamanController::class, 'show'])->name('peminjaman.show');
     Route::post('/peminjaman/{id}/approve', [ToolmanPeminjamanController::class, 'approve'])->name('peminjaman.approve');
     Route::post('/peminjaman/{id}/reject', [ToolmanPeminjamanController::class, 'reject'])->name('peminjaman.reject');
+    Route::get('/peminjaman/{id}/print-pinjam', [ToolmanPengembalianController::class, 'printPinjam'])->name('peminjaman.print-pinjam');
+    Route::get('/peminjaman/{id}/print-kembali', [ToolmanPengembalianController::class, 'printKembali'])->name('peminjaman.print-kembali');
 
     // Sirkulasi Pengembalian
     Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');
     Route::get('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'check'])->name('pengembalian.check');
     Route::post('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'processCheck'])->name('pengembalian.process-check');
+    Route::get('/pengembalian/{id}/print-pinjam', [ToolmanPengembalianController::class, 'printPinjam'])->name('pengembalian.print-pinjam');
+    Route::get('/pengembalian/{id}/print-kembali', [ToolmanPengembalianController::class, 'printKembali'])->name('pengembalian.print-kembali');
 
     // Pengadaan (RAB)
     Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');

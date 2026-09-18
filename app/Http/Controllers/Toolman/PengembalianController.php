@@ -17,15 +17,19 @@ class PengembalianController extends Controller
         $user = auth()->user();
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $tab = $request->input('tab', 'aktif'); // 'aktif' | 'riwayat'
 
-        // Ambil peminjaman yang sedang active / terlambat / menunggu pengecekan dengan barang inventaris
-        $query = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang'])
+        $query = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang.lokasiPenyimpanan', 'diprosesOleh'])
             ->where('bengkel_id', $bengkelId)
-            ->whereIn('status', ['active', 'terlambat', 'menunggu_pengecekan'])
             ->whereHas('detailPeminjamans.barang', function ($q) {
                 $q->where('jenis_barang', 'inventaris');
-            })
-            ->orderBy('batas_kembali');
+            });
+
+        if ($tab === 'riwayat') {
+            $query->where('status', 'selesai')->latest('updated_at');
+        } else {
+            $query->whereIn('status', ['active', 'terlambat', 'menunggu_pengecekan'])->orderBy('batas_kembali');
+        }
 
         if ($search = $request->input('search')) {
             $query->whereHas('user', function ($q) use ($search) {
@@ -36,7 +40,19 @@ class PengembalianController extends Controller
 
         $peminjamans = $query->paginate(10)->withQueryString();
 
-        return view('toolman.pengembalian.index', compact('peminjamans', 'bengkel'));
+        $aktifCount = Peminjaman::where('bengkel_id', $bengkelId)
+            ->whereIn('status', ['active', 'terlambat', 'menunggu_pengecekan'])
+            ->whereHas('detailPeminjamans.barang', function ($q) {
+                $q->where('jenis_barang', 'inventaris');
+            })->count();
+
+        $riwayatCount = Peminjaman::where('bengkel_id', $bengkelId)
+            ->where('status', 'selesai')
+            ->whereHas('detailPeminjamans.barang', function ($q) {
+                $q->where('jenis_barang', 'inventaris');
+            })->count();
+
+        return view('toolman.pengembalian.index', compact('peminjamans', 'bengkel', 'tab', 'aktifCount', 'riwayatCount'));
     }
 
     public function check($id)
@@ -210,5 +226,57 @@ class PengembalianController extends Controller
         } catch (\Exception $e) {
             return redirect()->back()->withInput()->with('error', "Gagal memproses pengecekan fisik: " . $e->getMessage());
         }
+    }
+
+    /**
+     * Cetak Lembar Bon Pinjam Alat / Bahan Resmi
+     * Sesuai format standar Kartu Pinjam.md
+     */
+    public function printPinjam($id)
+    {
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $query = Peminjaman::with([
+            'user',
+            'bengkel',
+            'detailPeminjamans.barang.lokasiPenyimpanan',
+            'diprosesOleh'
+        ]);
+
+        if ($user && $user->bengkel_id) {
+            $query->where('bengkel_id', $user->bengkel_id);
+        }
+
+        $peminjaman = $query->findOrFail($id);
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+
+        return view('toolman.pengembalian.print_pinjam', compact('peminjaman', 'bengkel'));
+    }
+
+    /**
+     * Cetak Lembar Bukti Pengembalian Alat / Bahan Resmi
+     * Sesuai format standar Kartu Pinjam.md
+     */
+    public function printKembali($id)
+    {
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $query = Peminjaman::with([
+            'user',
+            'bengkel',
+            'detailPeminjamans.barang.lokasiPenyimpanan',
+            'diprosesOleh'
+        ]);
+
+        if ($user && $user->bengkel_id) {
+            $query->where('bengkel_id', $user->bengkel_id);
+        }
+
+        $peminjaman = $query->findOrFail($id);
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+
+        return view('toolman.pengembalian.print_kembali', compact('peminjaman', 'bengkel'));
     }
 }
