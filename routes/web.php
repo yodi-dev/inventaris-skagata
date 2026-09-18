@@ -106,6 +106,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
+    Route::get('/barang/{id}/print-kartu', [ToolmanBarangController::class, 'printKartu'])->name('barang.print-kartu');
 
     // Manajemen Lokasi Penyimpanan
     Route::get('/lokasi', [ToolmanLokasiController::class, 'index'])->name('lokasi.index');
