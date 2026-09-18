@@ -5,6 +5,7 @@ use App\Http\Controllers\Superadmin\DashboardController as SuperadminDashboardCo
 use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanController;
 use App\Http\Controllers\Toolman\DashboardController as ToolmanDashboardController;
 use App\Http\Controllers\Toolman\BarangController as ToolmanBarangController;
+use App\Http\Controllers\Toolman\LokasiController as ToolmanLokasiController;
 use App\Http\Controllers\Toolman\PeminjamanController as ToolmanPeminjamanController;
 use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianController;
 use App\Http\Controllers\Toolman\PengadaanController as ToolmanPengadaanController;
@@ -105,17 +106,31 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
+    Route::get('/barang/{id}/print-kartu', [ToolmanBarangController::class, 'printKartu'])->name('barang.print-kartu');
+
+    // Manajemen Lokasi Penyimpanan
+    Route::get('/lokasi', [ToolmanLokasiController::class, 'index'])->name('lokasi.index');
+    Route::post('/lokasi', [ToolmanLokasiController::class, 'store'])->name('lokasi.store');
+    Route::put('/lokasi/{id}', [ToolmanLokasiController::class, 'update'])->name('lokasi.update');
+    Route::delete('/lokasi/{id}', [ToolmanLokasiController::class, 'destroy'])->name('lokasi.destroy');
+    Route::get('/lokasi-penyimpanan', function () {
+        return redirect()->route('toolman.lokasi.index');
+    })->name('lokasi-penyimpanan.index');
 
     // Sirkulasi Peminjaman
     Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
     Route::get('/peminjaman/{id}', [ToolmanPeminjamanController::class, 'show'])->name('peminjaman.show');
     Route::post('/peminjaman/{id}/approve', [ToolmanPeminjamanController::class, 'approve'])->name('peminjaman.approve');
     Route::post('/peminjaman/{id}/reject', [ToolmanPeminjamanController::class, 'reject'])->name('peminjaman.reject');
+    Route::get('/peminjaman/{id}/print-pinjam', [ToolmanPengembalianController::class, 'printPinjam'])->name('peminjaman.print-pinjam');
+    Route::get('/peminjaman/{id}/print-kembali', [ToolmanPengembalianController::class, 'printKembali'])->name('peminjaman.print-kembali');
 
     // Sirkulasi Pengembalian
     Route::get('/pengembalian', [ToolmanPengembalianController::class, 'index'])->name('pengembalian.index');
     Route::get('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'check'])->name('pengembalian.check');
     Route::post('/pengembalian/{id}/check', [ToolmanPengembalianController::class, 'processCheck'])->name('pengembalian.process-check');
+    Route::get('/pengembalian/{id}/print-pinjam', [ToolmanPengembalianController::class, 'printPinjam'])->name('pengembalian.print-pinjam');
+    Route::get('/pengembalian/{id}/print-kembali', [ToolmanPengembalianController::class, 'printKembali'])->name('pengembalian.print-kembali');
 
     // Pengadaan (RAB)
     Route::get('/pengadaan', [ToolmanPengadaanController::class, 'index'])->name('pengadaan.index');

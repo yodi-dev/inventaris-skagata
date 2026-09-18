@@ -299,4 +299,111 @@ class BarangController extends Controller
         return redirect()->route('toolman.barang.index')
             ->with('success', "Barang {$nama} ({$kode}) berhasil dihapus dari inventaris bengkel.");
     }
+
+    /**
+     * Cetak Lembar Kartu Barang / Kartu Persediaan Barang Resmi
+     * Sesuai format standar Kartu Barang.md
+     */
+    public function printKartu($id)
+    {
+        $user = auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        $query = Barang::with([
+            'bengkel',
+            'lokasiPenyimpanan',
+            'stockMovements' => function ($q) {
+                $q->with('user')->orderBy('created_at', 'asc');
+            }
+        ]);
+
+        if ($user && $user->bengkel_id) {
+            $query->where('bengkel_id', $user->bengkel_id);
+        }
+
+        $barang = $query->findOrFail($id);
+        $bengkel = $barang->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+
+        // Kalkulasi mutasi kartu barang dan saldo berjalannya
+        $movementRows = [];
+        $saldoBaik = 0;
+        $saldoRusak = 0;
+
+        foreach ($barang->stockMovements as $m) {
+            $masukBaik = 0;
+            $masukRusak = 0;
+            $keluarBaik = 0;
+            $keluarRusak = 0;
+
+            switch ($m->jenis) {
+                case 'stok_masuk':
+                    $masukBaik = (int) $m->jumlah;
+                    $saldoBaik += $masukBaik;
+                    break;
+                case 'peminjaman':
+                case 'bhp_keluar':
+                    $keluarBaik = (int) $m->jumlah;
+                    $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    break;
+                case 'pengembalian_baik':
+                    $masukBaik = (int) $m->jumlah;
+                    $saldoBaik += $masukBaik;
+                    break;
+                case 'pengembalian_rusak':
+                    $masukRusak = (int) $m->jumlah;
+                    $saldoRusak += $masukRusak;
+                    break;
+                case 'barang_hilang':
+                    $keluarBaik = (int) $m->jumlah;
+                    $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    break;
+                case 'perbaikan':
+                    $jml = (int) $m->jumlah;
+                    $saldoRusak = max(0, $saldoRusak - $jml);
+                    $saldoBaik += $jml;
+                    $masukBaik = $jml;
+                    break;
+                case 'penyesuaian':
+                default:
+                    $jml = (int) $m->jumlah;
+                    if ($jml >= 0) {
+                        $masukBaik = $jml;
+                        $saldoBaik += $jml;
+                    } else {
+                        $keluarBaik = abs($jml);
+                        $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    }
+                    break;
+            }
+
+            $movementRows[] = [
+                'tanggal'      => $m->created_at ? $m->created_at->translatedFormat('d/m/Y') : '-',
+                'masuk_baik'   => $masukBaik > 0 ? $masukBaik : '',
+                'masuk_rusak'  => $masukRusak > 0 ? $masukRusak : '',
+                'keluar_baik'  => $keluarBaik > 0 ? $keluarBaik : '',
+                'keluar_rusak' => $keluarRusak > 0 ? $keluarRusak : '',
+                'sisa_baik'    => $saldoBaik,
+                'sisa_rusak'   => $saldoRusak,
+                'paraf'        => $m->user ? strtoupper(substr($m->user->name, 0, 3)) : 'TLM',
+                'keterangan'   => $m->keterangan ?? '-',
+            ];
+        }
+
+        // Jika riwayat pergerakan kosong namun barang memiliki stok terdaftar
+        if (empty($movementRows) && ($barang->stok_total > 0 || $barang->stok_tersedia > 0 || $barang->stok_rusak > 0)) {
+            $movementRows[] = [
+                'tanggal'      => $barang->created_at ? $barang->created_at->translatedFormat('d/m/Y') : date('d/m/Y'),
+                'masuk_baik'   => $barang->stok_tersedia > 0 ? $barang->stok_tersedia : '',
+                'masuk_rusak'  => $barang->stok_rusak > 0 ? $barang->stok_rusak : '',
+                'keluar_baik'  => '',
+                'keluar_rusak' => '',
+                'sisa_baik'    => $barang->stok_tersedia,
+                'sisa_rusak'   => $barang->stok_rusak,
+                'paraf'        => 'TLM',
+                'keterangan'   => 'Stok Awal Terdaftar di Sistem',
+            ];
+        }
+
+        return view('toolman.barang.print_kartu', compact('barang', 'bengkel', 'movementRows'));
+    }
 }

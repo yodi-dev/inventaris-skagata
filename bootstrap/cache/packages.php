@@ -1,4 +1,11 @@
 <?php return array (
+  'jn-jairo/laravel-ngrok' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'JnJairo\\Laravel\\Ngrok\\NgrokServiceProvider',
+    ),
+  ),
   'laravel/breeze' => 
   array (
     'providers' => 
