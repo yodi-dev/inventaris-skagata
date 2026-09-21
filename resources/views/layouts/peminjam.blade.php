@@ -34,7 +34,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
 
             <!-- Brand / Logo -->
-            <a href="{{ route('peminjam.katalog.index') }}" class="flex items-center space-x-2.5 group">
+            <a href="{{ route('peminjam.dashboard') }}" class="flex items-center space-x-2.5 group">
                 <div
                     class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,6 +56,15 @@
 
             <!-- Navigation Links (Desktop) -->
             <nav class="hidden md:flex items-center space-x-1">
+                <a href="{{ route('peminjam.dashboard') }}"
+                    class="px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 {{ request()->is('peminjam/dashboard*') ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                        </path>
+                    </svg>
+                    Dashboard
+                </a>
                 <a href="{{ route('peminjam.katalog.index') }}"
                     class="px-3.5 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1.5 {{ request()->is('peminjam/katalog*') ? 'bg-primary-50 text-primary-700 font-semibold' : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100' }}">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,6 +170,17 @@
     <!-- MOBILE BOTTOM NAVIGATION (Fixed Bottom Bar - App Feel) -->
     <nav
         class="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200 px-2 py-1.5 shadow-lg flex items-center justify-around">
+        <!-- Dashboard -->
+        <a href="{{ route('peminjam.dashboard') }}"
+            class="flex-1 flex flex-col items-center justify-center py-1 rounded-lg transition-colors {{ request()->is('peminjam/dashboard*') ? 'text-primary-600 font-bold' : 'text-gray-500 hover:text-gray-800' }}">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
+                </path>
+            </svg>
+            <span class="text-[10px] mt-0.5">Beranda</span>
+        </a>
+
         <!-- Katalog -->
         <a href="{{ route('peminjam.katalog.index') }}"
             class="flex-1 flex flex-col items-center justify-center py-1 rounded-lg transition-colors {{ request()->is('peminjam/katalog*') ? 'text-primary-600 font-bold' : 'text-gray-500 hover:text-gray-800' }}">

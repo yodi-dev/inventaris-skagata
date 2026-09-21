@@ -10,6 +10,7 @@ use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianCo
 use App\Http\Controllers\Toolman\PengadaanController as ToolmanPengadaanController;
 use App\Http\Controllers\Toolman\PeminjamController as ToolmanPeminjamController;
 use App\Http\Controllers\Toolman\MutasiController as ToolmanMutasiController;
+use App\Http\Controllers\Peminjam\DashboardController as PeminjamDashboardController;
 use App\Http\Controllers\Peminjam\KatalogController as PeminjamKatalogController;
 use App\Http\Controllers\Peminjam\TiketController as PeminjamTiketController;
 use App\Http\Controllers\Peminjam\PengajuanController as PeminjamPengajuanController;
@@ -166,6 +167,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
 // 4. ROUTE PEMINJAM (GURU & SISWA)
 // ==========================================
 Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam'])->group(function () {
+    Route::get('/dashboard', [PeminjamDashboardController::class, 'index'])->name('dashboard');
     Route::get('/katalog', [PeminjamKatalogController::class, 'index'])->name('katalog.index');
 
     Route::get('/pengajuan/create', [PeminjamPengajuanController::class, 'create'])->name('pengajuan.create');
@@ -179,6 +181,11 @@ Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam
         return redirect()->route('profile.edit');
     })->name('profile');
 });
+
+// Alias backward-compatible peminjam
+Route::get('/peminjam', function () {
+    return redirect()->route('peminjam.dashboard');
+})->middleware(['auth', 'role:peminjam']);
 
 // Route untuk halaman edit profil dengan deteksi role dinamis
 Route::middleware('auth')->group(function () {

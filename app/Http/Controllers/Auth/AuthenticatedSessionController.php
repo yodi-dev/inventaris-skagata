@@ -70,7 +70,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         if ($user->role === 'peminjam') {
-            return redirect()->intended(route('peminjam.katalog.index'));
+            return redirect()->intended(route('peminjam.dashboard'));
         }
 
         return redirect()->intended(route('login'));
