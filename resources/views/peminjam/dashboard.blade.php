@@ -3,7 +3,14 @@
 @section('title', 'Dashboard Peminjam')
 
 @section('content')
-    <div class="max-w-5xl mx-auto space-y-6 sm:space-y-8">
+    <!-- Watermark Background Logo SMKN 3 Yogyakarta (Subtle & Non-intrusive) -->
+    <div class="fixed inset-0 pointer-events-none flex items-center justify-center z-0 overflow-hidden" aria-hidden="true">
+        <img src="{{ asset('logo.png') }}" alt="Watermark Logo SMKN 3 Yogyakarta"
+            class="w-80 h-80 sm:w-[440px] sm:h-[440px] md:w-[520px] md:h-[520px] object-contain select-none pointer-events-none"
+            style="opacity: 0.06;" />
+    </div>
+
+    <div class="relative z-10 max-w-5xl mx-auto space-y-6 sm:space-y-8">
 
         <!-- Flash Messages -->
         @if (session('success'))

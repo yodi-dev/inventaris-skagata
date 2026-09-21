@@ -64,10 +64,18 @@
             style="display: none;">
 
             <!-- Header & Close Button -->
-            <div class="h-16 flex items-center justify-between border-b border-gray-200 px-4 shrink-0">
-                <span class="text-lg font-bold text-primary-600 tracking-wide uppercase">
-                    Inventaris SMK
-                </span>
+            <div class="h-20 flex items-center justify-between border-b border-gray-200 px-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
+                    <div>
+                        <span class="text-base font-black text-primary-600 tracking-wide uppercase block leading-none">
+                            SIBENKA
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-bold tracking-wider uppercase block mt-1">
+                            SKAGATA
+                        </span>
+                    </div>
+                </div>
                 <button @click="mobileSidebarOpen = false"
                     class="text-gray-500 hover:text-gray-700 p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
                     aria-label="Tutup Menu">
@@ -93,10 +101,18 @@
 
         <div class="w-64 flex flex-col justify-between h-full shrink-0">
             <!-- Logo -->
-            <div class="h-16 flex items-center justify-center border-b border-gray-200 px-4 shrink-0">
-                <span class="text-lg font-bold text-primary-600 tracking-wide uppercase">
-                    Inventaris SMK
-                </span>
+            <div class="h-20 flex items-center justify-center border-b border-gray-200 px-4 shrink-0">
+                <div class="flex items-center gap-3">
+                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
+                    <div>
+                        <span class="text-base font-black text-primary-600 tracking-wide uppercase block leading-none">
+                            SIBENKA
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-bold tracking-wider uppercase block mt-1">
+                            SKAGATA
+                        </span>
+                    </div>
+                </div>
             </div>
 
             <!-- Navigation Links -->

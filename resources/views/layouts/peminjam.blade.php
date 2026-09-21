@@ -31,26 +31,19 @@
 
     <!-- TOP NAVBAR (Clean & Responsive) -->
     <header class="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-30 shadow-xs">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-3">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-3 sm:gap-4">
 
             <!-- Brand / Logo -->
-            <a href="{{ route('peminjam.dashboard') }}" class="flex items-center space-x-2.5 group">
-                <div
-                    class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary-700 to-primary-500 text-white flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition-transform">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10">
-                        </path>
-                    </svg>
-                </div>
+            <a href="{{ route('peminjam.dashboard') }}" class="flex items-center space-x-3 sm:space-x-3.5 group">
+                <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta"
+                    class="w-14 h-14 sm:w-16 sm:h-16 object-contain shrink-0 group-hover:scale-105 transition-transform drop-shadow-sm">
                 <div>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-base font-bold text-gray-900 tracking-tight">SIBENKA</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg sm:text-xl font-black text-gray-900 tracking-tight">SIBENKA</span>
                         <span
-                            class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-primary-50 text-primary-700 border border-primary-200">SKAGATA</span>
+                            class="text-[11px] sm:text-xs font-extrabold px-2 py-0.5 rounded-md bg-primary-50 text-primary-700 border border-primary-200 shadow-2xs">SKAGATA</span>
                     </div>
-                    <p class="text-[10px] text-gray-400 font-medium leading-none hidden sm:block">Sistem Inventaris
-                        Bengkel</p>
+                    <p class="text-xs text-gray-500 font-medium leading-tight hidden sm:block">Sistem Inventaris & Sirkulasi Bengkel</p>
                 </div>
             </a>
 
