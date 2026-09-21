@@ -144,10 +144,11 @@
     </header>
 
     <!-- MAIN CONTENT -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 pb-24 md:pb-8">
+    <main class="@yield('main_class', 'flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-7 pb-24 md:pb-8')">
         @yield('content')
     </main>
 
+    @if (!View::hasSection('hide_footer'))
     <!-- FOOTER (Desktop View) -->
     <footer class="bg-white border-t border-gray-200 py-5 text-center text-xs text-gray-500 hidden md:block">
         <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
@@ -164,6 +165,7 @@
             </p>
         </div>
     </footer>
+    @endif
 
     <!-- MOBILE BOTTOM NAVIGATION (Fixed Bottom Bar - App Feel) -->
     <nav
