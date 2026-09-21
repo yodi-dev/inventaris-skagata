@@ -6,6 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>@yield('title', 'Katalog Peminjam') - SIBENKA SMKN 3 Yogyakarta</title>
 
+    <!-- Favicon / Logo Tab Browser -->
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+
     <!-- Load Tailwind & JS via Vite -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>

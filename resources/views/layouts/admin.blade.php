@@ -5,6 +5,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('title', 'Admin Dashboard') - Inventaris SMKN 3 Yk</title>
+    <!-- Favicon / Logo Tab Browser -->
+    <link rel="icon" type="image/png" href="{{ asset('logo.png') }}">
+    <link rel="shortcut icon" href="{{ asset('logo.png') }}" type="image/png">
+    <link rel="apple-touch-icon" href="{{ asset('logo.png') }}">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
         /* Ultra-smooth hardware-accelerated sidebar transition */
