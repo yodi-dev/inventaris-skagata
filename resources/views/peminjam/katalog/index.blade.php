@@ -49,6 +49,86 @@
             </button>
         </div>
 
+        <!-- BANNER HIMBAUAN: MENJAGA BARANG YANG DIPINJAM (Hanya 12 Detik Pertama) -->
+        <div x-data="{
+                showHimbauan: true,
+                timeLeft: 12,
+                interval: null,
+                init() {
+                    this.interval = setInterval(() => {
+                        if (this.timeLeft > 1) {
+                            this.timeLeft--;
+                        } else {
+                            this.showHimbauan = false;
+                            clearInterval(this.interval);
+                        }
+                    }, 1000);
+                },
+                dismiss() {
+                    this.showHimbauan = false;
+                    if (this.interval) clearInterval(this.interval);
+                }
+            }"
+            x-show="showHimbauan"
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 -translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in-out duration-500 transform"
+            x-transition:leave-start="opacity-100 scale-100 max-h-[500px]"
+            x-transition:leave-end="opacity-0 scale-95 max-h-0 -translate-y-4"
+            class="relative overflow-hidden bg-gradient-to-r from-amber-50 via-yellow-50/60 to-orange-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 shadow-xs"
+            style="background-color: #fffbeb; border-color: #fcd34d;">
+            
+            <!-- Countdown Indicator & Dismiss Button (Pojok Kanan Atas) -->
+            <div class="absolute top-3.5 right-3.5 z-20 flex items-center gap-2">
+                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-200/90 text-[10px] font-mono font-black text-amber-950 border border-amber-300 shadow-2xs"
+                    style="background-color: #fde68a; color: #451a03;">
+                    <svg class="w-3 h-3 text-amber-800 animate-spin" style="animation-duration: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span x-text="timeLeft + 's'">12s</span>
+                </span>
+                <button type="button" @click="dismiss()"
+                    class="p-1.5 rounded-full bg-amber-200/70 hover:bg-amber-300/90 text-amber-950 transition-colors shadow-2xs"
+                    style="color: #451a03;"
+                    title="Tutup himbauan">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+
+            <div class="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-5 pr-14 sm:pr-0">
+                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md"
+                    style="background-color: #f59e0b; color: #ffffff;">
+                    <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                </div>
+                <div class="flex-1 space-y-1">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 border border-amber-300"
+                            style="background-color: #fde68a; color: #451a03;">
+                            Himbauan Peminjam
+                        </span>
+                        <h3 class="text-base sm:text-lg font-black text-amber-950" style="color: #451a03;">
+                            Jaga & Rawat Selalu Peralatan Praktik yang Anda Pinjam!
+                        </h3>
+                    </div>
+                    <p class="text-xs sm:text-sm text-amber-950 font-medium leading-relaxed" style="color: #451a03;">
+                        Setiap peralatan, perkakas, dan mesin di bengkel adalah aset bersama. Pastikan barang digunakan sesuai SOP keselamatan, dijaga agar tidak rusak atau hilang, serta dikembalikan tepat waktu dalam keadaan bersih dan lengkap ke meja Toolman.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Progress Bar 12 Detik di Bagian Bawah -->
+            <div class="absolute bottom-0 left-0 right-0 h-1 bg-amber-200/60 overflow-hidden">
+                <div class="h-full bg-amber-500 transition-all duration-1000 ease-linear"
+                    :style="'width: ' + ((timeLeft / 12) * 100) + '%'"></div>
+            </div>
+        </div>
+
         <!-- 1. HERO BANNER -->
         <div
             class="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-3xl p-5 sm:p-7 text-white shadow-md relative overflow-hidden">
