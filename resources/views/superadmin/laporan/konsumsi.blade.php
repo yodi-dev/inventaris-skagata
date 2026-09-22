@@ -20,7 +20,7 @@
                 <p class="text-sm text-gray-500 mt-1">Audit dan pantau distribusi serta pemakaian Bahan Habis Pakai (BHP) di seluruh bengkel praktik.</p>
             </div>
 
-            <!-- Action Buttons (Export Excel & Export PDF) -->
+            <!-- Action Buttons (Export Excel) -->
             <div class="flex items-center gap-3">
                 <!-- Tombol Export Excel -->
                 <a href="{{ route('superadmin.laporan.konsumsi.excel', request()->query()) }}" target="_blank"
@@ -31,17 +31,6 @@
                         </path>
                     </svg>
                     <span>Export Excel</span>
-                </a>
-
-                <!-- Tombol Export PDF -->
-                <a href="{{ route('superadmin.laporan.konsumsi.pdf', request()->query()) }}" target="_blank"
-                    class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl text-sm font-semibold transition-all shadow-xs hover:shadow-md group">
-                    <svg class="w-4 h-4 text-white group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
-                        </path>
-                    </svg>
-                    <span>Export PDF</span>
                 </a>
             </div>
         </div>

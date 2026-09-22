@@ -251,115 +251,125 @@
             <table>
                 <!-- KOP LAPORAN RESMI -->
                 <tr>
-                    <td colspan="10" class="main-title">SISTEM INVENTARIS BENGKEL (SIBENKA) - SMKN 3 YOGYAKARTA</td>
+                    <td colspan="13" class="main-title">SISTEM INVENTARIS BENGKEL (SIBENKA) - SMKN 3 YOGYAKARTA</td>
                 </tr>
                 <tr>
-                    <td colspan="10" class="sub-title">LAPORAN REKAPITULASI KONSUMSI BAHAN HABIS PAKAI (BHP)</td>
+                    <td colspan="13" class="sub-title">LAPORAN REKAPITULASI KONSUMSI BAHAN HABIS PAKAI (BHP)</td>
                 </tr>
                 <tr>
-                    <td colspan="10" class="school-title">Pengawasan Pemakaian Bahan Praktik Bengkel Kejuruan - Waka Sarpras (PRD v1.1)</td>
+                    <td colspan="13" class="school-title">Pengawasan Pemakaian Bahan Praktik Bengkel Kejuruan - Waka Sarpras (PRD v1.1)</td>
                 </tr>
-                <tr><td colspan="10">&nbsp;</td></tr>
+                <tr><td colspan="13">&nbsp;</td></tr>
 
                 <!-- PARAMETER INFORMASI DOKUMEN -->
                 <tr>
-                    <td colspan="10" class="section-bar">A. INFORMASI DOKUMEN &amp; PARAMETER FILTER</td>
+                    <td colspan="13" class="section-bar">A. INFORMASI DOKUMEN &amp; PARAMETER FILTER</td>
                 </tr>
                 <tr>
                     <td colspan="2" class="meta-label">Unit Bengkel / Kejuruan</td>
-                    <td colspan="3" class="meta-val">{{ $filters['bengkel'] }}</td>
-                    <td colspan="2" class="meta-label">Waktu Cetak / Unduh</td>
-                    <td colspan="3" class="meta-val">{{ date('d/m/Y H:i:s') }} WIB</td>
+                    <td colspan="4" class="meta-val">{{ $filters['bengkel'] }}</td>
+                    <td colspan="3" class="meta-label">Waktu Cetak / Unduh</td>
+                    <td colspan="4" class="meta-val">{{ date('d/m/Y H:i:s') }} WIB</td>
                 </tr>
                 <tr>
                     <td colspan="2" class="meta-label">Periode Tanggal Laporan</td>
-                    <td colspan="3" class="meta-val">{{ $filters['periode'] }}</td>
-                    <td colspan="2" class="meta-label">Diunduh Oleh (Akun)</td>
-                    <td colspan="3" class="meta-val">{{ $user->name ?? 'Waka Sarpras' }} (Superadmin)</td>
+                    <td colspan="4" class="meta-val">{{ $filters['periode'] }}</td>
+                    <td colspan="3" class="meta-label">Diunduh Oleh (Akun)</td>
+                    <td colspan="4" class="meta-val">{{ $user->name ?? 'Waka Sarpras' }} (Superadmin)</td>
                 </tr>
                 @if (!empty($filters['search']))
                 <tr>
                     <td colspan="2" class="meta-label">Kata Kunci Pencarian</td>
-                    <td colspan="8" class="meta-val">"{{ $filters['search'] }}"</td>
+                    <td colspan="11" class="meta-val">"{{ $filters['search'] }}"</td>
                 </tr>
                 @endif
-                <tr><td colspan="10">&nbsp;</td></tr>
+                <tr><td colspan="13">&nbsp;</td></tr>
 
                 <!-- RINGKASAN METRIK KPI -->
                 <tr>
-                    <td colspan="10" class="section-bar">B. RINGKASAN METRIK KONSUMSI BAHAN</td>
+                    <td colspan="13" class="section-bar">B. RINGKASAN METRIK KONSUMSI BAHAN</td>
                 </tr>
                 <tr>
-                    <td colspan="3" class="kpi-card-log">
+                    <td colspan="4" class="kpi-card-log">
                         <div class="kpi-title">TOTAL TRANSAKSI PEMAKAIAN</div>
                         <div class="kpi-val">{{ number_format($totalRecords, 0, ',', '.') }} Transaksi</div>
                     </td>
-                    <td colspan="4" class="kpi-card-qty">
+                    <td colspan="5" class="kpi-card-qty">
                         <div class="kpi-title">TOTAL KUANTITAS TERPAKAI</div>
                         <div class="kpi-val">{{ number_format($totalQuantity, 0, ',', '.') }} Satuan Fisik</div>
                     </td>
-                    <td colspan="3" class="kpi-card-var">
+                    <td colspan="4" class="kpi-card-var">
                         <div class="kpi-title">VARIASI JENIS BARANG BHP</div>
                         <div class="kpi-val">{{ number_format($totalBarangVarian, 0, ',', '.') }} Varian Barang</div>
                     </td>
                 </tr>
-                <tr><td colspan="10">&nbsp;</td></tr>
+                <tr><td colspan="13">&nbsp;</td></tr>
 
                 <!-- TABEL DATA KONSUMSI -->
                 <tr>
-                    <td colspan="10" class="section-bar">C. DATA RINCIAN TRANSAKSI PENGELUARAN BHP</td>
+                    <td colspan="13" class="section-bar">C. DATA RINCIAN TRANSAKSI PENGELUARAN BHP</td>
                 </tr>
-                <thead>
-                    <tr>
-                        <th class="th-col" width="5%">No</th>
-                        <th class="th-col" width="12%">Waktu Transaksi</th>
-                        <th class="th-col" width="12%">Kode Barang</th>
-                        <th class="th-col" width="20%">Nama Barang BHP</th>
-                        <th class="th-col" width="15%">Unit Bengkel</th>
-                        <th class="th-col" width="12%">Lokasi Simpan</th>
-                        <th class="th-col" width="10%">Jumlah Dipakai</th>
-                        <th class="th-col" width="8%">Satuan</th>
-                        <th class="th-col" width="14%">Petugas / Staf</th>
-                        <th class="th-col" width="20%">Keterangan / Keperluan</th>
+                <!-- HEADER KOLOM (Ditempatkan langsung di bawah Section C tanpa thead agar tidak terangkat ke atas) -->
+                <tr>
+                    <th class="th-col" style="width: 3%;">No</th>
+                    <th class="th-col" style="width: 9%;">Waktu Transaksi</th>
+                    <th class="th-col" style="width: 8%;">Kode Barang</th>
+                    <th class="th-col" style="width: 15%;">Nama Barang BHP</th>
+                    <th class="th-col" style="width: 9%;">Sumber Dana</th>
+                    <th class="th-col" style="width: 9%;">Unit Bengkel</th>
+                    <th class="th-col" style="width: 8%;">Lokasi Simpan</th>
+                    <th class="th-col" style="width: 8%;">Harga Satuan</th>
+                    <th class="th-col" style="width: 6%;">Jumlah Dipakai</th>
+                    <th class="th-col" style="width: 5%;">Satuan</th>
+                    <th class="th-col" style="width: 7%;">Stok Sekarang (Saldo)</th>
+                    <th class="th-col" style="width: 8%;">Petugas / Staf</th>
+                    <th class="th-col" style="width: 15%;">Keterangan / Keperluan</th>
+                </tr>
+                @forelse ($movements as $idx => $m)
+                    @php
+                        $harga = $m->barang->harga 
+                            ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
+                        $stokSekarang = $m->barang ? ($m->barang->stok_tersedia ?? $m->barang->stok_total ?? 0) : 0;
+                        $sumberDana = $m->barang?->sumberDana?->nama ?? '-';
+                        $lokasi = $m->barang?->lokasiPenyimpanan?->nama ?? ($m->barang?->lokasiPenyimpanan?->nama_lokasi ?? '-');
+                    @endphp
+                    <tr class="{{ $idx % 2 == 1 ? 'row-alt' : '' }}">
+                        <td class="td-cell td-center">{{ $idx + 1 }}</td>
+                        <td class="td-cell td-center">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
+                        <td class="td-cell td-center font-mono">{{ $m->barang->kode_barang ?? '-' }}</td>
+                        <td class="td-cell"><strong>{{ $m->barang->nama ?? 'Barang Dihapus' }}</strong></td>
+                        <td class="td-cell td-center">{{ $sumberDana }}</td>
+                        <td class="td-cell">{{ $m->barang->bengkel->nama ?? '-' }}</td>
+                        <td class="td-cell">{{ $lokasi }}</td>
+                        <td class="td-cell td-right">{{ $harga > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') : '-' }}</td>
+                        <td class="td-cell td-right qty-badge">-{{ abs($m->jumlah) }}</td>
+                        <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                        <td class="td-cell td-right font-semibold">{{ number_format($stokSekarang, 0, ',', '.') }} {{ $m->barang->satuan ?? 'unit' }}</td>
+                        <td class="td-cell">{{ $m->user->name ?? 'Sistem' }}</td>
+                        <td class="td-cell">{{ $m->keterangan ?? 'Penggunaan bahan praktik' }}</td>
                     </tr>
-                </thead>
-                <tbody>
-                    @forelse ($movements as $idx => $m)
-                        <tr class="{{ $idx % 2 == 1 ? 'row-alt' : '' }}">
-                            <td class="td-cell td-center">{{ $idx + 1 }}</td>
-                            <td class="td-cell td-center">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
-                            <td class="td-cell td-center font-mono">{{ $m->barang->kode_barang ?? '-' }}</td>
-                            <td class="td-cell"><strong>{{ $m->barang->nama ?? 'Barang Dihapus' }}</strong></td>
-                            <td class="td-cell">{{ $m->barang->bengkel->nama ?? '-' }}</td>
-                            <td class="td-cell">{{ $m->barang->lokasiPenyimpanan->nama_lokasi ?? '-' }}</td>
-                            <td class="td-cell td-right qty-badge">-{{ abs($m->jumlah) }}</td>
-                            <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
-                            <td class="td-cell">{{ $m->user->name ?? 'Sistem' }}</td>
-                            <td class="td-cell">{{ $m->keterangan ?? 'Penggunaan bahan praktik' }}</td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="10" class="td-cell td-center" style="padding: 20px; color: #64748b;">
-                                <em>Tidak ada riwayat pengeluaran atau konsumsi bahan habis pakai (BHP) pada kriteria filter ini.</em>
-                            </td>
-                        </tr>
-                    @endforelse
+                @empty
+                    <tr>
+                        <td colspan="13" class="td-cell td-center" style="padding: 20px; color: #64748b;">
+                            <em>Tidak ada riwayat pengeluaran atau konsumsi bahan habis pakai (BHP) pada kriteria filter ini.</em>
+                        </td>
+                    </tr>
+                @endforelse
 
-                    @if ($movements->isNotEmpty())
-                        <tr class="footer-total">
-                            <td colspan="6" class="td-cell td-right">TOTAL AKUMULASI KUANTITAS BAHAN TERPAKAI:</td>
-                            <td class="td-cell td-right qty-badge">{{ number_format($totalQuantity, 0, ',', '.') }}</td>
-                            <td colspan="3" class="td-cell">Unit/Satuan Terdistribusi</td>
-                        </tr>
-                    @endif
-                </tbody>
-                <tr><td colspan="10">&nbsp;</td></tr>
-                <tr><td colspan="10">&nbsp;</td></tr>
+                @if ($movements->isNotEmpty())
+                    <tr class="footer-total">
+                        <td colspan="8" class="td-cell td-right">TOTAL AKUMULASI KUANTITAS BAHAN TERPAKAI:</td>
+                        <td class="td-cell td-right qty-badge">{{ number_format($totalQuantity, 0, ',', '.') }}</td>
+                        <td colspan="4" class="td-cell">Unit/Satuan Terdistribusi</td>
+                    </tr>
+                @endif
+                <tr><td colspan="13">&nbsp;</td></tr>
+                <tr><td colspan="13">&nbsp;</td></tr>
 
                 <!-- LEMBAR PENGESAHAN DOKUMEN -->
                 <tr>
-                    <td colspan="6"></td>
-                    <td colspan="4" class="td-center">
+                    <td colspan="8"></td>
+                    <td colspan="5" class="td-center">
                         Yogyakarta, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}<br>
                         <strong>Mengetahui / Mengesahkan,</strong><br>
                         Wakil Kepala Sekolah Bidang Sarpras<br><br><br><br>

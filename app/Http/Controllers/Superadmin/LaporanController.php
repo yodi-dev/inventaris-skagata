@@ -298,7 +298,13 @@ class LaporanController extends Controller
      */
     protected function buildKonsumsiQuery(Request $request)
     {
-        $query = StockMovement::with(['barang.bengkel', 'barang.lokasiPenyimpanan', 'user'])
+        $query = StockMovement::with([
+            'barang.bengkel',
+            'barang.lokasiPenyimpanan',
+            'barang.sumberDana',
+            'barang.detailPengadaans',
+            'user'
+        ])
             ->where('jenis', 'bhp_keluar')
             ->orderBy('created_at', 'desc');
 
