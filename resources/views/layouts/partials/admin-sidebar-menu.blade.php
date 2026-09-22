@@ -82,6 +82,10 @@
             Dashboard
         </a>
 
+        <!-- Sub-menu Master Data -->
+        <div class="pt-4 pb-1">
+            <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Master Data</p>
+        </div>
         <a href="/toolman/barang"
             class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/barang*') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
             <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -100,6 +104,17 @@
                     d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
             </svg>
             Manajemen Lokasi
+        </a>
+
+        <a href="/toolman/peminjam"
+            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/peminjam') || request()->is('toolman/peminjam/*') || request()->is('toolman/users*')
+        ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
+            <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                </path>
+            </svg>
+            Manajemen Peminjam
         </a>
 
         <!-- Sub-menu Sirkulasi -->
@@ -125,7 +140,7 @@
             Pengembalian
         </a>
 
-        <!-- Menu Pengadaan & Manajemen -->
+        <!-- Menu Pengadaan & Mutasi -->
         <div class="pt-4 pb-1">
             <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Pengadaan & Mutasi</p>
         </div>
@@ -136,16 +151,6 @@
                 </path>
             </svg>
             Pengadaan (RAB)
-        </a>
-        <a href="/toolman/peminjam"
-            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/peminjam') || request()->is('toolman/peminjam/*') || request()->is('toolman/users*')
-        ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
-            <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                </path>
-            </svg>
-            Manajemen Peminjam
         </a>
         <a href="/toolman/mutasi"
             class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/mutasi*') ? 'bg-primary-50 text-primary-600' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
