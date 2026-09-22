@@ -104,6 +104,8 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/barang', [ToolmanBarangController::class, 'index'])->name('barang.index');
     Route::get('/barang/create', [ToolmanBarangController::class, 'create'])->name('barang.create');
     Route::post('/barang', [ToolmanBarangController::class, 'store'])->name('barang.store');
+    Route::get('/barang/template-excel', [ToolmanBarangController::class, 'downloadTemplate'])->name('barang.template-excel');
+    Route::post('/barang/import', [ToolmanBarangController::class, 'import'])->name('barang.import');
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
