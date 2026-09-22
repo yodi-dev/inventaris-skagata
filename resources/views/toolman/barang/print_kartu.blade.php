@@ -418,6 +418,11 @@
                             <td class="meta-sep">:</td>
                             <td class="meta-val">{{ $barang->deskripsi ?? '-' }}</td>
                         </tr>
+                        <tr>
+                            <td class="meta-label">Sumber Dana</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val">{{ $barang->sumberDana ? $barang->sumberDana->nama . ($barang->sumberDana->kode ? ' (' . $barang->sumberDana->kode . ')' : '') : '-' }}</td>
+                        </tr>
                     </table>
                 </div>
 

@@ -7,6 +7,8 @@ use App\Models\Barang;
 use App\Models\Bengkel;
 use App\Models\LokasiPenyimpanan;
 use App\Models\StockMovement;
+use App\Models\SumberDana;
+use App\Http\Controllers\Toolman\SumberDanaController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
@@ -19,7 +21,9 @@ class BarangController extends Controller
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
-        $query = Barang::with(['lokasiPenyimpanan', 'bengkel'])
+        SumberDanaController::ensureSchemaReady();
+
+        $query = Barang::with(['lokasiPenyimpanan', 'bengkel', 'sumberDana'])
             ->where('bengkel_id', $bengkelId);
 
         // Pencarian Nama / Kode Barang
@@ -62,13 +66,18 @@ class BarangController extends Controller
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
 
-        return view('toolman.barang.create', compact('bengkel', 'lokasiPenyimpanans'));
+        SumberDanaController::ensureSchemaReady();
+        $sumberDanas = SumberDana::withCount('barangs')->orderBy('nama', 'asc')->get();
+
+        return view('toolman.barang.create', compact('bengkel', 'lokasiPenyimpanans', 'sumberDanas'));
     }
 
     public function store(Request $request)
     {
         $user = auth()->user();
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        SumberDanaController::ensureSchemaReady();
 
         // Validasi input
         $validated = $request->validate([
@@ -88,6 +97,7 @@ class BarangController extends Controller
                     return $query->where('bengkel_id', $bengkelId);
                 }),
             ],
+            'sumber_dana_id' => 'nullable|exists:sumber_danas,id',
             'satuan' => 'required|string|max:50',
             'spesifikasi' => 'nullable|string',
             // Field khusus inventaris
@@ -100,6 +110,7 @@ class BarangController extends Controller
         ], [
             'kode_barang.unique' => 'Kode barang sudah digunakan di bengkel ini.',
             'lokasi_penyimpanan_id.exists' => 'Lokasi penyimpanan tidak valid untuk bengkel Anda.',
+            'sumber_dana_id.exists' => 'Sumber dana yang dipilih tidak valid.',
         ]);
 
         $jenisBarang = ($request->input('tipe') === 'bahan' || $request->input('tipe') === 'bhp') ? 'bhp' : 'inventaris';
@@ -127,6 +138,7 @@ class BarangController extends Controller
             $barang = Barang::create([
                 'bengkel_id' => $bengkelId,
                 'lokasi_penyimpanan_id' => $request->input('lokasi_penyimpanan_id'),
+                'sumber_dana_id' => $request->input('sumber_dana_id'),
                 'kode_barang' => strtoupper(trim($request->input('kode_barang'))),
                 'nama' => trim($request->input('nama_barang')),
                 'jenis_barang' => $jenisBarang,
@@ -166,9 +178,11 @@ class BarangController extends Controller
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
+        SumberDanaController::ensureSchemaReady();
+
         $barang = null;
         if ($id) {
-            $barang = Barang::with(['lokasiPenyimpanan', 'detailPeminjamans' => function ($q) {
+            $barang = Barang::with(['lokasiPenyimpanan', 'sumberDana', 'detailPeminjamans' => function ($q) {
                 $q->whereHas('peminjaman', function ($p) {
                     $p->whereIn('status', ['active', 'terlambat']);
                 })->with('peminjaman.user');
@@ -176,20 +190,23 @@ class BarangController extends Controller
                 ->where('bengkel_id', $bengkelId)
                 ->findOrFail($id);
         } else {
-            $barang = Barang::with('lokasiPenyimpanan')
+            $barang = Barang::with(['lokasiPenyimpanan', 'sumberDana'])
                 ->where('bengkel_id', $bengkelId)
                 ->firstOrFail();
         }
 
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
+        $sumberDanas = SumberDana::withCount('barangs')->orderBy('nama', 'asc')->get();
 
-        return view('toolman.barang.edit', compact('barang', 'bengkel', 'lokasiPenyimpanans'));
+        return view('toolman.barang.edit', compact('barang', 'bengkel', 'lokasiPenyimpanans', 'sumberDanas'));
     }
 
     public function update(Request $request, $id)
     {
         $user = auth()->user();
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+
+        SumberDanaController::ensureSchemaReady();
 
         $barang = Barang::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -209,6 +226,7 @@ class BarangController extends Controller
                     return $query->where('bengkel_id', $bengkelId);
                 }),
             ],
+            'sumber_dana_id' => 'nullable|exists:sumber_danas,id',
             'satuan' => 'required|string|max:50',
             'spesifikasi' => 'nullable|string',
             'stok_baik' => 'nullable|integer|min:0',
@@ -216,6 +234,8 @@ class BarangController extends Controller
             'stok_rusak_berat' => 'nullable|integer|min:0',
             'stok_bahan' => 'nullable|numeric|min:0',
             'batas_minimum' => 'nullable|numeric|min:0',
+        ], [
+            'sumber_dana_id.exists' => 'Sumber dana yang dipilih tidak valid.',
         ]);
 
         return DB::transaction(function () use ($request, $barang, $user) {
@@ -242,6 +262,7 @@ class BarangController extends Controller
 
             $barang->update([
                 'lokasi_penyimpanan_id' => $request->input('lokasi_penyimpanan_id'),
+                'sumber_dana_id' => $request->input('sumber_dana_id'),
                 'kode_barang' => strtoupper(trim($request->input('kode_barang'))),
                 'nama' => trim($request->input('nama_barang')),
                 'satuan' => trim($request->input('satuan')),
@@ -312,6 +333,7 @@ class BarangController extends Controller
         $query = Barang::with([
             'bengkel',
             'lokasiPenyimpanan',
+            'sumberDana',
             'stockMovements' => function ($q) {
                 $q->with('user')->orderBy('created_at', 'asc');
             }

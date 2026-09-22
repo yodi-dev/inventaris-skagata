@@ -14,6 +14,7 @@ class Barang extends Model
     protected $fillable = [
         'bengkel_id',
         'lokasi_penyimpanan_id',
+        'sumber_dana_id',
         'kode_barang',
         'nama',
         'jenis_barang',
@@ -34,6 +35,11 @@ class Barang extends Model
     public function lokasiPenyimpanan()
     {
         return $this->belongsTo(LokasiPenyimpanan::class);
+    }
+
+    public function sumberDana()
+    {
+        return $this->belongsTo(SumberDana::class);
     }
 
     public function detailPeminjamans()
