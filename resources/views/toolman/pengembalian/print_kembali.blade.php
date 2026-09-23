@@ -368,7 +368,7 @@
                 <span class="toolbar-badge">A4 Portrait</span>
             </div>
             <div class="toolbar-actions">
-                <a href="{{ route('toolman.pengembalian.index') }}" class="btn-toolbar btn-back">
+                <a href="{{ auth()->check() && auth()->user()->role === 'peminjam' ? route('peminjam.tiket.show', $peminjaman->id) : route('toolman.pengembalian.index') }}" class="btn-toolbar btn-back">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>

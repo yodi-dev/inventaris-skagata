@@ -198,6 +198,8 @@ Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam
     Route::get('/tiket', [PeminjamTiketController::class, 'index'])->name('tiket.index');
     Route::get('/tiket/{id}', [PeminjamTiketController::class, 'show'])->name('tiket.show');
     Route::post('/tiket/{id}/kembalikan', [PeminjamTiketController::class, 'ajukanPengembalian'])->name('tiket.kembalikan');
+    Route::get('/tiket/{id}/print-pinjam', [PeminjamTiketController::class, 'printPinjam'])->name('tiket.print-pinjam');
+    Route::get('/tiket/{id}/print-kembali', [PeminjamTiketController::class, 'printKembali'])->name('tiket.print-kembali');
 
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
