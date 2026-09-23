@@ -13,12 +13,6 @@
                 <p class="text-xs sm:text-sm text-gray-500 mt-1">Berikut adalah ringkasan inventaris dan sirkulasi barang
                     hari ini.</p>
             </div>
-            <div class="flex items-center gap-2 shrink-0">
-                <a href="{{ route('superadmin.laporan.mutasi') }}"
-                    class="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-white border border-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50 shadow-sm transition-colors">
-                    Unduh Laporan
-                </a>
-            </div>
         </div>
 
         <!-- Stats Grid -->

@@ -6,6 +6,7 @@ use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanCo
 use App\Http\Controllers\Toolman\DashboardController as ToolmanDashboardController;
 use App\Http\Controllers\Toolman\BarangController as ToolmanBarangController;
 use App\Http\Controllers\Toolman\LokasiController as ToolmanLokasiController;
+use App\Http\Controllers\Toolman\SatuanController as ToolmanSatuanController;
 use App\Http\Controllers\Toolman\SumberDanaController as ToolmanSumberDanaController;
 use App\Http\Controllers\Toolman\PeminjamanController as ToolmanPeminjamanController;
 use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianController;
@@ -121,7 +122,13 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
         return redirect()->route('toolman.lokasi.index');
     })->name('lokasi-penyimpanan.index');
 
-    // Sumber Dana (Modal CRUD - Tanpa Menu Sidebar)
+    // Manajemen Satuan Barang
+    Route::get('/satuan', [ToolmanSatuanController::class, 'index'])->name('satuan.index');
+    Route::post('/satuan', [ToolmanSatuanController::class, 'store'])->name('satuan.store');
+    Route::put('/satuan/{id}', [ToolmanSatuanController::class, 'update'])->name('satuan.update');
+    Route::delete('/satuan/{id}', [ToolmanSatuanController::class, 'destroy'])->name('satuan.destroy');
+
+    // Manajemen Sumber Dana
     Route::get('/sumber-dana', [ToolmanSumberDanaController::class, 'index'])->name('sumber-dana.index');
     Route::post('/sumber-dana', [ToolmanSumberDanaController::class, 'store'])->name('sumber-dana.store');
     Route::put('/sumber-dana/{id}', [ToolmanSumberDanaController::class, 'update'])->name('sumber-dana.update');

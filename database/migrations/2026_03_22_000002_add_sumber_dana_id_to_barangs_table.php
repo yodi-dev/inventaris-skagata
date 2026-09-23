@@ -8,21 +8,24 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('barangs', function (Blueprint $table) {
-            $table->foreignId('sumber_dana_id')
-                ->nullable()
-                ->after('lokasi_penyimpanan_id')
-                ->constrained('sumber_danas')
-                ->nullOnDelete();
-        });
+        if (Schema::hasTable('barangs') && !Schema::hasColumn('barangs', 'sumber_dana_id')) {
+            Schema::table('barangs', function (Blueprint $table) {
+                $table->foreignId('sumber_dana_id')
+                    ->nullable()
+                    ->after('lokasi_penyimpanan_id')
+                    ->constrained('sumber_danas')
+                    ->nullOnDelete();
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('barangs', function (Blueprint $table) {
-            $table->dropForeign(['sumber_dana_id']);
-            $table->dropColumn('sumber_dana_id');
-        });
+        if (Schema::hasTable('barangs') && Schema::hasColumn('barangs', 'sumber_dana_id')) {
+            Schema::table('barangs', function (Blueprint $table) {
+                $table->dropForeign(['sumber_dana_id']);
+                $table->dropColumn('sumber_dana_id');
+            });
+        }
     }
 };
-

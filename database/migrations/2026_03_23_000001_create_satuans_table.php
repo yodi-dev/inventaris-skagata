@@ -8,11 +8,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasTable('sumber_danas')) {
-            Schema::create('sumber_danas', function (Blueprint $table) {
+        if (!Schema::hasTable('satuans')) {
+            Schema::create('satuans', function (Blueprint $table) {
                 $table->id();
-                $table->string('kode')->nullable();
                 $table->string('nama');
+                $table->string('singkatan')->nullable();
                 $table->text('deskripsi')->nullable();
                 $table->timestamps();
             });
@@ -21,6 +21,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('sumber_danas');
+        Schema::dropIfExists('satuans');
     }
 };

@@ -8,7 +8,9 @@ use App\Models\Bengkel;
 use App\Models\LokasiPenyimpanan;
 use App\Models\StockMovement;
 use App\Models\SumberDana;
+use App\Models\Satuan;
 use App\Http\Controllers\Toolman\SumberDanaController;
+use App\Http\Controllers\Toolman\SatuanController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -70,7 +72,10 @@ class BarangController extends Controller
         SumberDanaController::ensureSchemaReady();
         $sumberDanas = SumberDana::withCount('barangs')->orderBy('nama', 'asc')->get();
 
-        return view('toolman.barang.create', compact('bengkel', 'lokasiPenyimpanans', 'sumberDanas'));
+        SatuanController::ensureDefaults();
+        $satuans = Satuan::orderBy('nama', 'asc')->get();
+
+        return view('toolman.barang.create', compact('bengkel', 'lokasiPenyimpanans', 'sumberDanas', 'satuans'));
     }
 
     public function store(Request $request)
@@ -199,7 +204,10 @@ class BarangController extends Controller
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
         $sumberDanas = SumberDana::withCount('barangs')->orderBy('nama', 'asc')->get();
 
-        return view('toolman.barang.edit', compact('barang', 'bengkel', 'lokasiPenyimpanans', 'sumberDanas'));
+        SatuanController::ensureDefaults();
+        $satuans = Satuan::orderBy('nama', 'asc')->get();
+
+        return view('toolman.barang.edit', compact('barang', 'bengkel', 'lokasiPenyimpanans', 'sumberDanas', 'satuans'));
     }
 
     public function update(Request $request, $id)

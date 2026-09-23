@@ -25,14 +25,16 @@ class SumberDanaController extends Controller
                     $table->text('deskripsi')->nullable();
                     $table->timestamps();
                 });
+            }
 
-                // Seed default sumber dana sekolah jika baru dibuat
+            if (SumberDana::count() === 0) {
+                // Seed default sumber dana sekolah jika masih kosong
                 $defaultData = [
                     ['kode' => 'BOS', 'nama' => 'BOS Reguler', 'deskripsi' => 'Bantuan Operasional Sekolah Reguler'],
                     ['kode' => 'BOSDA', 'nama' => 'BOS Daerah (BOSDA)', 'deskripsi' => 'Bantuan Operasional Pendidikan Daerah DIY'],
                     ['kode' => 'KOMITE', 'nama' => 'Komite Sekolah', 'deskripsi' => 'Dana Partisipasi Masyarakat / Komite Sekolah'],
                     ['kode' => 'DAK', 'nama' => 'DAK Fisik', 'deskripsi' => 'Dana Alokasi Khusus Fisik Bidang Pendidikan'],
-                    ['kode' => 'HIBAH', 'nama' => 'Hibah / CSR Industri', 'deskripsi' => 'Bantuan Hibah Kerjasama Industri / Mitra'],
+                    ['kode' => 'HIBAH', 'nama' => 'Hibah / CSR Industri', 'deskripsi' => 'Bantuan Hibah Kerjasama Industri / Mitra Perusahaan'],
                 ];
                 foreach ($defaultData as $item) {
                     SumberDana::firstOrCreate(['nama' => $item['nama']], $item);
@@ -54,25 +56,51 @@ class SumberDanaController extends Controller
     }
 
     /**
-     * Mengambil daftar data sumber dana (JSON untuk modal & dropdown).
-     * Bersifat global untuk seluruh bengkel di sekolah.
+     * Mengambil daftar data sumber dana (Halaman View atau JSON).
      */
     public function index(Request $request)
     {
         self::ensureSchemaReady();
 
-        $sumberDanas = SumberDana::withCount('barangs')
-            ->orderBy('nama', 'asc')
-            ->get();
+        $user = $request->user() ?? auth()->user();
+        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
-        return response()->json([
-            'success' => true,
-            'data' => $sumberDanas,
-        ]);
+        $query = SumberDana::withCount('barangs');
+
+        if ($search = $request->input('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama', 'like', "%{$search}%")
+                    ->orWhere('kode', 'like', "%{$search}%")
+                    ->orWhere('deskripsi', 'like', "%{$search}%");
+            });
+        }
+
+        // Jika request via AJAX / API (misal dari form barang create/edit)
+        if ($request->wantsJson() || $request->ajax()) {
+            $sumberDanas = $query->orderBy('nama', 'asc')->get();
+            return response()->json([
+                'success' => true,
+                'data' => $sumberDanas,
+            ]);
+        }
+
+        // Statistik
+        $totalSumberDana = SumberDana::count();
+        $danaTerpakaiCount = SumberDana::has('barangs')->count();
+
+        $sumberDanas = $query->orderBy('nama', 'asc')->paginate(10)->withQueryString();
+
+        return view('toolman.sumber-dana.index', compact(
+            'sumberDanas',
+            'bengkel',
+            'totalSumberDana',
+            'danaTerpakaiCount'
+        ));
     }
 
     /**
-     * Menyimpan data sumber dana baru via AJAX modal (Global).
+     * Menyimpan data sumber dana baru.
      */
     public function store(Request $request)
     {
@@ -96,15 +124,20 @@ class SumberDanaController extends Controller
 
         $sumberDana->loadCount('barangs');
 
-        return response()->json([
-            'success' => true,
-            'message' => "Sumber Dana '{$sumberDana->nama}' berhasil ditambahkan!",
-            'data' => $sumberDana,
-        ], 201);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Sumber Dana '{$sumberDana->nama}' berhasil ditambahkan!",
+                'data' => $sumberDana,
+            ], 201);
+        }
+
+        return redirect()->route('toolman.sumber-dana.index')
+            ->with('success', "Sumber Dana '{$sumberDana->nama}' berhasil ditambahkan.");
     }
 
     /**
-     * Memperbarui data sumber dana via AJAX modal.
+     * Memperbarui data sumber dana.
      */
     public function update(Request $request, $id)
     {
@@ -129,15 +162,20 @@ class SumberDanaController extends Controller
 
         $sumberDana->loadCount('barangs');
 
-        return response()->json([
-            'success' => true,
-            'message' => "Sumber Dana '{$sumberDana->nama}' berhasil diperbarui!",
-            'data' => $sumberDana,
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Sumber Dana '{$sumberDana->nama}' berhasil diperbarui!",
+                'data' => $sumberDana,
+            ]);
+        }
+
+        return redirect()->route('toolman.sumber-dana.index')
+            ->with('success', "Sumber Dana '{$sumberDana->nama}' berhasil diperbarui.");
     }
 
     /**
-     * Menghapus data sumber dana via AJAX modal.
+     * Menghapus data sumber dana.
      */
     public function destroy(Request $request, $id)
     {
@@ -147,19 +185,24 @@ class SumberDanaController extends Controller
 
         // Proteksi jika sumber dana sedang digunakan oleh barang di bengkel manapun
         if ($sumberDana->barangs_count > 0) {
-            return response()->json([
-                'success' => false,
-                'message' => "Tidak dapat menghapus '{$sumberDana->nama}' karena sedang digunakan oleh {$sumberDana->barangs_count} data barang!",
-            ], 422);
+            $msg = "Tidak dapat menghapus '{$sumberDana->nama}' karena sedang digunakan oleh {$sumberDana->barangs_count} data barang!";
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $msg], 422);
+            }
+            return redirect()->back()->with('error', $msg);
         }
 
         $nama = $sumberDana->nama;
         $sumberDana->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => "Sumber Dana '{$nama}' berhasil dihapus!",
-        ]);
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => "Sumber Dana '{$nama}' berhasil dihapus!",
+            ]);
+        }
+
+        return redirect()->route('toolman.sumber-dana.index')
+            ->with('success', "Sumber Dana '{$nama}' berhasil dihapus.");
     }
 }
-

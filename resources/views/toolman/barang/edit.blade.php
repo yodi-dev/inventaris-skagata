@@ -13,30 +13,30 @@
                 namaBarang: {!! json_encode($barang->nama) !!},
                 lokasiId: '{{ $barang->lokasi_penyimpanan_id }}',
                 satuan: '{{ $barang->satuan }}',
-            
+
                 // Kuantitas Alat Inventaris
                 stokBaik: {{ (int) $barang->stok_tersedia }},
                 stokRusakRingan: 0,
                 stokRusakBerat: {{ (int) $barang->stok_rusak }},
                 stokDipinjam: {{ (int) $barang->stok_dipinjam }},
-            
+
                 // Kuantitas Bahan Habis Pakai
                 stokBahan: {{ (float) $barang->stok_tersedia }},
                 batasMinimum: {{ (int) $barang->minimum_stok }},
-            
+
                 // Estimasi Harga & Spesifikasi
                 estimasiHarga: '0',
                 spesifikasi: {!! json_encode($barang->deskripsi ?? '') !!},
-            
+
                 // Image state
                 hasExistingImage: true,
                 imagePreview: null,
-            
+
                 // Modal state
                 showDeleteModal: false,
                 toastMessage: '',
                 showToast: false,
-            
+
                 handleFileChange(event) {
                     const file = event.target.files[0];
                     if (file) {
@@ -54,12 +54,15 @@
                     this.tipe = val;
                 },
                 totalStokInventaris() {
-                    return (parseInt(this.stokBaik) || 0) + (parseInt(this.stokRusakRingan) || 0) + (parseInt(this.stokRusakBerat) || 0);
+                    return (parseInt(this.stokBaik) || 0) + (parseInt(this.stokRusakRingan) || 0) + (parseInt(this
+                        .stokRusakBerat) || 0);
                 },
                 triggerToast(msg) {
                     this.toastMessage = msg;
                     this.showToast = true;
-                    setTimeout(() => { this.showToast = false; }, 3500);
+                    setTimeout(() => {
+                        this.showToast = false;
+                    }, 3500);
                 },
 
                 // Sumber Dana Modal State & Methods
@@ -102,7 +105,9 @@
                 async refreshSumberDanas() {
                     try {
                         const res = await fetch('{{ route('toolman.sumber-dana.index') }}', {
-                            headers: { 'Accept': 'application/json' }
+                            headers: {
+                                'Accept': 'application/json'
+                            }
                         });
                         if (res.ok) {
                             const json = await res.json();
@@ -119,7 +124,7 @@
                     const selectEl = document.getElementById('sumber_dana_id');
                     if (!selectEl) return;
                     const currentVal = selectedId || selectEl.value;
-                    
+
                     selectEl.innerHTML = '<option value="">-- Pilih Sumber Dana (Opsional) --</option>';
                     this.sumberDanas.forEach(item => {
                         const opt = document.createElement('option');
@@ -142,9 +147,9 @@
                     this.sdLoading = true;
                     this.sdError = '';
                     try {
-                        const url = this.sdFormMode === 'create' 
-                            ? '{{ route('toolman.sumber-dana.store') }}'
-                            : '{{ url('/toolman/sumber-dana') }}/' + this.sdFormId;
+                        const url = this.sdFormMode === 'create' ?
+                            '{{ route('toolman.sumber-dana.store') }}' :
+                            '{{ url('/toolman/sumber-dana') }}/' + this.sdFormId;
                         const method = this.sdFormMode === 'create' ? 'POST' : 'PUT';
 
                         const response = await fetch(url, {
@@ -162,20 +167,24 @@
                         });
                         const data = await response.json();
                         if (!response.ok) {
-                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal menyimpan sumber dana'));
+                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(
+                                ', ') : 'Gagal menyimpan sumber dana'));
                         }
 
                         await this.refreshSumberDanas();
 
                         if (this.sdFormMode === 'create') {
                             this.updateSumberDanaSelect(data.data.id);
-                            this.sdSuccessMsg = 'Sumber dana "' + data.data.nama + '" berhasil ditambahkan dan langsung dipilih!';
+                            this.sdSuccessMsg = 'Sumber dana "' + data.data.nama +
+                                '" berhasil ditambahkan dan langsung dipilih!';
                         } else {
                             this.sdSuccessMsg = 'Sumber dana "' + data.data.nama + '" berhasil diperbarui!';
                         }
 
                         this.sdView = 'list';
-                        setTimeout(() => { this.sdSuccessMsg = ''; }, 3000);
+                        setTimeout(() => {
+                            this.sdSuccessMsg = '';
+                        }, 3000);
                     } catch (err) {
                         this.sdError = err.message;
                     } finally {
@@ -200,7 +209,9 @@
                         }
                         await this.refreshSumberDanas();
                         this.sdSuccessMsg = 'Sumber dana berhasil dihapus!';
-                        setTimeout(() => { this.sdSuccessMsg = ''; }, 3000);
+                        setTimeout(() => {
+                            this.sdSuccessMsg = '';
+                        }, 3000);
                     } catch (err) {
                         this.sdError = err.message;
                     } finally {
@@ -303,7 +314,8 @@
         </div>
 
         @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
+            <div
+                class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
                 <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
@@ -314,7 +326,8 @@
         @if (session('error'))
             <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
                 <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
                 <span>{{ session('error') }}</span>
             </div>
@@ -324,7 +337,8 @@
             <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 space-y-1">
                 <div class="font-bold flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <span>Terdapat kesalahan pada isian form:</span>
                 </div>
@@ -337,12 +351,10 @@
         @endif
 
         <!-- Form Wrapper -->
-        <form action="{{ route('toolman.barang.update', $barang->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6"
-            data-confirm="true"
-            data-title="Konfirmasi Perbarui Data Barang"
+        <form action="{{ route('toolman.barang.update', $barang->id) }}" method="POST" enctype="multipart/form-data"
+            class="space-y-6" data-confirm="true" data-title="Konfirmasi Perbarui Data Barang"
             data-message="Apakah Anda yakin ingin menyimpan perubahan data dan penyesuaian stok untuk barang <b>{{ addslashes($barang->nama) }}</b>?"
-            data-type="primary"
-            data-confirm-text="Ya, Perbarui Barang">
+            data-type="primary" data-confirm-text="Ya, Perbarui Barang">
             @csrf
             @method('PUT')
 
@@ -517,7 +529,8 @@
                             <button type="button" @click="openSumberDanaModal('list')"
                                 class="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 hover:bg-primary-100/80 px-2.5 py-1 rounded-md">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4"></path>
                                 </svg>
                                 <span>Kelola Sumber Dana</span>
                             </button>
@@ -526,7 +539,8 @@
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm bg-white">
                             <option value="">-- Pilih Sumber Dana (Opsional) --</option>
                             @foreach ($sumberDanas as $sd)
-                                <option value="{{ $sd->id }}" {{ (old('sumber_dana_id', $barang->sumber_dana_id) == $sd->id) ? 'selected' : '' }}>
+                                <option value="{{ $sd->id }}"
+                                    {{ old('sumber_dana_id', $barang->sumber_dana_id) == $sd->id ? 'selected' : '' }}>
                                     {{ $sd->nama }} {{ $sd->kode ? "({$sd->kode})" : '' }}
                                 </option>
                             @endforeach
@@ -542,18 +556,38 @@
 
                     <!-- Satuan Barang -->
                     <div>
-                        <label for="satuan" class="block text-sm font-medium text-gray-700 mb-1.5">
-                            Satuan Hitung <span class="text-red-500">*</span>
-                        </label>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label for="satuan" class="block text-sm font-medium text-gray-700">
+                                Satuan Hitung <span class="text-red-500">*</span>
+                            </label>
+                            <a href="{{ route('toolman.satuan.index') }}" target="_blank"
+                                class="text-xs text-primary-600 hover:text-primary-700 font-medium inline-flex items-center hover:underline">
+                                + Kelola Satuan
+                            </a>
+                        </div>
                         <select id="satuan" name="satuan" x-model="satuan" required
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm">
-                            <option value="Unit">Unit</option>
-                            <option value="Pcs">Pcs / Buah</option>
-                            <option value="Set">Set / Kotak Lengkap</option>
-                            <option value="Pack">Pack</option>
-                            <option value="Roll">Roll / Gulung</option>
-                            <option value="Meter">Meter</option>
-                            <option value="Box">Box / Kotak</option>
+                            @if (isset($satuans) && $satuans->count() > 0)
+                                @foreach ($satuans as $sItem)
+                                    <option value="{{ $sItem->nama }}"
+                                        {{ $barang->satuan === $sItem->nama ? 'selected' : '' }}>
+                                        {{ $sItem->nama }} {{ $sItem->singkatan ? '(' . $sItem->singkatan . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            @else
+                                <option value="Unit">Unit</option>
+                                <option value="Pcs">Pcs / Buah</option>
+                                <option value="Set">Set / Kotak Lengkap</option>
+                                <option value="Pack">Pack</option>
+                                <option value="Roll">Roll / Gulung</option>
+                                <option value="Meter">Meter</option>
+                                <option value="Box">Box / Kotak</option>
+                                <option value="Lembar">Lembar</option>
+                                <option value="Batang">Batang</option>
+                                <option value="Liter">Liter</option>
+                                <option value="Botol">Botol</option>
+                                <option value="Pasang">Pasang</option>
+                            @endif
                         </select>
                     </div>
 
@@ -839,7 +873,8 @@
                     </p>
                     <p class="text-gray-500">Didaftarkan: <span class="font-medium text-gray-700">10 Jan 2026</span> oleh
                         <span class="font-medium text-gray-700">Toolman TKJ</span> &bull; Terakhir Dicek: <span
-                            class="font-medium text-gray-700">28 Feb 2026</span></p>
+                            class="font-medium text-gray-700">28 Feb 2026</span>
+                    </p>
                 </div>
                 <div class="flex items-center gap-2">
                     <span
@@ -912,7 +947,8 @@
                             <div>
                                 <h4 class="text-lg font-bold text-gray-900">Hapus Data Barang?</h4>
                                 <p class="text-xs text-gray-500 mt-1">
-                                    Aset <strong class="text-gray-800">{{ $barang->nama }} ({{ $barang->kode_barang }})</strong> akan
+                                    Aset <strong class="text-gray-800">{{ $barang->nama }}
+                                        ({{ $barang->kode_barang }})</strong> akan
                                     dihapus permanen dari inventaris bengkel.
                                 </p>
                             </div>
@@ -922,13 +958,16 @@
                             <!-- Warning: Sedang dipinjam -->
                             <div
                                 class="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-800 leading-relaxed">
-                                <strong>Tidak Dapat Dihapus:</strong> Barang ini sedang dalam status aktif dipinjam oleh siswa
-                                ({{ $barang->stok_dipinjam }} {{ $barang->satuan }}). Anda harus menunggu pengembalian barang dan menyelesaikan tiket terlebih dahulu
+                                <strong>Tidak Dapat Dihapus:</strong> Barang ini sedang dalam status aktif dipinjam oleh
+                                siswa
+                                ({{ $barang->stok_dipinjam }} {{ $barang->satuan }}). Anda harus menunggu pengembalian
+                                barang dan menyelesaikan tiket terlebih dahulu
                                 sebelum dapat menghapus aset ini.
                             </div>
                         @else
                             <p class="mt-4 text-xs text-gray-500">
-                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Pastikan data barang sudah tidak lagi dibutuhkan.
+                                Tindakan ini bersifat permanen dan tidak dapat dibatalkan. Pastikan data barang sudah tidak
+                                lagi dibutuhkan.
                             </p>
                         @endif
                     </div>
@@ -944,7 +983,8 @@
                                 Hapus Permanen
                             </button>
                         @else
-                            <form action="{{ route('toolman.barang.destroy', $barang->id) }}" method="POST" class="inline">
+                            <form action="{{ route('toolman.barang.destroy', $barang->id) }}" method="POST"
+                                class="inline">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit"
@@ -963,34 +1003,36 @@
         <!-- ================================================================= -->
         <div x-show="showSumberDanaModal" x-cloak
             class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div x-show="showSumberDanaModal"
-                x-transition:enter="transition ease-out duration-200 transform"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
+            <div x-show="showSumberDanaModal" x-transition:enter="transition ease-out duration-200 transform"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-150 transform"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
+                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                 @click.away="showSumberDanaModal = false"
                 class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-gray-100 space-y-4">
-                
+
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                                </path>
                             </svg>
                         </div>
                         <div>
-                            <h4 class="text-base font-bold text-gray-900" x-text="sdView === 'form' ? (sdFormMode === 'create' ? 'Tambah Sumber Dana' : 'Edit Sumber Dana') : 'Kelola Sumber Dana'"></h4>
-                            <p class="text-xs text-gray-500 mt-0.5">Daftar sumber dana / mata anggaran sekolah (berlaku lintas bengkel).</p>
+                            <h4 class="text-base font-bold text-gray-900"
+                                x-text="sdView === 'form' ? (sdFormMode === 'create' ? 'Tambah Sumber Dana' : 'Edit Sumber Dana') : 'Kelola Sumber Dana'">
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-0.5">Daftar sumber dana / mata anggaran sekolah (berlaku
+                                lintas bengkel).</p>
                         </div>
                     </div>
                     <button type="button" @click="showSumberDanaModal = false"
                         class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -998,7 +1040,8 @@
                 <!-- Alert Messages inside modal -->
                 <div x-show="sdError" x-cloak
                     class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
-                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -1006,7 +1049,8 @@
                 </div>
                 <div x-show="sdSuccessMsg" x-cloak
                     class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg flex items-start gap-2">
-                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <span x-text="sdSuccessMsg"></span>
@@ -1015,11 +1059,13 @@
                 <!-- VIEW 1: LIST SUMBER DANA -->
                 <div x-show="sdView === 'list'" class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-gray-500" x-text="'Total: ' + (sumberDanas ? sumberDanas.length : 0) + ' Sumber Dana'"></span>
+                        <span class="text-xs font-semibold text-gray-500"
+                            x-text="'Total: ' + (sumberDanas ? sumberDanas.length : 0) + ' Sumber Dana'"></span>
                         <button type="button" @click="openSumberDanaModal('create')"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                                </path>
                             </svg>
                             <span>Tambah Sumber Dana</span>
                         </button>
@@ -1040,30 +1086,39 @@
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-3 py-2.5 font-medium text-gray-900 whitespace-nowrap">
                                             <div class="font-semibold" x-text="item.nama"></div>
-                                            <div class="font-mono text-[10px] text-gray-400" x-text="item.kode || '-'"></div>
+                                            <div class="font-mono text-[10px] text-gray-400" x-text="item.kode || '-'">
+                                            </div>
                                         </td>
-                                        <td class="px-3 py-2.5 text-gray-500 max-w-[160px] truncate" x-text="item.deskripsi || '-'"></td>
+                                        <td class="px-3 py-2.5 text-gray-500 max-w-[160px] truncate"
+                                            x-text="item.deskripsi || '-'"></td>
                                         <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700"
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700"
                                                 x-text="(item.barangs_count || 0) + ' item'"></span>
                                         </td>
                                         <td class="px-3 py-2.5 text-right whitespace-nowrap space-x-1">
                                             <button type="button" @click="openEditSumberDana(item)"
                                                 class="text-primary-600 hover:text-primary-800 p-1 hover:bg-primary-50 rounded transition-colors"
                                                 title="Edit">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                                    </path>
                                                 </svg>
                                             </button>
                                             <button type="button" @click="deleteSumberDana(item)"
                                                 :disabled="item.barangs_count > 0 || sdLoading"
-                                                :class="item.barangs_count > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:text-red-700 hover:bg-red-50'"
+                                                :class="item.barangs_count > 0 ? 'text-gray-300 cursor-not-allowed' :
+                                                    'text-red-500 hover:text-red-700 hover:bg-red-50'"
                                                 class="p-1 rounded transition-colors"
-                                                :title="item.barangs_count > 0 ? 'Tidak dapat dihapus karena digunakan ' + item.barangs_count + ' barang' : 'Hapus'">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                :title="item.barangs_count > 0 ? 'Tidak dapat dihapus karena digunakan ' + item
+                                                    .barangs_count + ' barang' : 'Hapus'">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
                                                 </svg>
                                             </button>
                                         </td>
@@ -1094,7 +1149,8 @@
                         <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Nama Sumber Dana <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" x-model="sdFormNama" placeholder="Contoh: BOS Reguler 2026, Komite Sekolah, DAK Fisik SMK"
+                        <input type="text" x-model="sdFormNama"
+                            placeholder="Contoh: BOS Reguler 2026, Komite Sekolah, DAK Fisik SMK"
                             class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
                     </div>
 
@@ -1126,11 +1182,14 @@
                             </button>
                             <button type="button" @click="saveSumberDana()" :disabled="sdLoading"
                                 class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
-                                <svg x-show="sdLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <svg x-show="sdLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
-                                <span x-text="sdLoading ? 'Menyimpan...' : (sdFormMode === 'create' ? 'Simpan & Pilih' : 'Perbarui')"></span>
+                                <span
+                                    x-text="sdLoading ? 'Menyimpan...' : (sdFormMode === 'create' ? 'Simpan & Pilih' : 'Perbarui')"></span>
                             </button>
                         </div>
                     </div>
