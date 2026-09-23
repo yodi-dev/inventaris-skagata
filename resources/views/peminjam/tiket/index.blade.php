@@ -299,11 +299,36 @@
                             @endif
                         </div>
 
-                        <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
                             <a href="{{ route('peminjam.tiket.show', $tiket->id) }}"
                                 class="px-3.5 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors">
                                 Lihat Detail
                             </a>
+
+                            @if (in_array($tiket->status, ['active', 'terlambat', 'menunggu_pengecekan', 'selesai']))
+                                <a href="{{ route('peminjam.tiket.print-pinjam', $tiket->id) }}" target="_blank"
+                                    class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 text-gray-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors flex items-center gap-1.5"
+                                    title="Cetak Lembar Bon Pinjam">
+                                    <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z">
+                                        </path>
+                                    </svg>
+                                    <span>Bukti Pinjam</span>
+                                </a>
+                            @endif
+
+                            @if ($tiket->status === 'selesai')
+                                <a href="{{ route('peminjam.tiket.print-kembali', $tiket->id) }}" target="_blank"
+                                    class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-blue-50 hover:text-blue-700 hover:border-blue-300 text-gray-700 text-xs font-semibold rounded-xl shadow-2xs transition-colors flex items-center gap-1.5"
+                                    title="Cetak Lembar Bukti Pengembalian">
+                                    <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span>Bukti Kembali</span>
+                                </a>
+                            @endif
 
                             @if (in_array($tiket->status, ['active', 'terlambat']))
                                 <form method="POST" action="{{ route('peminjam.tiket.kembalikan', $tiket->id) }}"

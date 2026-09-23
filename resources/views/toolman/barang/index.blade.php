@@ -110,7 +110,14 @@
                                 class="hover:bg-gray-50 transition-colors {{ $barang->stok_dipinjam > 0 ? 'bg-blue-50/20' : '' }}">
                                 <td class="px-6 py-4">
                                     <p class="font-bold text-gray-900">{{ $barang->nama }}</p>
-                                    <p class="text-xs text-gray-500 font-mono mt-0.5">{{ $barang->kode_barang }}</p>
+                                    <div class="flex items-center gap-2 mt-0.5">
+                                        <span class="text-xs text-gray-500 font-mono">{{ $barang->kode_barang }}</span>
+                                        @if ($barang->sumberDana)
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-indigo-50 text-indigo-700 border border-indigo-200" title="Sumber Dana: {{ $barang->sumberDana->nama }}">
+                                                {{ $barang->sumberDana->nama }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span

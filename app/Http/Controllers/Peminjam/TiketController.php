@@ -90,4 +90,56 @@ class TiketController extends Controller
 
         return back()->with('success', 'Pengajuan pengembalian berhasil! Silakan bawa alat fisik ke meja Toolman bengkel untuk pengecekan kondisi.');
     }
+
+    /**
+     * Cetak Lembar Bon Pinjam Alat / Bahan Resmi untuk Peminjam
+     */
+    public function printPinjam($id)
+    {
+        $user = auth()->user();
+
+        $peminjaman = Peminjaman::with([
+            'user',
+            'bengkel',
+            'detailPeminjamans.barang.lokasiPenyimpanan',
+            'diprosesOleh'
+        ])
+            ->where('user_id', $user->id)
+            ->findOrFail($id);
+
+        if (in_array($peminjaman->status, ['pending', 'menunggu_acc', 'ditolak'])) {
+            return redirect()->route('peminjam.tiket.show', $id)
+                ->with('error', 'Bukti pinjam hanya dapat dicetak setelah pengajuan peminjaman disetujui oleh Toolman.');
+        }
+
+        $bengkel = $peminjaman->bengkel;
+
+        return view('toolman.pengembalian.print_pinjam', compact('peminjaman', 'bengkel'));
+    }
+
+    /**
+     * Cetak Lembar Bukti Pengembalian Alat / Bahan Resmi untuk Peminjam
+     */
+    public function printKembali($id)
+    {
+        $user = auth()->user();
+
+        $peminjaman = Peminjaman::with([
+            'user',
+            'bengkel',
+            'detailPeminjamans.barang.lokasiPenyimpanan',
+            'diprosesOleh'
+        ])
+            ->where('user_id', $user->id)
+            ->findOrFail($id);
+
+        if ($peminjaman->status !== 'selesai') {
+            return redirect()->route('peminjam.tiket.show', $id)
+                ->with('error', 'Bukti pengembalian hanya dapat dicetak setelah pengembalian dikonfirmasi selesai oleh Toolman.');
+        }
+
+        $bengkel = $peminjaman->bengkel;
+
+        return view('toolman.pengembalian.print_kembali', compact('peminjaman', 'bengkel'));
+    }
 }

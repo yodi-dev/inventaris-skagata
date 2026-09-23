@@ -6,6 +6,7 @@ use App\Http\Controllers\Superadmin\PengadaanController as SuperadminPengadaanCo
 use App\Http\Controllers\Toolman\DashboardController as ToolmanDashboardController;
 use App\Http\Controllers\Toolman\BarangController as ToolmanBarangController;
 use App\Http\Controllers\Toolman\LokasiController as ToolmanLokasiController;
+use App\Http\Controllers\Toolman\SumberDanaController as ToolmanSumberDanaController;
 use App\Http\Controllers\Toolman\PeminjamanController as ToolmanPeminjamanController;
 use App\Http\Controllers\Toolman\PengembalianController as ToolmanPengembalianController;
 use App\Http\Controllers\Toolman\PengadaanController as ToolmanPengadaanController;
@@ -104,6 +105,8 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/barang', [ToolmanBarangController::class, 'index'])->name('barang.index');
     Route::get('/barang/create', [ToolmanBarangController::class, 'create'])->name('barang.create');
     Route::post('/barang', [ToolmanBarangController::class, 'store'])->name('barang.store');
+    Route::get('/barang/template-excel', [ToolmanBarangController::class, 'downloadTemplate'])->name('barang.template-excel');
+    Route::post('/barang/import', [ToolmanBarangController::class, 'import'])->name('barang.import');
     Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
@@ -117,6 +120,12 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/lokasi-penyimpanan', function () {
         return redirect()->route('toolman.lokasi.index');
     })->name('lokasi-penyimpanan.index');
+
+    // Sumber Dana (Modal CRUD - Tanpa Menu Sidebar)
+    Route::get('/sumber-dana', [ToolmanSumberDanaController::class, 'index'])->name('sumber-dana.index');
+    Route::post('/sumber-dana', [ToolmanSumberDanaController::class, 'store'])->name('sumber-dana.store');
+    Route::put('/sumber-dana/{id}', [ToolmanSumberDanaController::class, 'update'])->name('sumber-dana.update');
+    Route::delete('/sumber-dana/{id}', [ToolmanSumberDanaController::class, 'destroy'])->name('sumber-dana.destroy');
 
     // Sirkulasi Peminjaman
     Route::get('/peminjaman', [ToolmanPeminjamanController::class, 'index'])->name('peminjaman.index');
@@ -191,6 +200,8 @@ Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam
     Route::get('/tiket', [PeminjamTiketController::class, 'index'])->name('tiket.index');
     Route::get('/tiket/{id}', [PeminjamTiketController::class, 'show'])->name('tiket.show');
     Route::post('/tiket/{id}/kembalikan', [PeminjamTiketController::class, 'ajukanPengembalian'])->name('tiket.kembalikan');
+    Route::get('/tiket/{id}/print-pinjam', [PeminjamTiketController::class, 'printPinjam'])->name('tiket.print-pinjam');
+    Route::get('/tiket/{id}/print-kembali', [PeminjamTiketController::class, 'printKembali'])->name('tiket.print-kembali');
 
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
