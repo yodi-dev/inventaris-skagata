@@ -254,7 +254,13 @@ class LaporanController extends Controller
      */
     protected function buildMutasiQuery(Request $request)
     {
-        $query = StockMovement::with(['barang.bengkel', 'barang.lokasiPenyimpanan', 'user'])
+        $query = StockMovement::with([
+            'barang.bengkel',
+            'barang.lokasiPenyimpanan',
+            'barang.sumberDana',
+            'barang.detailPengadaans',
+            'user'
+        ])
             ->orderBy('created_at', 'desc');
 
         if ($request->filled('start_date')) {
