@@ -439,8 +439,10 @@ class BarangController extends Controller
     }
 
     /**
-     * Unduh file template CSV/Excel untuk Import Data Barang.
-     * Menggunakan format UTF-8 BOM agar rapi langsung dibuka di Microsoft Excel.
+     * Unduh file template Microsoft Excel (.xlsx) resmi untuk Import Data Barang.
+     * Menggunakan format native OpenXML (.xlsx) multi-sheet:
+     * Sheet 1: Template data barang dengan kolom terpisah & styling rapi
+     * Sheet 2: Panduan pengisian & data referensi (Lokasi, Sumber Dana, Satuan)
      */
     public function downloadTemplate()
     {
@@ -449,11 +451,257 @@ class BarangController extends Controller
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BENGKEL') : 'BENGKEL';
 
-        $filename = "Template_Import_Barang_{$bengkelCode}.csv";
+        SumberDanaController::ensureSchemaReady();
+        SatuanController::ensureDefaults();
 
-        $headers = [
+        $lokasis = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->orderBy('nama')->get();
+        $sumberDanas = SumberDana::orderBy('nama')->get();
+        $satuans = Satuan::orderBy('nama')->get();
+
+        $sampleLokasi = $lokasis->first()?->nama ?? 'Gudang Utama';
+        $sampleSumberDana = $sumberDanas->first()?->nama ?? 'BOS Reguler';
+
+        $filename = "Template_Import_Barang_{$bengkelCode}.xlsx";
+
+        if (class_exists(\ZipArchive::class)) {
+            $tempFile = tempnam(sys_get_temp_dir(), 'skagata_tpl_') . '.xlsx';
+            $zip = new \ZipArchive();
+
+            if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) === true) {
+                $xmlEsc = function (string $str): string {
+                    return htmlspecialchars($str, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+                };
+
+                // 1. [Content_Types].xml
+                $zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+  <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/>
+  <Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/>
+</Types>');
+
+                // 2. _rels/.rels
+                $zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/>
+</Relationships>');
+
+                // 3. docProps/app.xml & docProps/core.xml
+                $zip->addFromString('docProps/app.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties">
+  <Application>Inventaris Skagata</Application>
+</Properties>');
+
+                $zip->addFromString('docProps/core.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <dc:creator>Inventaris Skagata</dc:creator>
+  <cp:lastModifiedBy>Inventaris Skagata</cp:lastModifiedBy>
+</cp:coreProperties>');
+
+                // 4. xl/_rels/workbook.xml.rels
+                $zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
+  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>');
+
+                // 5. xl/workbook.xml
+                $zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets>
+    <sheet name="Template Barang" sheetId="1" r:id="rId1"/>
+    <sheet name="Panduan &amp; Referensi" sheetId="2" r:id="rId2"/>
+  </sheets>
+</workbook>');
+
+                // 6. xl/styles.xml
+                $zip->addFromString('xl/styles.xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  <fonts count="3">
+    <font><name val="Calibri"/><sz val="11"/></font>
+    <font><b/><color rgb="FFFFFFFF"/><name val="Calibri"/><sz val="11"/></font>
+    <font><b/><color rgb="FF1F2937"/><name val="Calibri"/><sz val="11"/></font>
+  </fonts>
+  <fills count="4">
+    <fill><patternFill patternType="none"/></fill>
+    <fill><patternFill patternType="gray125"/></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FF059669"/></patternFill></fill>
+    <fill><patternFill patternType="solid"><fgColor rgb="FFF3F4F6"/></patternFill></fill>
+  </fills>
+  <borders count="2">
+    <border><left/><right/><top/><bottom/></border>
+    <border>
+      <left style="thin"><color rgb="FFD1D5DB"/></left>
+      <right style="thin"><color rgb="FFD1D5DB"/></right>
+      <top style="thin"><color rgb="FFD1D5DB"/></top>
+      <bottom style="thin"><color rgb="FFD1D5DB"/></bottom>
+    </border>
+  </borders>
+  <cellStyleXfs count="1">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="0"/>
+  </cellStyleXfs>
+  <cellXfs count="4">
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0"/>
+    <xf numFmtId="0" fontId="1" fillId="2" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="2" fillId="3" borderId="1" xfId="0" applyFont="1" applyFill="1" applyBorder="1"/>
+    <xf numFmtId="0" fontId="0" fillId="0" borderId="1" xfId="0" applyBorder="1"/>
+  </cellXfs>
+</styleSheet>');
+
+                // 7. Sheet 1: Template Barang
+                $s1Cols = '
+  <cols>
+    <col min="1" max="1" width="24" customWidth="1"/>
+    <col min="2" max="2" width="36" customWidth="1"/>
+    <col min="3" max="3" width="20" customWidth="1"/>
+    <col min="4" max="4" width="14" customWidth="1"/>
+    <col min="5" max="5" width="26" customWidth="1"/>
+    <col min="6" max="6" width="26" customWidth="1"/>
+    <col min="7" max="7" width="18" customWidth="1"/>
+    <col min="8" max="8" width="18" customWidth="1"/>
+    <col min="9" max="9" width="18" customWidth="1"/>
+    <col min="10" max="10" width="16" customWidth="1"/>
+    <col min="11" max="11" width="42" customWidth="1"/>
+  </cols>';
+
+                $s1Rows = '
+    <row r="1" ht="26" customHeight="1">
+      <c r="A1" t="inlineStr" s="1"><is><t>Kode Barang (Opsional)</t></is></c>
+      <c r="B1" t="inlineStr" s="1"><is><t>Nama Barang</t></is></c>
+      <c r="C1" t="inlineStr" s="1"><is><t>Tipe (inventaris/bhp)</t></is></c>
+      <c r="D1" t="inlineStr" s="1"><is><t>Satuan</t></is></c>
+      <c r="E1" t="inlineStr" s="1"><is><t>Lokasi Penyimpanan</t></is></c>
+      <c r="F1" t="inlineStr" s="1"><is><t>Sumber Dana</t></is></c>
+      <c r="G1" t="inlineStr" s="1"><is><t>Stok Baik / Bahan</t></is></c>
+      <c r="H1" t="inlineStr" s="1"><is><t>Stok Rusak Ringan</t></is></c>
+      <c r="I1" t="inlineStr" s="1"><is><t>Stok Rusak Berat</t></is></c>
+      <c r="J1" t="inlineStr" s="1"><is><t>Batas Minimum</t></is></c>
+      <c r="K1" t="inlineStr" s="1"><is><t>Spesifikasi / Keterangan</t></is></c>
+    </row>
+    <row r="2" ht="20" customHeight="1">
+      <c r="A2" t="inlineStr" s="3"><is><t>' . $xmlEsc("INV-{$bengkelCode}-101") . '</t></is></c>
+      <c r="B2" t="inlineStr" s="3"><is><t>Laptop ASUS ExpertBook B1400</t></is></c>
+      <c r="C2" t="inlineStr" s="3"><is><t>inventaris</t></is></c>
+      <c r="D2" t="inlineStr" s="3"><is><t>Unit</t></is></c>
+      <c r="E2" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleLokasi) . '</t></is></c>
+      <c r="F2" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleSumberDana) . '</t></is></c>
+      <c r="G2" s="3"><v>10</v></c>
+      <c r="H2" s="3"><v>1</v></c>
+      <c r="I2" s="3"><v>0</v></c>
+      <c r="J2" s="3"><v>2</v></c>
+      <c r="K2" t="inlineStr" s="3"><is><t>Intel Core i5, RAM 16GB, SSD 512GB, Windows 11 Pro</t></is></c>
+    </row>
+    <row r="3" ht="20" customHeight="1">
+      <c r="A3" t="inlineStr" s="3"><is><t>' . $xmlEsc("BHP-{$bengkelCode}-201") . '</t></is></c>
+      <c r="B3" t="inlineStr" s="3"><is><t>Kabel UTP Cat6 Belden (305m)</t></is></c>
+      <c r="C3" t="inlineStr" s="3"><is><t>bhp</t></is></c>
+      <c r="D3" t="inlineStr" s="3"><is><t>Roll</t></is></c>
+      <c r="E3" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleLokasi) . '</t></is></c>
+      <c r="F3" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleSumberDana) . '</t></is></c>
+      <c r="G3" s="3"><v>5</v></c>
+      <c r="H3" s="3"><v>0</v></c>
+      <c r="I3" s="3"><v>0</v></c>
+      <c r="J3" s="3"><v>1</v></c>
+      <c r="K3" t="inlineStr" s="3"><is><t>Kabel LAN Cat6 original panjang 305 meter</t></is></c>
+    </row>
+    <row r="4" ht="20" customHeight="1">
+      <c r="A4" t="inlineStr" s="3"><is><t></t></is></c>
+      <c r="B4" t="inlineStr" s="3"><is><t>Obeng Set Presisi 32 in 1</t></is></c>
+      <c r="C4" t="inlineStr" s="3"><is><t>inventaris</t></is></c>
+      <c r="D4" t="inlineStr" s="3"><is><t>Set</t></is></c>
+      <c r="E4" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleLokasi) . '</t></is></c>
+      <c r="F4" t="inlineStr" s="3"><is><t>' . $xmlEsc($sampleSumberDana) . '</t></is></c>
+      <c r="G4" s="3"><v>15</v></c>
+      <c r="H4" s="3"><v>0</v></c>
+      <c r="I4" s="3"><v>0</v></c>
+      <c r="J4" s="3"><v>3</v></c>
+      <c r="K4" t="inlineStr" s="3"><is><t>Mata obeng magnetik lengkap dengan pinset presisi</t></is></c>
+    </row>';
+
+                $sheet1Xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . $s1Cols . '<sheetData>' . $s1Rows . '</sheetData></worksheet>';
+
+                $zip->addFromString('xl/worksheets/sheet1.xml', $sheet1Xml);
+
+                // 8. Sheet 2: Panduan & Referensi
+                $rules = [
+                    "1. Kolom 'Nama Barang' WAJIB diisi.",
+                    "2. Kolom 'Tipe' diisi 'inventaris' atau 'bhp'.",
+                    "3. Kolom 'Kode Barang' opsional (kosongkan agar dibuat otomatis sistem).",
+                    "4. Kolom 'Satuan' disarankan memakai satuan baku di Kolom D.",
+                    "5. Kolom 'Lokasi' sebaiknya mengacu pada daftar di Kolom B.",
+                    "6. Kolom 'Sumber Dana' sebaiknya mengacu pada daftar di Kolom C.",
+                    "7. Lokasi/Sumber Dana baru akan didaftarkan otomatis jika opsinya dicentang saat import.",
+                    "8. Untuk tipe 'bhp', jumlah stok diisi pada 'Stok Baik / Bahan'.",
+                    "9. 'Stok Rusak Ringan' dan 'Rusak Berat' khusus untuk barang inventaris.",
+                    "10. 'Batas Minimum' menentukan ambang batas peringatan stok menipis."
+                ];
+
+                $lokasiList = $lokasis->map(fn($l) => $l->nama . ($l->kode ? " ({$l->kode})" : ''))->toArray();
+                $sumberDanaList = $sumberDanas->map(fn($s) => $s->nama . ($s->kode ? " ({$s->kode})" : ''))->toArray();
+                $satuanList = $satuans->map(fn($st) => $st->nama . ($st->singkatan ? " ({$st->singkatan})" : ''))->toArray();
+
+                $maxRows = max(count($rules), count($lokasiList), count($sumberDanaList), count($satuanList));
+
+                $s2Cols = '
+  <cols>
+    <col min="1" max="1" width="46" customWidth="1"/>
+    <col min="2" max="2" width="30" customWidth="1"/>
+    <col min="3" max="3" width="30" customWidth="1"/>
+    <col min="4" max="4" width="22" customWidth="1"/>
+  </cols>';
+
+                $s2Rows = '
+    <row r="1" ht="26" customHeight="1">
+      <c r="A1" t="inlineStr" s="2"><is><t>Petunjuk &amp; Aturan Pengisian</t></is></c>
+      <c r="B1" t="inlineStr" s="2"><is><t>Lokasi di Bengkel Ini</t></is></c>
+      <c r="C1" t="inlineStr" s="2"><is><t>Sumber Dana Terdaftar</t></is></c>
+      <c r="D1" t="inlineStr" s="2"><is><t>Satuan Baku Terdaftar</t></is></c>
+    </row>';
+
+                for ($i = 0; $i < $maxRows; $i++) {
+                    $rNum = $i + 2;
+                    $ruleVal = $rules[$i] ?? '';
+                    $lokVal = $lokasiList[$i] ?? '';
+                    $sdVal = $sumberDanaList[$i] ?? '';
+                    $stVal = $satuanList[$i] ?? '';
+
+                    $s2Rows .= "
+    <row r=\"{$rNum}\" ht=\"20\" customHeight=\"1\">
+      <c r=\"A{$rNum}\" t=\"inlineStr\" s=\"3\"><is><t>" . $xmlEsc($ruleVal) . "</t></is></c>
+      <c r=\"B{$rNum}\" t=\"inlineStr\" s=\"3\"><is><t>" . $xmlEsc($lokVal) . "</t></is></c>
+      <c r=\"C{$rNum}\" t=\"inlineStr\" s=\"3\"><is><t>" . $xmlEsc($sdVal) . "</t></is></c>
+      <c r=\"D{$rNum}\" t=\"inlineStr\" s=\"3\"><is><t>" . $xmlEsc($stVal) . "</t></is></c>
+    </row>";
+                }
+
+                $sheet2Xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' . $s2Cols . '<sheetData>' . $s2Rows . '</sheetData></worksheet>';
+
+                $zip->addFromString('xl/worksheets/sheet2.xml', $sheet2Xml);
+                $zip->close();
+
+                return response()->download($tempFile, $filename, [
+                    'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                    'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+                    'Pragma' => 'public',
+                ])->deleteFileAfterSend(true);
+            }
+        }
+
+        // Fallback ke CSV jika ZipArchive tidak aktif
+        $filenameCsv = "Template_Import_Barang_{$bengkelCode}.csv";
+        $headersCsv = [
             'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Content-Disposition' => "attachment; filename=\"{$filenameCsv}\"",
             'Pragma' => 'no-cache',
             'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
             'Expires' => '0',
@@ -466,16 +714,12 @@ class BarangController extends Controller
             'Satuan',
             'Lokasi Penyimpanan',
             'Sumber Dana',
-            'Stok Baik / Stok Bahan',
+            'Stok Baik / Bahan',
             'Stok Rusak Ringan',
             'Stok Rusak Berat',
             'Batas Minimum',
-            'Spesifikasi',
+            'Spesifikasi / Keterangan',
         ];
-
-        // Ambil sampel data eksisting untuk mempermudah pengguna
-        $sampleLokasi = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->first()?->nama ?? 'Gudang Utama';
-        $sampleSumberDana = SumberDana::first()?->nama ?? 'BOS Reguler 2026';
 
         $sampleRows = [
             [
@@ -505,7 +749,7 @@ class BarangController extends Controller
                 'Kabel LAN Cat6 original panjang 305 meter',
             ],
             [
-                '', // Kosong -> akan digenerate otomatis oleh sistem
+                '',
                 'Obeng Set Presisi 32 in 1',
                 'inventaris',
                 'Set',
@@ -515,22 +759,21 @@ class BarangController extends Controller
                 '0',
                 '0',
                 '3',
-                'Mata obeng magnetik lengkap dengan pinset',
+                'Mata obeng magnetik lengkap dengan pinset presisi',
             ],
         ];
 
         $callback = function () use ($columns, $sampleRows) {
             $handle = fopen('php://output', 'w');
-            // Tulis UTF-8 BOM untuk kompatibilitas Microsoft Excel Windows
             fputs($handle, "\xEF\xBB\xBF");
-            fputcsv($handle, $columns, ',');
+            fputcsv($handle, $columns, ';');
             foreach ($sampleRows as $row) {
-                fputcsv($handle, $row, ',');
+                fputcsv($handle, $row, ';');
             }
             fclose($handle);
         };
 
-        return response()->stream($callback, 200, $headers);
+        return response()->stream($callback, 200, $headersCsv);
     }
 
     /**
@@ -552,6 +795,7 @@ class BarangController extends Controller
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BGK') : 'BGK';
 
         SumberDanaController::ensureSchemaReady();
+        SatuanController::ensureDefaults();
 
         $autoCreateLokasi = $request->boolean('auto_create_lokasi', true);
         $autoCreateSumberDana = $request->boolean('auto_create_sumber_dana', true);
@@ -652,6 +896,21 @@ class BarangController extends Controller
                 $satuan = trim((string) ($row[$colMap['satuan']] ?? ''));
                 if (empty($satuan)) {
                     $satuan = ($jenisBarang === 'bhp') ? 'Pcs' : 'Unit';
+                } else {
+                    $satuan = ucfirst(strtolower($satuan));
+                }
+
+                // Daftarkan satuan ke master satuan jika belum ada
+                try {
+                    Satuan::firstOrCreate(
+                        ['nama' => $satuan],
+                        [
+                            'singkatan' => strtolower(substr($satuan, 0, 10)),
+                            'deskripsi' => 'Didaftarkan otomatis melalui Import Excel',
+                        ]
+                    );
+                } catch (\Throwable $e) {
+                    // Abaikan race condition atau duplicate
                 }
 
                 // Tentukan kode barang
