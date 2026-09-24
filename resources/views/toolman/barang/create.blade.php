@@ -72,7 +72,8 @@
                     }
                 },
                 totalStokInventaris() {
-                    return (parseInt(this.stokBaik) || 0) + (parseInt(this.stokRusakRingan) || 0) + (parseInt(this.stokRusakBerat) || 0);
+                    return (parseInt(this.stokBaik) || 0) + (parseInt(this.stokRusakRingan) || 0) + (parseInt(this
+                        .stokRusakBerat) || 0);
                 },
                 // Quick Tambah Lokasi Modal State & Method
                 showLokasiModal: false,
@@ -105,7 +106,8 @@
                         });
                         const data = await response.json();
                         if (!response.ok) {
-                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal menyimpan lokasi'));
+                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(
+                                ', ') : 'Gagal menyimpan lokasi'));
                         }
                         const selectEl = document.getElementById('lokasi_penyimpanan_id');
                         const option = document.createElement('option');
@@ -115,7 +117,8 @@
                         selectEl.appendChild(option);
                         selectEl.value = data.data.id;
 
-                        this.lokasiSuccessMsg = 'Lokasi ' + data.data.nama + ' (' + data.data.kode + ') berhasil dibuat dan langsung dipilih!';
+                        this.lokasiSuccessMsg = 'Lokasi ' + data.data.nama + ' (' + data.data.kode +
+                            ') berhasil dibuat dan langsung dipilih!';
                         this.newLokasiKode = '';
                         this.newLokasiNama = '';
                         this.newLokasiDeskripsi = '';
@@ -128,6 +131,76 @@
                         this.lokasiError = err.message;
                     } finally {
                         this.lokasiLoading = false;
+                    }
+                },
+
+                // Quick Tambah Satuan Modal State & Methods
+                showSatuanModal: false,
+                newSatuanNama: '',
+                newSatuanSingkatan: '',
+                newSatuanDeskripsi: '',
+                satuanLoading: false,
+                satuanError: '',
+                satuanSuccessMsg: '',
+
+                openSatuanModal() {
+                    this.newSatuanNama = '';
+                    this.newSatuanSingkatan = '';
+                    this.newSatuanDeskripsi = '';
+                    this.satuanError = '';
+                    this.showSatuanModal = true;
+                },
+
+                async submitSatuan() {
+                    if (!this.newSatuanNama.trim()) {
+                        this.satuanError = 'Nama satuan wajib diisi!';
+                        return;
+                    }
+                    this.satuanLoading = true;
+                    this.satuanError = '';
+
+                    try {
+                        const res = await fetch('{{ route('toolman.satuan.store') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({
+                                nama: this.newSatuanNama,
+                                singkatan: this.newSatuanSingkatan,
+                                deskripsi: this.newSatuanDeskripsi
+                            })
+                        });
+
+                        const data = await res.json();
+                        if (!res.ok) {
+                            throw new Error(data.message || 'Gagal menyimpan satuan.');
+                        }
+
+                        // Tambahkan ke dropdown satuan dan pilih
+                        const selectEl = document.getElementById('satuan');
+                        const option = document.createElement('option');
+                        option.value = data.data.nama;
+                        option.text = data.data.nama + (data.data.singkatan ? ' (' + data.data.singkatan + ')' : '');
+                        option.selected = true;
+                        selectEl.appendChild(option);
+                        this.satuan = data.data.nama;
+
+                        this.satuanSuccessMsg = 'Satuan ' + data.data.nama + ' berhasil dibuat dan langsung dipilih!';
+                        this.newSatuanNama = '';
+                        this.newSatuanSingkatan = '';
+                        this.newSatuanDeskripsi = '';
+                        this.showSatuanModal = false;
+
+                        setTimeout(() => {
+                            this.satuanSuccessMsg = '';
+                        }, 4000);
+                    } catch (err) {
+                        this.satuanError = err.message;
+                    } finally {
+                        this.satuanLoading = false;
                     }
                 },
 
@@ -171,7 +244,9 @@
                 async refreshSumberDanas() {
                     try {
                         const res = await fetch('{{ route('toolman.sumber-dana.index') }}', {
-                            headers: { 'Accept': 'application/json' }
+                            headers: {
+                                'Accept': 'application/json'
+                            }
                         });
                         if (res.ok) {
                             const json = await res.json();
@@ -188,7 +263,7 @@
                     const selectEl = document.getElementById('sumber_dana_id');
                     if (!selectEl) return;
                     const currentVal = selectedId || selectEl.value;
-                    
+
                     selectEl.innerHTML = '<option value="">-- Pilih Sumber Dana (Opsional) --</option>';
                     this.sumberDanas.forEach(item => {
                         const opt = document.createElement('option');
@@ -211,9 +286,9 @@
                     this.sdLoading = true;
                     this.sdError = '';
                     try {
-                        const url = this.sdFormMode === 'create' 
-                            ? '{{ route('toolman.sumber-dana.store') }}'
-                            : '{{ url('/toolman/sumber-dana') }}/' + this.sdFormId;
+                        const url = this.sdFormMode === 'create' ?
+                            '{{ route('toolman.sumber-dana.store') }}' :
+                            '{{ url('/toolman/sumber-dana') }}/' + this.sdFormId;
                         const method = this.sdFormMode === 'create' ? 'POST' : 'PUT';
 
                         const response = await fetch(url, {
@@ -231,20 +306,24 @@
                         });
                         const data = await response.json();
                         if (!response.ok) {
-                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(', ') : 'Gagal menyimpan sumber dana'));
+                            throw new Error(data.message || (data.errors ? Object.values(data.errors).flat().join(
+                                ', ') : 'Gagal menyimpan sumber dana'));
                         }
 
                         await this.refreshSumberDanas();
 
                         if (this.sdFormMode === 'create') {
                             this.updateSumberDanaSelect(data.data.id);
-                            this.sdSuccessMsg = 'Sumber dana "' + data.data.nama + '" berhasil ditambahkan dan langsung dipilih!';
+                            this.sdSuccessMsg = 'Sumber dana "' + data.data.nama +
+                                '" berhasil ditambahkan dan langsung dipilih!';
+                            this.showSumberDanaModal = false;
                         } else {
                             this.sdSuccessMsg = 'Sumber dana "' + data.data.nama + '" berhasil diperbarui!';
+                            this.sdView = 'list';
                         }
-
-                        this.sdView = 'list';
-                        setTimeout(() => { this.sdSuccessMsg = ''; }, 3000);
+                        setTimeout(() => {
+                            this.sdSuccessMsg = '';
+                        }, 3000);
                     } catch (err) {
                         this.sdError = err.message;
                     } finally {
@@ -269,7 +348,9 @@
                         }
                         await this.refreshSumberDanas();
                         this.sdSuccessMsg = 'Sumber dana berhasil dihapus!';
-                        setTimeout(() => { this.sdSuccessMsg = ''; }, 3000);
+                        setTimeout(() => {
+                            this.sdSuccessMsg = '';
+                        }, 3000);
                     } catch (err) {
                         this.sdError = err.message;
                     } finally {
@@ -303,7 +384,8 @@
                     class="inline-flex items-center px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg shadow-sm transition-colors gap-2">
                     <svg class="w-4 h-4 text-emerald-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
                     </svg>
                     <span>Import dari Excel</span>
                 </button>
@@ -319,7 +401,8 @@
         </div>
 
         @if (session('success'))
-            <div class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
+            <div
+                class="p-4 bg-emerald-50 border border-emerald-200 rounded-xl text-sm text-emerald-800 flex items-center gap-3">
                 <svg class="w-5 h-5 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                 </svg>
@@ -331,7 +414,8 @@
             <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 space-y-1">
                 <div class="font-bold flex items-center gap-2">
                     <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
                     <span>Terdapat kesalahan pada isian form:</span>
                 </div>
@@ -345,11 +429,9 @@
 
         <!-- Form Wrapper -->
         <form action="{{ route('toolman.barang.store') }}" method="POST" enctype="multipart/form-data" class="space-y-6"
-            data-confirm="true"
-            data-title="Konfirmasi Tambah Barang Baru"
+            data-confirm="true" data-title="Konfirmasi Tambah Barang Baru"
             data-message="Pastikan data klasifikasi, kuantitas stok, dan lokasi penyimpanan barang sudah sesuai sebelum disimpan ke master inventaris bengkel."
-            data-type="primary"
-            data-confirm-text="Ya, Simpan Barang">
+            data-type="primary" data-confirm-text="Ya, Simpan Barang">
             @csrf
 
             <!-- SECTION 1: Pilih Tipe Barang (Interactive Segmented Cards) -->
@@ -499,44 +581,34 @@
 
                     <!-- Lokasi Penyimpanan Fisik -->
                     <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label for="lokasi_penyimpanan_id" class="block text-sm font-medium text-gray-700">
-                                Lokasi Penyimpanan <span class="text-red-500">*</span>
-                            </label>
-                            <button type="button" @click="showLokasiModal = true"
-                                class="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 hover:bg-primary-100/80 px-2.5 py-1 rounded-md">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <span>Tambah Lokasi</span>
-                            </button>
-                        </div>
+                        <label for="lokasi_penyimpanan_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Lokasi Penyimpanan <span class="text-red-500">*</span>
+                        </label>
                         <select id="lokasi_penyimpanan_id" name="lokasi_penyimpanan_id" required
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm bg-white">
                             <option value="">-- Pilih Lokasi Penyimpanan --</option>
                             @foreach ($lokasiPenyimpanans as $lokasi)
-                                <option value="{{ $lokasi->id }}" {{ old('lokasi_penyimpanan_id') == $lokasi->id ? 'selected' : '' }}>
+                                <option value="{{ $lokasi->id }}"
+                                    {{ old('lokasi_penyimpanan_id') == $lokasi->id ? 'selected' : '' }}>
                                     {{ $lokasi->nama }} ({{ $lokasi->kode }})
                                 </option>
                             @endforeach
                         </select>
                         <div class="flex items-center justify-between mt-1 text-[11px] text-gray-400">
                             <span>Pilih lemari, rak, atau laci penyimpanan di bengkel ini.</span>
-                            <a href="{{ route('toolman.lokasi.index') }}" target="_blank"
+                            <button type="button" @click="showLokasiModal = true"
                                 class="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center hover:underline">
-                                Kelola Lokasi
-                                <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                                </svg>
-                            </a>
+                                + Tambah Baru
+                            </button>
                         </div>
-                        
+
                         <!-- Notifikasi Sukses Tambah Lokasi Cepat -->
                         <div x-show="lokasiSuccessMsg" x-cloak x-transition
                             class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
-                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                                </path>
                             </svg>
                             <span x-text="lokasiSuccessMsg"></span>
                         </div>
@@ -544,23 +616,15 @@
 
                     <!-- Sumber Dana -->
                     <div>
-                        <div class="flex items-center justify-between mb-1.5">
-                            <label for="sumber_dana_id" class="block text-sm font-medium text-gray-700">
-                                Sumber Dana <span class="text-xs text-gray-400 font-normal">(Opsional)</span>
-                            </label>
-                            <button type="button" @click="openSumberDanaModal('list')"
-                                class="inline-flex items-center gap-1 text-xs font-semibold text-primary-600 hover:text-primary-700 transition-colors bg-primary-50 hover:bg-primary-100/80 px-2.5 py-1 rounded-md">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                                </svg>
-                                <span>Kelola Sumber Dana</span>
-                            </button>
-                        </div>
+                        <label for="sumber_dana_id" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Sumber Dana <span class="text-xs text-gray-400 font-normal">(Opsional)</span>
+                        </label>
                         <select id="sumber_dana_id" name="sumber_dana_id"
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm bg-white">
                             <option value="">-- Pilih Sumber Dana (Opsional) --</option>
                             @foreach ($sumberDanas as $sd)
-                                <option value="{{ $sd->id }}" {{ old('sumber_dana_id') == $sd->id ? 'selected' : '' }}>
+                                <option value="{{ $sd->id }}"
+                                    {{ old('sumber_dana_id') == $sd->id ? 'selected' : '' }}>
                                     {{ $sd->nama }} {{ $sd->kode ? "({$sd->kode})" : '' }}
                                 </option>
                             @endforeach
@@ -572,6 +636,17 @@
                                 + Tambah Baru
                             </button>
                         </div>
+
+                        <!-- Notifikasi Sukses Tambah Sumber Dana Cepat -->
+                        <div x-show="sdSuccessMsg" x-cloak x-transition
+                            class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                                </path>
+                            </svg>
+                            <span x-text="sdSuccessMsg"></span>
+                        </div>
                     </div>
 
                     <!-- Satuan Barang -->
@@ -581,26 +656,45 @@
                         </label>
                         <select id="satuan" name="satuan" x-model="satuan" required
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm">
-                            <template x-if="tipe === 'inventaris'">
-                                <optgroup label="Satuan Alat">
-                                    <option value="Unit">Unit</option>
-                                    <option value="Pcs">Pcs / Buah</option>
-                                    <option value="Set">Set / Kotak Lengkap</option>
-                                    <option value="Pack">Pack</option>
-                                </optgroup>
-                            </template>
-                            <template x-if="tipe === 'bahan'">
-                                <optgroup label="Satuan Bahan">
-                                    <option value="Roll">Roll / Gulung</option>
-                                    <option value="Meter">Meter</option>
-                                    <option value="Pcs">Pcs / Buah</option>
-                                    <option value="Box">Box / Kotak</option>
-                                    <option value="Pack">Pack</option>
-                                    <option value="Batang">Batang</option>
-                                    <option value="Botol">Botol / Kaleng</option>
-                                </optgroup>
-                            </template>
+                            @if (isset($satuans) && $satuans->count() > 0)
+                                @foreach ($satuans as $sItem)
+                                    <option value="{{ $sItem->nama }}">
+                                        {{ $sItem->nama }} {{ $sItem->singkatan ? '(' . $sItem->singkatan . ')' : '' }}
+                                    </option>
+                                @endforeach
+                            @else
+                                <option value="Unit">Unit</option>
+                                <option value="Pcs">Pcs / Buah</option>
+                                <option value="Set">Set / Kotak Lengkap</option>
+                                <option value="Roll">Roll / Gulung</option>
+                                <option value="Meter">Meter</option>
+                                <option value="Box">Box / Kotak</option>
+                                <option value="Lembar">Lembar</option>
+                                <option value="Batang">Batang</option>
+                                <option value="Liter">Liter</option>
+                                <option value="Botol">Botol</option>
+                                <option value="Pack">Pack</option>
+                                <option value="Pasang">Pasang</option>
+                            @endif
                         </select>
+                        <div class="flex items-center justify-between mt-1 text-[11px] text-gray-400">
+                            <span>Pilih satuan hitung inventaris atau bahan praktik.</span>
+                            <button type="button" @click="openSatuanModal()"
+                                class="text-primary-600 hover:text-primary-700 font-medium inline-flex items-center hover:underline">
+                                + Tambah Baru
+                            </button>
+                        </div>
+
+                        <!-- Notifikasi Sukses Tambah Satuan Cepat -->
+                        <div x-show="satuanSuccessMsg" x-cloak x-transition
+                            class="mt-2 p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-lg text-xs flex items-center gap-2">
+                            <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
+                                </path>
+                            </svg>
+                            <span x-text="satuanSuccessMsg"></span>
+                        </div>
                     </div>
 
                 </div>
@@ -903,25 +997,24 @@
         <!-- ================================================================= -->
         <div x-show="showLokasiModal" x-cloak
             class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div x-show="showLokasiModal"
-                x-transition:enter="transition ease-out duration-200 transform"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
+            <div x-show="showLokasiModal" x-transition:enter="transition ease-out duration-200 transform"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-150 transform"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
+                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                 @click.away="showLokasiModal = false"
                 class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
-                
+
                 <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div>
                         <h4 class="text-base font-bold text-gray-900">Tambah Lokasi Baru</h4>
-                        <p class="text-xs text-gray-500 mt-0.5">Daftarkan titik simpan di {{ $bengkel->nama ?? 'Bengkel' }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5">Daftarkan titik simpan di
+                            {{ $bengkel->nama ?? 'Bengkel' }}</p>
                     </div>
                     <button type="button" @click="showLokasiModal = false"
                         class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -929,7 +1022,8 @@
                 <!-- Error Alert inside modal -->
                 <div x-show="lokasiError" x-cloak
                     class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
-                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -970,11 +1064,95 @@
                     </button>
                     <button type="button" @click="submitLokasi()" :disabled="lokasiLoading"
                         class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
-                        <svg x-show="lokasiLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <svg x-show="lokasiLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                         </svg>
                         <span x-text="lokasiLoading ? 'Menyimpan...' : 'Simpan & Pilih'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ================================================================= -->
+        <!-- MODAL CEPAT: TAMBAH SATUAN BARU                                   -->
+        <!-- ================================================================= -->
+        <div x-show="showSatuanModal" x-cloak
+            class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+            <div x-show="showSatuanModal" x-transition:enter="transition ease-out duration-200 transform"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                x-transition:leave="transition ease-in duration-150 transform"
+                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
+                @click.away="showSatuanModal = false"
+                class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-gray-100 space-y-4">
+
+                <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                    <div>
+                        <h4 class="text-base font-bold text-gray-900">Tambah Satuan Baru</h4>
+                        <p class="text-xs text-gray-500 mt-0.5">Daftarkan jenis satuan hitung barang</p>
+                    </div>
+                    <button type="button" @click="showSatuanModal = false"
+                        class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Error Alert inside modal -->
+                <div x-show="satuanError" x-cloak
+                    class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span x-text="satuanError"></span>
+                </div>
+
+                <div class="space-y-3.5">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Nama Satuan <span class="text-red-500">*</span>
+                        </label>
+                        <input type="text" x-model="newSatuanNama" placeholder="Contoh: Lembar, Botol, Pack, Roll"
+                            class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Singkatan / Simbol (Opsional)
+                        </label>
+                        <input type="text" x-model="newSatuanSingkatan" placeholder="Contoh: lbr, btl, pack, roll"
+                            class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Keterangan / Peruntukan (Opsional)
+                        </label>
+                        <textarea x-model="newSatuanDeskripsi" rows="2" placeholder="Catatan peruntukan satuan..."
+                            class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"></textarea>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-end gap-2.5 pt-3 border-t border-gray-100">
+                    <button type="button" @click="showSatuanModal = false"
+                        class="px-3.5 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="submitSatuan()" :disabled="satuanLoading"
+                        class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
+                        <svg x-show="satuanLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white"
+                            fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                        </svg>
+                        <span x-text="satuanLoading ? 'Menyimpan...' : 'Simpan & Pilih'"></span>
                     </button>
                 </div>
             </div>
@@ -985,34 +1163,36 @@
         <!-- ================================================================= -->
         <div x-show="showSumberDanaModal" x-cloak
             class="fixed inset-0 z-50 overflow-y-auto bg-gray-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-            <div x-show="showSumberDanaModal"
-                x-transition:enter="transition ease-out duration-200 transform"
-                x-transition:enter-start="opacity-0 scale-95"
-                x-transition:enter-end="opacity-100 scale-100"
+            <div x-show="showSumberDanaModal" x-transition:enter="transition ease-out duration-200 transform"
+                x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
                 x-transition:leave="transition ease-in duration-150 transform"
-                x-transition:leave-start="opacity-100 scale-100"
-                x-transition:leave-end="opacity-0 scale-95"
+                x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95"
                 @click.away="showSumberDanaModal = false"
                 class="bg-white rounded-2xl max-w-xl w-full p-6 shadow-2xl border border-gray-100 space-y-4">
-                
+
                 <!-- Modal Header -->
                 <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                     <div class="flex items-center gap-2.5">
                         <div class="w-8 h-8 rounded-lg bg-primary-100 text-primary-700 flex items-center justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
+                                </path>
                             </svg>
                         </div>
                         <div>
-                            <h4 class="text-base font-bold text-gray-900" x-text="sdView === 'form' ? (sdFormMode === 'create' ? 'Tambah Sumber Dana' : 'Edit Sumber Dana') : 'Kelola Sumber Dana'"></h4>
-                            <p class="text-xs text-gray-500 mt-0.5">Daftar sumber dana / mata anggaran sekolah (berlaku lintas bengkel).</p>
+                            <h4 class="text-base font-bold text-gray-900"
+                                x-text="sdView === 'form' ? (sdFormMode === 'create' ? 'Tambah Sumber Dana' : 'Edit Sumber Dana') : 'Kelola Sumber Dana'">
+                            </h4>
+                            <p class="text-xs text-gray-500 mt-0.5">Daftar sumber dana / mata anggaran sekolah (berlaku
+                                lintas bengkel).</p>
                         </div>
                     </div>
                     <button type="button" @click="showSumberDanaModal = false"
                         class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
                         </svg>
                     </button>
                 </div>
@@ -1020,7 +1200,8 @@
                 <!-- Alert Messages inside modal -->
                 <div x-show="sdError" x-cloak
                     class="p-3 bg-red-50 border border-red-200 text-red-700 text-xs rounded-lg flex items-start gap-2">
-                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
@@ -1028,7 +1209,8 @@
                 </div>
                 <div x-show="sdSuccessMsg" x-cloak
                     class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs rounded-lg flex items-start gap-2">
-                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                     </svg>
                     <span x-text="sdSuccessMsg"></span>
@@ -1037,11 +1219,13 @@
                 <!-- VIEW 1: LIST SUMBER DANA -->
                 <div x-show="sdView === 'list'" class="space-y-3">
                     <div class="flex items-center justify-between">
-                        <span class="text-xs font-semibold text-gray-500" x-text="'Total: ' + (sumberDanas ? sumberDanas.length : 0) + ' Sumber Dana'"></span>
+                        <span class="text-xs font-semibold text-gray-500"
+                            x-text="'Total: ' + (sumberDanas ? sumberDanas.length : 0) + ' Sumber Dana'"></span>
                         <button type="button" @click="openSumberDanaModal('create')"
                             class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4">
+                                </path>
                             </svg>
                             <span>Tambah Sumber Dana</span>
                         </button>
@@ -1062,30 +1246,39 @@
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-3 py-2.5 font-medium text-gray-900 whitespace-nowrap">
                                             <div class="font-semibold" x-text="item.nama"></div>
-                                            <div class="font-mono text-[10px] text-gray-400" x-text="item.kode || '-'"></div>
+                                            <div class="font-mono text-[10px] text-gray-400" x-text="item.kode || '-'">
+                                            </div>
                                         </td>
-                                        <td class="px-3 py-2.5 text-gray-500 max-w-[160px] truncate" x-text="item.deskripsi || '-'"></td>
+                                        <td class="px-3 py-2.5 text-gray-500 max-w-[160px] truncate"
+                                            x-text="item.deskripsi || '-'"></td>
                                         <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700"
+                                            <span
+                                                class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-gray-100 text-gray-700"
                                                 x-text="(item.barangs_count || 0) + ' item'"></span>
                                         </td>
                                         <td class="px-3 py-2.5 text-right whitespace-nowrap space-x-1">
                                             <button type="button" @click="openEditSumberDana(item)"
                                                 class="text-primary-600 hover:text-primary-800 p-1 hover:bg-primary-50 rounded transition-colors"
                                                 title="Edit">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
+                                                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                                    </path>
                                                 </svg>
                                             </button>
                                             <button type="button" @click="deleteSumberDana(item)"
                                                 :disabled="item.barangs_count > 0 || sdLoading"
-                                                :class="item.barangs_count > 0 ? 'text-gray-300 cursor-not-allowed' : 'text-red-500 hover:text-red-700 hover:bg-red-50'"
+                                                :class="item.barangs_count > 0 ? 'text-gray-300 cursor-not-allowed' :
+                                                    'text-red-500 hover:text-red-700 hover:bg-red-50'"
                                                 class="p-1 rounded transition-colors"
-                                                :title="item.barangs_count > 0 ? 'Tidak dapat dihapus karena digunakan ' + item.barangs_count + ' barang' : 'Hapus'">
-                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                :title="item.barangs_count > 0 ? 'Tidak dapat dihapus karena digunakan ' + item
+                                                    .barangs_count + ' barang' : 'Hapus'">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                                    </path>
                                                 </svg>
                                             </button>
                                         </td>
@@ -1116,7 +1309,8 @@
                         <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Nama Sumber Dana <span class="text-red-500">*</span>
                         </label>
-                        <input type="text" x-model="sdFormNama" placeholder="Contoh: BOS Reguler 2026, Komite Sekolah, DAK Fisik SMK"
+                        <input type="text" x-model="sdFormNama"
+                            placeholder="Contoh: BOS Reguler 2026, Komite Sekolah, DAK Fisik SMK"
                             class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500">
                     </div>
 
@@ -1136,11 +1330,7 @@
                             class="w-full px-3 py-2 text-xs rounded-lg border-gray-300 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"></textarea>
                     </div>
 
-                    <div class="flex items-center justify-between pt-3 border-t border-gray-100">
-                        <button type="button" @click="sdView = 'list'"
-                            class="px-3.5 py-1.5 bg-white border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors">
-                            &larr; Kembali ke Daftar
-                        </button>
+                    <div class="flex items-center justify-end pt-3 border-t border-gray-100">
                         <div class="flex items-center gap-2">
                             <button type="button" @click="showSumberDanaModal = false"
                                 class="px-3 py-1.5 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors">
@@ -1148,11 +1338,14 @@
                             </button>
                             <button type="button" @click="saveSumberDana()" :disabled="sdLoading"
                                 class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-primary-600 hover:bg-primary-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
-                                <svg x-show="sdLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <svg x-show="sdLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white"
+                                    fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                        stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
                                 </svg>
-                                <span x-text="sdLoading ? 'Menyimpan...' : (sdFormMode === 'create' ? 'Simpan & Pilih' : 'Perbarui')"></span>
+                                <span
+                                    x-text="sdLoading ? 'Menyimpan...' : (sdFormMode === 'create' ? 'Simpan & Pilih' : 'Perbarui')"></span>
                             </button>
                         </div>
                     </div>
@@ -1165,14 +1358,12 @@
         <!-- MODAL IMPORT DATA BARANG DARI EXCEL                              -->
         <!-- ================================================================= -->
         <template x-teleport="body">
-            <div x-show="showImportModal" x-cloak class="relative z-[9999]" aria-labelledby="modal-import-title" role="dialog" aria-modal="true">
+            <div x-show="showImportModal" x-cloak class="relative z-[9999]" aria-labelledby="modal-import-title"
+                role="dialog" aria-modal="true">
                 <!-- Full Screen Backdrop Overlay -->
-                <div x-show="showImportModal"
-                    x-transition:enter="ease-out duration-300"
-                    x-transition:enter-start="opacity-0"
-                    x-transition:enter-end="opacity-100"
-                    x-transition:leave="ease-in duration-200"
-                    x-transition:leave-start="opacity-100"
+                <div x-show="showImportModal" x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                    x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100"
                     x-transition:leave-end="opacity-0"
                     class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"
                     @click="if (!importLoading) showImportModal = false">
@@ -1181,8 +1372,7 @@
                 <!-- Modal Dialog Positioner -->
                 <div class="fixed inset-0 z-10 overflow-y-auto">
                     <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-                        <div x-show="showImportModal"
-                            x-transition:enter="ease-out duration-300"
+                        <div x-show="showImportModal" x-transition:enter="ease-out duration-300"
                             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
                             x-transition:leave="ease-in duration-200"
@@ -1194,30 +1384,37 @@
                             <!-- Modal Header -->
                             <div class="flex items-center justify-between border-b border-gray-100 pb-3">
                                 <div class="flex items-center gap-2.5">
-                                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-xs">
+                                    <div
+                                        class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shadow-xs">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                            </path>
                                         </svg>
                                     </div>
                                     <div>
-                                        <h4 class="text-base font-bold text-gray-900" id="modal-import-title">Import Data Barang</h4>
-                                        <p class="text-xs text-gray-500 mt-0.5">Tambah banyak barang sekaligus menggunakan file Excel/CSV.</p>
+                                        <h4 class="text-base font-bold text-gray-900" id="modal-import-title">Import Data
+                                            Barang</h4>
+                                        <p class="text-xs text-gray-500 mt-0.5">Tambah banyak barang sekaligus menggunakan
+                                            file Excel/CSV.</p>
                                     </div>
                                 </div>
                                 <button type="button" @click="showImportModal = false" :disabled="importLoading"
                                     class="text-gray-400 hover:text-gray-600 p-1.5 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M6 18L18 6M6 6l12 12"></path>
                                     </svg>
                                 </button>
                             </div>
 
                             <!-- Template Download Card -->
-                            <div class="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center justify-between gap-3">
+                            <div
+                                class="p-3.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center justify-between gap-3">
                                 <div class="space-y-0.5">
                                     <div class="text-xs font-semibold text-emerald-900">Belum punya format file?</div>
-                                    <p class="text-[11px] text-emerald-700 leading-relaxed">Unduh template resmi yang telah disesuaikan dengan bengkel Anda.</p>
+                                    <p class="text-[11px] text-emerald-700 leading-relaxed">Unduh template resmi yang telah
+                                        disesuaikan dengan bengkel Anda.</p>
                                 </div>
                                 <a href="{{ route('toolman.barang.template-excel') }}"
                                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-xs transition-colors shrink-0">
@@ -1230,36 +1427,45 @@
                             </div>
 
                             <!-- Import Form -->
-                            <form action="{{ route('toolman.barang.import') }}" method="POST" enctype="multipart/form-data"
-                                @submit="importLoading = true" class="space-y-4">
+                            <form action="{{ route('toolman.barang.import') }}" method="POST"
+                                enctype="multipart/form-data" @submit="importLoading = true" class="space-y-4">
                                 @csrf
 
                                 <!-- File Upload Area -->
                                 <div>
-                                    <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
+                                    <label
+                                        class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1.5">
                                         Pilih File Excel / CSV <span class="text-red-500">*</span>
                                     </label>
-                                    <div class="relative border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-5 text-center transition-colors bg-gray-50/50 hover:bg-emerald-50/20">
+                                    <div
+                                        class="relative border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-5 text-center transition-colors bg-gray-50/50 hover:bg-emerald-50/20">
                                         <input type="file" name="file" id="excel_file" required
-                                            accept=".xlsx,.xls,.csv,.txt"
-                                            @change="handleImportFileSelect($event)"
+                                            accept=".xlsx,.xls,.csv,.txt" @change="handleImportFileSelect($event)"
                                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                         <div class="space-y-1.5">
-                                            <div class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
-                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <div
+                                                class="w-10 h-10 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                                    viewBox="0 0 24 24">
                                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12">
+                                                    </path>
                                                 </svg>
                                             </div>
                                             <div class="text-xs text-gray-600">
-                                                <span class="font-semibold text-emerald-600 hover:underline">Klik untuk telusuri</span> atau seret file ke sini
+                                                <span class="font-semibold text-emerald-600 hover:underline">Klik untuk
+                                                    telusuri</span> atau seret file ke sini
                                             </div>
-                                            <p class="text-[10px] text-gray-400">Format yang didukung: .xlsx, .xls, .csv (Maksimal 10MB)</p>
+                                            <p class="text-[10px] text-gray-400">Format yang didukung: .xlsx, .xls, .csv
+                                                (Maksimal 10MB)</p>
                                         </div>
                                     </div>
-                                    <div x-show="importFileName" x-cloak class="mt-2 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
-                                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    <div x-show="importFileName" x-cloak
+                                        class="mt-2 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200">
+                                        <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none"
+                                            stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                                         </svg>
                                         <span class="truncate font-medium" x-text="importFileName"></span>
                                     </div>
@@ -1270,12 +1476,14 @@
                                     <label class="flex items-start gap-2.5 cursor-pointer text-xs text-gray-700">
                                         <input type="checkbox" name="auto_create_lokasi" value="1" checked
                                             class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>Otomatis buat <strong>Lokasi Penyimpanan</strong> baru jika nama lokasi belum terdaftar di bengkel ini.</span>
+                                        <span>Otomatis buat <strong>Lokasi Penyimpanan</strong> baru jika nama lokasi belum
+                                            terdaftar di bengkel ini.</span>
                                     </label>
                                     <label class="flex items-start gap-2.5 cursor-pointer text-xs text-gray-700">
                                         <input type="checkbox" name="auto_create_sumber_dana" value="1" checked
                                             class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>Otomatis buat <strong>Sumber Dana</strong> baru jika belum ada di master sekolah.</span>
+                                        <span>Otomatis buat <strong>Sumber Dana</strong> baru jika belum ada di master
+                                            sekolah.</span>
                                     </label>
                                 </div>
 
@@ -1287,11 +1495,16 @@
                                     </button>
                                     <button type="submit" :disabled="importLoading"
                                         class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition-colors disabled:opacity-50">
-                                        <svg x-show="importLoading" class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
-                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                        <svg x-show="importLoading"
+                                            class="animate-spin -ml-0.5 mr-1 h-3.5 w-3.5 text-white" fill="none"
+                                            viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z">
+                                            </path>
                                         </svg>
-                                        <span x-text="importLoading ? 'Memproses Import...' : 'Unggah & Import Data'"></span>
+                                        <span
+                                            x-text="importLoading ? 'Memproses Import...' : 'Unggah & Import Data'"></span>
                                     </button>
                                 </div>
                             </form>

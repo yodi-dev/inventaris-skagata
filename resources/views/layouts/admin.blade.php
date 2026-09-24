@@ -35,20 +35,39 @@
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
         }
+
+        /* Subtle smooth custom scrollbar for sidebar nav */
+        .sidebar-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+
+        .sidebar-scroll::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
     </style>
 </head>
 
-<body class="bg-slate-50 text-gray-800 font-sans antialiased flex min-h-screen overflow-hidden" x-data="{
-    sidebarOpen: true,
-    mobileSidebarOpen: false,
-    toggleSidebar() {
-        if (window.innerWidth < 768) {
-            this.mobileSidebarOpen = !this.mobileSidebarOpen;
-        } else {
-            this.sidebarOpen = !this.sidebarOpen;
+<body class="bg-slate-50 text-gray-800 font-sans antialiased flex h-screen max-h-screen overflow-hidden"
+    x-data="{
+        sidebarOpen: true,
+        mobileSidebarOpen: false,
+        toggleSidebar() {
+            if (window.innerWidth < 768) {
+                this.mobileSidebarOpen = !this.mobileSidebarOpen;
+            } else {
+                this.sidebarOpen = !this.sidebarOpen;
+            }
         }
-    }
-}">
+    }">
 
     <!-- Mobile Sidebar Drawer (Only on screens < md) -->
     <div class="md:hidden" x-cloak>
@@ -65,13 +84,14 @@
             x-transition:enter-start="-translate-x-full" x-transition:enter-end="translate-x-0"
             x-transition:leave="transition ease-in duration-250 transform" x-transition:leave-start="translate-x-0"
             x-transition:leave-end="-translate-x-full"
-            class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] bg-white flex flex-col justify-between shadow-2xl border-r border-gray-200 mobile-drawer-transition"
+            class="fixed inset-y-0 left-0 z-50 w-72 max-w-[85vw] h-full max-h-screen bg-white flex flex-col min-h-0 shadow-2xl border-r border-gray-200 mobile-drawer-transition"
             style="display: none;">
 
             <!-- Header & Close Button -->
             <div class="h-20 flex items-center justify-between border-b border-gray-200 px-4 shrink-0">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
+                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta"
+                        class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
                     <div>
                         <span class="text-base font-black text-primary-600 tracking-wide uppercase block leading-none">
                             SIBENKA
@@ -101,14 +121,15 @@
 
     <!-- Desktop Sidebar -->
     <aside
-        class="w-64 bg-white border-r border-gray-200 flex-col justify-between hidden md:flex z-20 shadow-sm shrink-0 sidebar-desktop-transition"
+        class="w-64 bg-white border-r border-gray-200 flex flex-col h-screen max-h-screen hidden md:flex z-20 shadow-sm shrink-0 sidebar-desktop-transition"
         :class="sidebarOpen ? 'sidebar-desktop-open' : 'sidebar-desktop-closed'">
 
-        <div class="w-64 flex flex-col justify-between h-full shrink-0">
+        <div class="w-64 flex flex-col h-full min-h-0 shrink-0">
             <!-- Logo -->
             <div class="h-20 flex items-center justify-center border-b border-gray-200 px-4 shrink-0">
                 <div class="flex items-center gap-3">
-                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
+                    <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta"
+                        class="w-12 h-12 object-contain shrink-0 drop-shadow-xs">
                     <div>
                         <span class="text-base font-black text-primary-600 tracking-wide uppercase block leading-none">
                             SIBENKA

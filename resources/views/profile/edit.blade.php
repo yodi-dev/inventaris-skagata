@@ -84,7 +84,8 @@
                 </div>
                 <div>
                     <p class="font-bold">Profil Berhasil Disimpan</p>
-                    <p class="text-xs text-emerald-700 mt-0.5">Informasi akun Anda telah berhasil diperbarui pada sistem.</p>
+                    <p class="text-xs text-emerald-700 mt-0.5">Informasi akun Anda telah berhasil diperbarui pada sistem.
+                    </p>
                 </div>
             </div>
         @endif
@@ -191,7 +192,8 @@
                 {{-- Statistik Cepat --}}
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-5 border-t border-gray-100">
                     @foreach ($stats as $stat)
-                        <div class="bg-gray-50/80 border border-gray-200/80 rounded-xl p-3.5 text-center sm:text-left transition-colors hover:bg-gray-50">
+                        <div
+                            class="bg-gray-50/80 border border-gray-200/80 rounded-xl p-3.5 text-center sm:text-left transition-colors hover:bg-gray-50">
                             <p class="text-[11px] font-semibold text-gray-400 uppercase tracking-wide truncate">
                                 {{ $stat['label'] }}</p>
                             <p class="text-base sm:text-xl font-bold text-gray-900 mt-0.5 leading-tight">
@@ -209,8 +211,9 @@
             <button type="button" @click="activeTab = 'profile'"
                 class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shrink-0 flex items-center gap-2 border"
                 :class="activeTab === 'profile'
-                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
+                    ?
+                    'bg-primary-600 text-white border-primary-600 shadow-sm' :
+                    'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -220,8 +223,9 @@
             <button type="button" @click="activeTab = 'security'"
                 class="px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all shrink-0 flex items-center gap-2 border"
                 :class="activeTab === 'security'
-                    ? 'bg-primary-600 text-white border-primary-600 shadow-sm'
-                    : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
+                    ?
+                    'bg-primary-600 text-white border-primary-600 shadow-sm' :
+                    'bg-white border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-900'">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -478,9 +482,12 @@
                             </div>
                             <p class="text-[10px] text-gray-400">
                                 <span x-show="pwdNew.length === 0">Minimal 8 karakter.</span>
-                                <span x-show="pwdNew.length > 0 && pwdNew.length < 6" class="text-rose-500">Terlalu pendek</span>
-                                <span x-show="pwdNew.length >= 6 && pwdNew.length < 8" class="text-amber-600">Hampir cukup…</span>
-                                <span x-show="pwdNew.length >= 8" class="text-emerald-600 font-medium">Sangat baik & kuat</span>
+                                <span x-show="pwdNew.length > 0 && pwdNew.length < 6" class="text-rose-500">Terlalu
+                                    pendek</span>
+                                <span x-show="pwdNew.length >= 6 && pwdNew.length < 8" class="text-amber-600">Hampir
+                                    cukup…</span>
+                                <span x-show="pwdNew.length >= 8" class="text-emerald-600 font-medium">Sangat baik &
+                                    kuat</span>
                             </p>
                         </div>
                     </div>
@@ -509,7 +516,8 @@
                         </svg>
                         Sesi Login Terverifikasi
                     </p>
-                    <p class="text-gray-500">Sistem Informasi Manajemen Inventaris & Bengkel SMKN 3 Yogyakarta (Sibenka)</p>
+                    <p class="text-gray-500">Sistem Informasi Manajemen Inventaris & Bengkel SMKN 3 Yogyakarta (Sibenka)
+                    </p>
                 </div>
 
                 <div class="flex justify-end pt-3 border-t border-gray-100">
@@ -523,6 +531,35 @@
                     </button>
                 </div>
 
+            </form>
+        </div>
+
+        {{-- ====================================================== --}}
+        {{-- CARD SESI & KELUAR (LOGOUT)                            --}}
+        {{-- ====================================================== --}}
+        <div
+            class="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                    <h3 class="text-sm sm:text-base font-bold text-gray-900">Sesi Login Aktif</h3>
+                </div>
+                <p class="text-xs text-gray-500 max-w-xl">
+                    Anda saat ini masuk sebagai <strong class="text-gray-700">{{ auth()->user()->name }}</strong>. Keluar
+                    dari sesi jika Anda menggunakan komputer bersama atau telah selesai menggunakan aplikasi.
+                </p>
+            </div>
+            <form method="POST" action="{{ route('logout') }}"
+                onsubmit="return confirm('Apakah Anda yakin ingin keluar dari akun ini?');" class="shrink-0">
+                @csrf
+                <button type="submit"
+                    class="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 active:scale-[0.98] transition-all flex items-center justify-center gap-2 shadow-2xs">
+                    <svg class="w-4 h-4 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                    </svg>
+                    <span>Keluar dari Akun</span>
+                </button>
             </form>
         </div>
 
