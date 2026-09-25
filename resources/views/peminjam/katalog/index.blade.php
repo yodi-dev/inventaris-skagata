@@ -9,7 +9,10 @@
         $selectedBengkelId = request('bengkel_id', $bengkel?->id ?? '');
     @endphp
 
-    <div x-data="katalogApp()" x-cloak class="space-y-6">
+    <div x-data="katalogApp()" x-cloak
+        @keydown.escape.window="detailModalOpen = false; cartDrawerOpen = false; checkoutModalOpen = false;"
+        x-effect="document.body.classList.toggle('overflow-hidden', detailModalOpen || cartDrawerOpen || checkoutModalOpen)"
+        class="space-y-4 sm:space-y-5">
 
         <!-- Toast Notification -->
         <div x-show="toast.show" x-transition
@@ -49,288 +52,151 @@
             </button>
         </div>
 
-        <!-- BANNER HIMBAUAN: MENJAGA BARANG YANG DIPINJAM (Hanya 12 Detik Pertama) -->
+        <!-- BANNER HIMBAUAN: PENGGUNAAN ALAT (Dismissable & Non-distracting) -->
         <div x-data="{
-                showHimbauan: true,
-                timeLeft: 12,
-                interval: null,
-                init() {
-                    this.interval = setInterval(() => {
-                        if (this.timeLeft > 1) {
-                            this.timeLeft--;
-                        } else {
-                            this.showHimbauan = false;
-                            clearInterval(this.interval);
-                        }
-                    }, 1000);
-                },
-                dismiss() {
-                    this.showHimbauan = false;
-                    if (this.interval) clearInterval(this.interval);
-                }
-            }"
-            x-show="showHimbauan"
-            x-transition:enter="transition ease-out duration-300"
-            x-transition:enter-start="opacity-0 -translate-y-2"
-            x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in-out duration-500 transform"
-            x-transition:leave-start="opacity-100 scale-100 max-h-[500px]"
-            x-transition:leave-end="opacity-0 scale-95 max-h-0 -translate-y-4"
-            class="relative overflow-hidden bg-gradient-to-r from-amber-50 via-yellow-50/60 to-orange-50 border-2 border-amber-300 rounded-3xl p-5 sm:p-6 shadow-xs"
-            style="background-color: #fffbeb; border-color: #fcd34d;">
-            
-            <!-- Countdown Indicator & Dismiss Button (Pojok Kanan Atas) -->
-            <div class="absolute top-3.5 right-3.5 z-20 flex items-center gap-2">
-                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-200/90 text-[10px] font-mono font-black text-amber-950 border border-amber-300 shadow-2xs"
-                    style="background-color: #fde68a; color: #451a03;">
-                    <svg class="w-3 h-3 text-amber-800 animate-spin" style="animation-duration: 3s;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    <span x-text="timeLeft + 's'">12s</span>
+            dismissed: localStorage.getItem('sibenka_katalog_tip_closed') === 'true',
+            close() {
+                this.dismissed = true;
+                localStorage.setItem('sibenka_katalog_tip_closed', 'true');
+            }
+        }" x-show="!dismissed" x-transition
+            class="bg-amber-50/80 border border-amber-200/80 rounded-2xl p-3 sm:p-4 flex items-start justify-between gap-3 text-amber-900 shadow-2xs">
+            <div class="flex items-start gap-2.5 min-w-0">
+                <span
+                    class="w-6 h-6 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+                    !
                 </span>
-                <button type="button" @click="dismiss()"
-                    class="p-1.5 rounded-full bg-amber-200/70 hover:bg-amber-300/90 text-amber-950 transition-colors shadow-2xs"
-                    style="color: #451a03;"
-                    title="Tutup himbauan">
-                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-
-            <div class="flex flex-col md:flex-row items-start md:items-center gap-4 sm:gap-5 pr-14 sm:pr-0">
-                <div class="w-12 h-12 sm:w-14 sm:h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-amber-600 text-white flex items-center justify-center shrink-0 shadow-md"
-                    style="background-color: #f59e0b; color: #ffffff;">
-                    <svg class="w-6 h-6 sm:w-7 sm:h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                    </svg>
-                </div>
-                <div class="flex-1 space-y-1">
-                    <div class="flex flex-wrap items-center gap-2">
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-black uppercase tracking-wider bg-amber-200 text-amber-950 border border-amber-300"
-                            style="background-color: #fde68a; color: #451a03;">
-                            Himbauan Peminjam
-                        </span>
-                        <h3 class="text-base sm:text-lg font-black text-amber-950" style="color: #451a03;">
-                            Jaga & Rawat Selalu Peralatan Praktik yang Anda Pinjam!
-                        </h3>
-                    </div>
-                    <p class="text-xs sm:text-sm text-amber-950 font-medium leading-relaxed" style="color: #451a03;">
-                        Setiap peralatan, perkakas, dan mesin di bengkel adalah aset bersama. Pastikan barang digunakan sesuai SOP keselamatan, dijaga agar tidak rusak atau hilang, serta dikembalikan tepat waktu dalam keadaan bersih dan lengkap ke meja Toolman.
+                <div class="text-xs space-y-0.5 min-w-0">
+                    <p class="font-bold text-amber-950">Jaga & Rawat Peralatan Praktik Bersama</p>
+                    <p class="text-amber-800 text-[11px] leading-relaxed">
+                        Gunakan peralatan sesuai SOP keselamatan bengkel dan kembalikan tepat waktu ke meja Toolman dalam
+                        keadaan bersih dan lengkap.
                     </p>
                 </div>
             </div>
-
-            <!-- Progress Bar 12 Detik di Bagian Bawah -->
-            <div class="absolute bottom-0 left-0 right-0 h-1 bg-amber-200/60 overflow-hidden">
-                <div class="h-full bg-amber-500 transition-all duration-1000 ease-linear"
-                    :style="'width: ' + ((timeLeft / 12) * 100) + '%'"></div>
-            </div>
+            <button type="button" @click="close()"
+                class="p-1 text-amber-600 hover:text-amber-900 rounded-lg hover:bg-amber-100 transition-colors shrink-0"
+                title="Tutup pesan ini">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
         </div>
 
-        <!-- 1. HERO BANNER -->
-        <div
-            class="bg-gradient-to-br from-emerald-800 via-emerald-700 to-teal-800 rounded-3xl p-5 sm:p-7 text-white shadow-md relative overflow-hidden">
-            <div class="absolute -right-8 -bottom-8 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="absolute right-12 top-4 w-24 h-24 bg-emerald-400/10 rounded-full blur-xl pointer-events-none"></div>
+        <!-- HEADER & FILTER HUB (Compact & Unified) -->
+        <div class="bg-white border border-gray-200 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
+            <!-- Row 1: Compact Search Input (Opsi A) & Sub-filters -->
+            <form method="GET" action="{{ route('peminjam.katalog.index') }}"
+                class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                @if (request('tipe'))
+                    <input type="hidden" name="tipe" value="{{ request('tipe') }}">
+                @endif
 
-            <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-5">
-                <!-- Greeting & Info -->
-                <div class="space-y-1.5 text-left">
-                    <div
-                        class="inline-flex items-center gap-1.5 bg-emerald-900/50 backdrop-blur-md px-3 py-1 rounded-full text-xs font-semibold text-emerald-200 border border-emerald-500/30">
-                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                        <span>
-                            @if ($isGuru)
-                                Akses Guru &bull; Multi-Bengkel SMKN 3
-                            @else
-                                {{ $bengkel->nama ?? 'Bengkel Kejuruan' }} &bull; SMKN 3 Yogyakarta
-                            @endif
-                        </span>
+                <!-- Compact Search Input -->
+                <div class="relative flex-1 max-w-md">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
                     </div>
-                    <h1 class="text-xl sm:text-2xl md:text-3xl font-black tracking-tight leading-tight">
-                        Mau pinjam alat apa hari ini?
-                    </h1>
-                    <p class="text-emerald-100/90 text-xs sm:text-sm max-w-lg leading-relaxed">
-                        @if ($isGuru)
-                            Pilih bengkel dan temukan alat praktik serta bahan habis pakai untuk kegiatan mengajar dan
-                            praktikum.
-                        @else
-                            Temukan peralatan praktik dan bahan habis pakai di bengkel {{ $bengkel->nama ?? 'jurusanmu' }}
-                            dengan mudah dan transparan.
-                        @endif
-                    </p>
-                </div>
-
-                <!-- Search Form in Banner -->
-                <div class="w-full md:w-88 space-y-2">
-                    <form method="GET" action="{{ route('peminjam.katalog.index') }}" class="relative">
-                        @if (request('tipe'))
-                            <input type="hidden" name="tipe" value="{{ request('tipe') }}">
-                        @endif
-                        @if (request('status'))
-                            <input type="hidden" name="status" value="{{ request('status') }}">
-                        @endif
-                        @if ($isGuru && request('bengkel_id'))
-                            <input type="hidden" name="bengkel_id" value="{{ request('bengkel_id') }}">
-                        @endif
-
-                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-                            <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <input type="text" name="search" value="{{ request('search') }}"
+                        placeholder="Cari nama alat atau bahan..."
+                        class="w-full pl-9 pr-8 py-2 bg-gray-50 focus:bg-white text-gray-900 border border-gray-200 rounded-xl text-xs sm:text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all outline-none">
+                    @if (request('search'))
+                        <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['search' => null, 'page' => 1])) }}"
+                            class="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600"
+                            title="Hapus pencarian">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                    d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
-                        </div>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari alat, kode, atau spesifikasi..."
-                            class="block w-full pl-10 pr-9 py-2.5 sm:py-3 bg-white text-gray-900 rounded-2xl text-xs sm:text-sm placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-400 focus:outline-none shadow-sm transition-all">
-                        @if (request('search'))
-                            <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['search' => null])) }}"
-                                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                            </a>
-                        @endif
-                    </form>
-
-                    <!-- Quick Keywords Tag Chips -->
-                    <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-[11px] text-emerald-100">
-                        <span class="text-emerald-300/80 shrink-0">Populer:</span>
-                        @foreach (['Router', 'Switch', 'Crimping', 'Kabel', 'Obeng', 'Kunci'] as $kw)
-                            <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['search' => $kw])) }}"
-                                class="shrink-0 px-2 py-0.5 rounded-md bg-white/10 hover:bg-white/20 transition-colors {{ request('search') === $kw ? 'bg-white/30 font-bold' : '' }}">
-                                {{ $kw }}
-                            </a>
-                        @endforeach
-                    </div>
+                        </a>
+                    @endif
                 </div>
-            </div>
-        </div>
 
-        <!-- 2. FILTER & KATEGORI -->
-        <div class="space-y-3">
-            <!-- Horizontal Scrollable Category Chips -->
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                <div
-                    class="flex items-center gap-2 overflow-x-auto no-scrollbar py-1 w-full sm:w-auto text-xs font-semibold">
+                <!-- Sub-filters: Bengkel & Status Stok -->
+                <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
+                    @if ($isGuru)
+                        <select name="bengkel_id" onchange="this.form.submit()"
+                            class="text-xs bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 font-semibold text-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                            @foreach ($bengkels as $b)
+                                <option value="{{ $b->id }}"
+                                    {{ (string) $selectedBengkelId === (string) $b->id ? 'selected' : '' }}>
+                                    {{ $b->nama }} ({{ $b->kode }})
+                                </option>
+                            @endforeach
+                        </select>
+                    @else
+                        <div
+                            class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-gray-50 border border-gray-200 text-xs font-semibold text-gray-600 shrink-0">
+                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                            <span
+                                class="truncate max-w-[130px] sm:max-w-none">{{ $bengkel->nama ?? 'Bengkel Saya' }}</span>
+                        </div>
+                    @endif
+
+                    <select name="status" onchange="this.form.submit()"
+                        class="text-xs bg-gray-50 border border-gray-200 rounded-xl py-2 px-2.5 font-medium text-gray-700 focus:ring-primary-500 focus:border-primary-500">
+                        <option value="" {{ empty($selectedStatus) ? 'selected' : '' }}>Semua Stok</option>
+                        <option value="tersedia" {{ $selectedStatus === 'tersedia' ? 'selected' : '' }}>Tersedia</option>
+                        <option value="mepet" {{ $selectedStatus === 'mepet' ? 'selected' : '' }}>Stok Menipis</option>
+                        <option value="habis" {{ $selectedStatus === 'habis' ? 'selected' : '' }}>Habis / Dipinjam
+                        </option>
+                    </select>
+
+                    @if (request()->anyFilled(['search', 'status']))
+                        <a href="{{ route('peminjam.katalog.index', array_merge($isGuru && request('bengkel_id') ? ['bengkel_id' => request('bengkel_id')] : [], request('tipe') ? ['tipe' => request('tipe')] : [])) }}"
+                            class="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1.5 rounded-lg hover:bg-rose-50 transition-colors shrink-0"
+                            title="Reset filter & pencarian">
+                            Reset
+                        </a>
+                    @endif
+                </div>
+            </form>
+
+            <!-- Row 2: Category Chips & Total Count -->
+            <div class="flex items-center justify-between gap-3 pt-2.5 border-t border-gray-100">
+                <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5 text-xs font-semibold">
                     <!-- Chip: Semua -->
                     <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['tipe' => null, 'page' => 1])) }}"
-                        class="px-3.5 py-2 rounded-xl shrink-0 transition-all flex items-center gap-1.5 shadow-2xs {{ empty($selectedTipe) ? 'bg-primary-600 text-white shadow-sm ring-2 ring-primary-200' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' }}">
-                        <span>Semua Barang</span>
+                        class="px-3 py-1.5 rounded-xl shrink-0 transition-all flex items-center gap-1.5 shadow-2xs {{ empty($selectedTipe) ? 'bg-primary-600 text-white shadow-xs' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100' }}">
+                        <span>Semua</span>
                         <span
-                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ empty($selectedTipe) ? 'bg-primary-800 text-white' : 'bg-gray-100 text-gray-600' }}">
+                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ empty($selectedTipe) ? 'bg-primary-800 text-white' : 'bg-gray-200/80 text-gray-600' }}">
                             {{ $totalCount }}
                         </span>
                     </a>
 
                     <!-- Chip: Alat Inventaris -->
                     <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['tipe' => 'inventaris', 'page' => 1])) }}"
-                        class="px-3.5 py-2 rounded-xl shrink-0 transition-all flex items-center gap-2 shadow-2xs {{ $selectedTipe === 'inventaris' ? 'bg-primary-600 text-white shadow-sm ring-2 ring-primary-200' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' }}">
-                        <svg class="w-3.5 h-3.5 {{ $selectedTipe === 'inventaris' ? 'text-white' : 'text-emerald-600' }}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
+                        class="px-3 py-1.5 rounded-xl shrink-0 transition-all flex items-center gap-1.5 shadow-2xs {{ $selectedTipe === 'inventaris' ? 'bg-primary-600 text-white shadow-xs' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100' }}">
                         <span>Alat Inventaris</span>
                         <span
-                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ $selectedTipe === 'inventaris' ? 'bg-primary-800 text-white' : 'bg-gray-100 text-gray-600' }}">
+                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ $selectedTipe === 'inventaris' ? 'bg-primary-800 text-white' : 'bg-gray-200/80 text-gray-600' }}">
                             {{ $inventarisCount }}
                         </span>
                     </a>
 
-                    <!-- Chip: Bahan Habis Pakai -->
+                    <!-- Chip: BHP -->
                     <a href="{{ route('peminjam.katalog.index', array_merge(request()->query(), ['tipe' => 'bhp', 'page' => 1])) }}"
-                        class="px-3.5 py-2 rounded-xl shrink-0 transition-all flex items-center gap-2 shadow-2xs {{ $selectedTipe === 'bhp' ? 'bg-amber-600 text-white shadow-sm ring-2 ring-amber-200' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50' }}">
-                        <svg class="w-3.5 h-3.5 {{ $selectedTipe === 'bhp' ? 'text-white' : 'text-amber-600' }}"
-                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                        <span>Bahan Habis Pakai (BHP)</span>
+                        class="px-3 py-1.5 rounded-xl shrink-0 transition-all flex items-center gap-1.5 shadow-2xs {{ $selectedTipe === 'bhp' ? 'bg-amber-600 text-white shadow-xs' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100' }}">
+                        <span>BHP</span>
                         <span
-                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ $selectedTipe === 'bhp' ? 'bg-amber-800 text-white' : 'bg-gray-100 text-gray-600' }}">
+                            class="text-[10px] px-1.5 py-0.2 rounded-full {{ $selectedTipe === 'bhp' ? 'bg-amber-800 text-white' : 'bg-gray-200/80 text-gray-600' }}">
                             {{ $bhpCount }}
                         </span>
                     </a>
                 </div>
 
-                <!-- Total Info -->
-                <div class="text-xs text-gray-500 shrink-0 self-end sm:self-center">
-                    Ditemukan <strong class="text-gray-800">{{ $barangs->total() }}</strong> barang
+                <div class="text-[11px] text-gray-400 shrink-0 hidden sm:block">
+                    Total: <strong class="text-gray-700">{{ $barangs->total() }}</strong> barang
                 </div>
-            </div>
-
-            <!-- Sub-filter row (Bengkel & Ketersediaan Stok) -->
-            <div
-                class="flex flex-wrap items-center justify-between gap-3 text-xs text-gray-600 bg-white p-3 rounded-2xl border border-gray-200 shadow-2xs">
-                <form method="GET" action="{{ route('peminjam.katalog.index') }}"
-                    class="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
-                    @if (request('search'))
-                        <input type="hidden" name="search" value="{{ request('search') }}">
-                    @endif
-                    @if (request('tipe'))
-                        <input type="hidden" name="tipe" value="{{ request('tipe') }}">
-                    @endif
-
-                    <!-- Pilihan Bengkel (Khusus Guru dapat ganti bengkel, Siswa terkunci) -->
-                    @if ($isGuru)
-                        <div class="flex items-center gap-1.5">
-                            <label class="text-gray-500 font-medium shrink-0">Bengkel:</label>
-                            <select name="bengkel_id" onchange="this.form.submit()"
-                                class="text-xs bg-gray-50 border-gray-300 rounded-xl py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 font-semibold text-gray-800">
-                                @foreach ($bengkels as $b)
-                                    <option value="{{ $b->id }}"
-                                        {{ (string) $selectedBengkelId === (string) $b->id ? 'selected' : '' }}>
-                                        {{ $b->nama }} ({{ $b->kode }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                    @else
-                        <div
-                            class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-semibold">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                            Bengkel: {{ $bengkel->nama ?? 'Bengkel Saya' }}
-                        </div>
-                    @endif
-
-                    <!-- Filter Ketersediaan Stok -->
-                    <div class="flex items-center gap-1.5">
-                        <label class="text-gray-500 font-medium shrink-0">Status Stok:</label>
-                        <select name="status" onchange="this.form.submit()"
-                            class="text-xs bg-gray-50 border-gray-300 rounded-xl py-1.5 px-3 focus:ring-primary-500 focus:border-primary-500 font-medium text-gray-800">
-                            <option value="" {{ empty($selectedStatus) ? 'selected' : '' }}>Semua Ketersediaan
-                            </option>
-                            <option value="tersedia" {{ $selectedStatus === 'tersedia' ? 'selected' : '' }}>Stok Tersedia
-                            </option>
-                            <option value="mepet" {{ $selectedStatus === 'mepet' ? 'selected' : '' }}>Stok Menipis
-                            </option>
-                            <option value="habis" {{ $selectedStatus === 'habis' ? 'selected' : '' }}>Stok Habis /
-                                Dipinjam</option>
-                        </select>
-                    </div>
-                </form>
-
-                @if (request()->anyFilled(['search', 'tipe', 'status']))
-                    <a href="{{ route('peminjam.katalog.index', $isGuru && request('bengkel_id') ? ['bengkel_id' => request('bengkel_id')] : []) }}"
-                        class="text-xs text-red-600 hover:text-red-800 font-semibold inline-flex items-center gap-1 transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                        Reset Filter
-                    </a>
-                @endif
             </div>
         </div>
 
-        <!-- 3. GRID KATALOG BARANG NYATA -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+        <!-- 3. GRID KATALOG BARANG (2-Kolom Mobile, 3-4 Kolom Desktop) -->
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
             @forelse ($barangs as $item)
                 @php
                     $isInventaris = $item->jenis_barang === 'inventaris';
@@ -339,39 +205,44 @@
                 @endphp
 
                 <div
-                    class="bg-white border rounded-2xl shadow-xs overflow-hidden flex flex-col justify-between transition-all hover:shadow-md hover:border-primary-200 group {{ $isOutOfStock ? 'border-gray-200 bg-slate-50/50 opacity-80' : 'border-gray-200' }}">
+                    class="bg-white border rounded-2xl shadow-2xs overflow-hidden flex flex-col justify-between transition-all hover:shadow-md hover:border-primary-200 group {{ $isOutOfStock ? 'border-gray-200 bg-slate-50/60 opacity-75' : 'border-gray-200' }}">
 
-                    <!-- Card Header -->
-                    <div class="p-4 sm:p-5">
-                        <!-- Top Info row: Category Badge & Item Code -->
-                        <div class="flex items-center justify-between gap-2 mb-3">
-                            @if ($isInventaris)
-                                <span
-                                    class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
-                                        </path>
-                                    </svg>
-                                    Alat Inventaris
-                                </span>
-                            @else
-                                <span
-                                    class="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-200/80">
-                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
-                                    </svg>
-                                    Bahan Habis Pakai
-                                </span>
-                            @endif
-
+                    <!-- Card Body -->
+                    <div class="p-3 sm:p-4 flex-1 flex flex-col justify-between">
+                        <!-- Top: Category Badge & Info Button -->
+                        <div class="flex items-center justify-between gap-1 mb-2">
                             <span
-                                class="font-mono text-[11px] text-gray-400 font-semibold">{{ $item->kode_barang }}</span>
+                                class="inline-flex items-center px-1.5 sm:px-2 py-0.5 rounded-md text-[9px] sm:text-[10px] font-bold uppercase tracking-wide {{ $isInventaris ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-amber-50 text-amber-700 border border-amber-200/60' }}">
+                                {{ $isInventaris ? 'Alat' : 'BHP' }}
+                            </span>
+                            <button type="button"
+                                @click="openItemDetail({
+                                id: {{ $item->id }},
+                                bengkelId: {{ $item->bengkel_id }},
+                                bengkelNama: '{{ addslashes($item->bengkel->nama ?? '') }}',
+                                kode: '{{ $item->kode_barang }}',
+                                nama: '{{ addslashes($item->nama) }}',
+                                tipe: '{{ $item->jenis_barang }}',
+                                satuan: '{{ $item->satuan }}',
+                                stok: {{ $item->stok_tersedia }},
+                                stokTotal: {{ $item->stok_total }},
+                                stokDipinjam: {{ $item->stok_dipinjam }},
+                                stokRusak: {{ $item->stok_rusak }},
+                                lokasi: '{{ addslashes($item->lokasiPenyimpanan->nama ?? 'Gudang Bengkel') }}',
+                                deskripsi: '{{ addslashes($item->deskripsi ?? 'Tidak ada catatan deskripsi tambahan.') }}'
+                            })"
+                                class="text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-gray-100 transition-colors"
+                                title="Lihat rincian lengkap">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </button>
                         </div>
 
-                        <!-- Item Box -->
-                        <div @click="openItemDetail({
+                        <!-- Name (Clickable) -->
+                        <div class="cursor-pointer mb-2"
+                            @click="openItemDetail({
                             id: {{ $item->id }},
                             bengkelId: {{ $item->bengkel_id }},
                             bengkelNama: '{{ addslashes($item->bengkel->nama ?? '') }}',
@@ -385,126 +256,43 @@
                             stokRusak: {{ $item->stok_rusak }},
                             lokasi: '{{ addslashes($item->lokasiPenyimpanan->nama ?? 'Gudang Bengkel') }}',
                             deskripsi: '{{ addslashes($item->deskripsi ?? 'Tidak ada catatan deskripsi tambahan.') }}'
-                         })"
-                            class="cursor-pointer mb-3.5 p-4 rounded-xl flex items-center justify-between transition-transform group-hover:scale-[1.01] {{ $isInventaris ? 'bg-emerald-50/60 border border-emerald-100' : 'bg-amber-50/60 border border-amber-100' }}">
-                            <div class="flex items-center space-x-3">
-                                <div
-                                    class="w-12 h-12 rounded-xl flex items-center justify-center shadow-2xs shrink-0 {{ $isInventaris ? 'bg-emerald-100/80 text-emerald-700' : 'bg-amber-100/80 text-amber-700' }}">
-                                    @if ($isInventaris)
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        </svg>
-                                    @else
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                                        </svg>
-                                    @endif
-                                </div>
-                                <div>
-                                    <p class="text-[11px] text-gray-500 flex items-center gap-1 font-medium">
-                                        <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z">
-                                            </path>
-                                        </svg>
-                                        <span>{{ $item->lokasiPenyimpanan->nama ?? 'Gudang Bengkel' }}</span>
-                                    </p>
-                                    <p class="text-xs text-gray-400 font-normal mt-0.5">{{ $item->bengkel->nama }}</p>
-                                </div>
-                            </div>
-
-                            <!-- Stock Badge status -->
-                            <div>
-                                @if ($item->stok_tersedia > $item->minimum_stok)
-                                    <span
-                                        class="px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                        <span>Tersedia: {{ $item->stok_tersedia }} {{ $item->satuan }}</span>
-                                    </span>
-                                @elseif ($isLowStock)
-                                    <span
-                                        class="px-2.5 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200 flex items-center gap-1">
-                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-                                        <span>Sisa: {{ $item->stok_tersedia }} {{ $item->satuan }}</span>
-                                    </span>
-                                @else
-                                    <span
-                                        class="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-200 text-gray-600">
-                                        Habis / Dipinjam
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-
-                        <!-- Title & Spec -->
-                        <div @click="openItemDetail({
-                            id: {{ $item->id }},
-                            bengkelId: {{ $item->bengkel_id }},
-                            bengkelNama: '{{ addslashes($item->bengkel->nama ?? '') }}',
-                            kode: '{{ $item->kode_barang }}',
-                            nama: '{{ addslashes($item->nama) }}',
-                            tipe: '{{ $item->jenis_barang }}',
-                            satuan: '{{ $item->satuan }}',
-                            stok: {{ $item->stok_tersedia }},
-                            stokTotal: {{ $item->stok_total }},
-                            stokDipinjam: {{ $item->stok_dipinjam }},
-                            stokRusak: {{ $item->stok_rusak }},
-                            lokasi: '{{ addslashes($item->lokasiPenyimpanan->nama ?? 'Gudang Bengkel') }}',
-                            deskripsi: '{{ addslashes($item->deskripsi ?? 'Tidak ada catatan deskripsi tambahan.') }}'
-                         })"
-                            class="cursor-pointer space-y-1">
-                            <h3
-                                class="font-bold text-gray-900 text-sm sm:text-base group-hover:text-primary-600 transition-colors leading-snug">
+                        })">
+                            <h3 class="font-bold text-gray-900 text-xs sm:text-sm group-hover:text-primary-600 transition-colors leading-snug line-clamp-2"
+                                title="{{ $item->nama }}">
                                 {{ $item->nama }}
                             </h3>
-                            <p class="text-xs text-gray-500 line-clamp-2 leading-relaxed">
-                                {{ $item->deskripsi ?: 'Peralatan resmi bengkel SMKN 3 Yogyakarta siap digunakan untuk kegiatan belajar mengajar.' }}
-                            </p>
+                        </div>
+
+                        <!-- Stock Status -->
+                        <div class="mt-auto pt-1">
+                            @if ($item->stok_tersedia > $item->minimum_stok)
+                                <div
+                                    class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold text-emerald-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
+                                    <span class="truncate">{{ $item->stok_tersedia }} {{ $item->satuan }}</span>
+                                </div>
+                            @elseif ($isLowStock)
+                                <div
+                                    class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-semibold text-amber-700">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse shrink-0"></span>
+                                    <span class="truncate">Sisa {{ $item->stok_tersedia }} {{ $item->satuan }}</span>
+                                </div>
+                            @else
+                                <div
+                                    class="flex items-center gap-1.5 text-[10px] sm:text-[11px] font-medium text-gray-400">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-300 shrink-0"></span>
+                                    <span>Habis</span>
+                                </div>
+                            @endif
                         </div>
                     </div>
 
-                    <!-- Card Footer Action Buttons -->
-                    <div class="px-4 pb-4 sm:px-5 sm:pb-5 pt-0">
+                    <!-- Card Action Footer -->
+                    <div class="px-2.5 pb-2.5 sm:px-3 sm:pb-3 pt-0">
                         @if ($item->stok_tersedia > 0)
-                            <div class="flex items-center gap-2">
-                                <!-- Quick Detail Button -->
+                            <template x-if="!isInCart({{ $item->id }})">
                                 <button
-                                    @click="openItemDetail({
-                                    id: {{ $item->id }},
-                                    bengkelId: {{ $item->bengkel_id }},
-                                    bengkelNama: '{{ addslashes($item->bengkel->nama ?? '') }}',
-                                    kode: '{{ $item->kode_barang }}',
-                                    nama: '{{ addslashes($item->nama) }}',
-                                    tipe: '{{ $item->jenis_barang }}',
-                                    satuan: '{{ $item->satuan }}',
-                                    stok: {{ $item->stok_tersedia }},
-                                    stokTotal: {{ $item->stok_total }},
-                                    stokDipinjam: {{ $item->stok_dipinjam }},
-                                    stokRusak: {{ $item->stok_rusak }},
-                                    lokasi: '{{ addslashes($item->lokasiPenyimpanan->nama ?? 'Gudang Bengkel') }}',
-                                    deskripsi: '{{ addslashes($item->deskripsi ?? 'Tidak ada catatan deskripsi tambahan.') }}'
-                                 })"
-                                    type="button"
-                                    class="p-2.5 bg-gray-50 hover:bg-gray-100 text-gray-600 rounded-xl border border-gray-200 transition-colors"
-                                    title="Lihat Rincian Barang">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z">
-                                        </path>
-                                    </svg>
-                                </button>
-
-                                <!-- Add to Cart or Stepper if in Cart -->
-                                <template x-if="!isInCart({{ $item->id }})">
-                                    <button
-                                        @click="addToCart({
+                                    @click="addToCart({
                                         id: {{ $item->id }},
                                         bengkelId: {{ $item->bengkel_id }},
                                         kode: '{{ $item->kode_barang }}',
@@ -513,43 +301,36 @@
                                         satuan: '{{ $item->satuan }}',
                                         stok: {{ $item->stok_tersedia }}
                                     }, 1)"
-                                        type="button"
-                                        class="flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold shadow-xs transition-all flex items-center justify-center gap-1.5 active:scale-98 {{ $isInventaris ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                                        </svg>
-                                        <span>{{ $isInventaris ? 'Pinjam Alat' : 'Minta Bahan' }}</span>
-                                    </button>
-                                </template>
+                                    type="button"
+                                    class="w-full py-1.5 sm:py-2 px-2 rounded-xl text-xs font-bold shadow-2xs transition-all flex items-center justify-center gap-1 active:scale-95 {{ $isInventaris ? 'bg-primary-600 hover:bg-primary-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white' }}">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                                    </svg>
+                                    <span>Pinjam</span>
+                                </button>
+                            </template>
 
-                                <template x-if="isInCart({{ $item->id }})">
-                                    <div
-                                        class="flex-1 flex items-center justify-between bg-primary-50 border border-primary-300 rounded-xl px-2 py-1">
-                                        <button @click="decreaseQty({{ $item->id }})"
-                                            class="w-7 h-7 rounded-lg bg-white text-primary-700 font-bold hover:bg-primary-100 flex items-center justify-center shadow-2xs">
-                                            -
-                                        </button>
-                                        <span class="text-xs font-bold text-primary-900"
-                                            x-text="getCartQty({{ $item->id }}) + ' {{ $item->satuan }}'"></span>
-                                        <button @click="increaseQty({{ $item->id }})"
-                                            :disabled="getCartQty({{ $item->id }}) >= {{ $item->stok_tersedia }}"
-                                            class="w-7 h-7 rounded-lg bg-white text-primary-700 font-bold hover:bg-primary-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-2xs">
-                                            +
-                                        </button>
-                                    </div>
-                                </template>
-                            </div>
+                            <template x-if="isInCart({{ $item->id }})">
+                                <div
+                                    class="w-full flex items-center justify-between bg-primary-50 border border-primary-300 rounded-xl px-1.5 py-1">
+                                    <button @click="decreaseQty({{ $item->id }})"
+                                        class="w-6 h-6 rounded-lg bg-white text-primary-700 font-bold hover:bg-primary-100 flex items-center justify-center shadow-2xs text-xs">
+                                        -
+                                    </button>
+                                    <span class="text-xs font-bold text-primary-900"
+                                        x-text="getCartQty({{ $item->id }})"></span>
+                                    <button @click="increaseQty({{ $item->id }})"
+                                        :disabled="getCartQty({{ $item->id }}) >= {{ $item->stok_tersedia }}"
+                                        class="w-6 h-6 rounded-lg bg-white text-primary-700 font-bold hover:bg-primary-100 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center shadow-2xs text-xs">
+                                        +
+                                    </button>
+                                </div>
+                            </template>
                         @else
                             <button disabled
-                                class="w-full py-2.5 px-4 bg-gray-100 text-gray-400 text-xs sm:text-sm font-semibold rounded-xl cursor-not-allowed flex items-center justify-center gap-1.5">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
-                                    </path>
-                                </svg>
-                                Stok Kosong / Dipinjam
+                                class="w-full py-1.5 sm:py-2 px-2 bg-gray-100 text-gray-400 text-xs font-medium rounded-xl cursor-not-allowed text-center">
+                                Habis
                             </button>
                         @endif
                     </div>
@@ -584,9 +365,8 @@
             </div>
         @endif
 
-        <!-- 4. FLOATING ACTION CART BAR (MOBILE / DESKTOP) -->
-        <div x-show="cart.length > 0" x-transition
-            class="fixed bottom-16 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-40 sm:max-w-md">
+        <!-- 4. FLOATING ACTION CART BAR (Desktop Only - Mobile uses Top Bar Cart) -->
+        <div x-show="cart.length > 0" x-transition class="hidden sm:block fixed sm:bottom-6 sm:right-6 z-40 sm:max-w-md">
             <div
                 class="bg-gradient-to-r from-gray-900 to-slate-800 text-white rounded-2xl p-3.5 sm:p-4 shadow-2xl border border-white/10 flex items-center justify-between gap-3">
                 <div class="flex items-center space-x-3 cursor-pointer" @click="cartDrawerOpen = true">
@@ -788,13 +568,19 @@
                                 <p class="text-xs text-gray-500 mt-1" x-text="totalCartCount + ' item dipilih'"></p>
                             </div>
                         </div>
-                        <button @click="cartDrawerOpen = false"
-                            class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                        </button>
+                        <div class="flex items-center gap-2">
+                            <button x-show="cart.length > 0" @click="clearCart()" type="button"
+                                class="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors">
+                                Kosongkan
+                            </button>
+                            <button @click="cartDrawerOpen = false"
+                                class="p-1.5 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Drawer Body (Items list) -->
@@ -919,8 +705,7 @@
                     x-transition:leave-end="scale-95 opacity-0"
                     class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-lg border border-gray-100">
 
-                    <form method="POST" action="{{ route('peminjam.pengajuan.store') }}"
-                        @submit="prepareFormSubmit()">
+                    <form method="POST" action="{{ route('peminjam.pengajuan.store') }}" @submit="prepareFormSubmit()">
                         @csrf
                         <input type="hidden" name="bengkel_id" :value="cart[0]?.bengkelId || '{{ $bengkel?->id }}'">
                         <input type="hidden" name="items"
@@ -1017,7 +802,8 @@
                                             <label class="block text-[11px] font-semibold text-gray-700">Batas Pengembalian
                                                 (Wajib):</label>
                                             <input type="datetime-local" name="batas_kembali"
-                                                value="{{ now()->setTime(16, 0)->format('Y-m-d\TH:i') }}"
+                                                min="{{ now()->format('Y-m-d\TH:i') }}"
+                                                value="{{ now()->hour >= 16 ? now()->addHours(2)->format('Y-m-d\TH:i') : now()->setTime(16, 0)->format('Y-m-d\TH:i') }}"
                                                 class="mt-1 block w-full text-xs bg-white border-amber-300 text-amber-900 font-bold rounded-lg shadow-2xs focus:ring-primary-500 focus:border-primary-500">
                                         </div>
                                     </div>
@@ -1098,6 +884,18 @@
                     window.addEventListener('toggle-cart', () => {
                         this.cartDrawerOpen = !this.cartDrawerOpen;
                     });
+                    if (new URLSearchParams(window.location.search).get('open_cart') === '1') {
+                        this.cartDrawerOpen = true;
+                    }
+                },
+
+                clearCart() {
+                    if (this.cart.length === 0) return;
+                    if (confirm('Kosongkan semua barang dari keranjang peminjaman?')) {
+                        this.cart = [];
+                        this.saveCart();
+                        this.showToast('Keranjang Kosong', 'Semua barang dikeluarkan dari keranjang.', 'info');
+                    }
                 },
 
                 loadCart() {

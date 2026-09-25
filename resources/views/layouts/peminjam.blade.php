@@ -93,18 +93,33 @@
             <div class="flex items-center space-x-2 sm:space-x-3">
 
                 <!-- Quick Cart Button (Desktop & Mobile) -->
-                <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-cart'))"
-                    class="relative p-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center justify-center"
-                    title="Keranjang Peminjaman">
-                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
-                    </svg>
-                    <!-- Cart Badge Counter -->
-                    <span x-show="cartCount > 0" x-transition
-                        class="absolute -top-1 -right-1 bg-primary-600 text-white font-bold text-[10px] min-w-4.5 h-4.5 px-1 rounded-full flex items-center justify-center shadow-xs"
-                        x-text="cartCount"></span>
-                </button>
+                @if (request()->routeIs('peminjam.katalog.index'))
+                    <button type="button" @click="window.dispatchEvent(new CustomEvent('toggle-cart'))"
+                        class="relative p-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center justify-center"
+                        title="Keranjang Peminjaman">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <!-- Cart Badge Counter -->
+                        <span x-show="cartCount > 0" x-transition
+                            class="absolute -top-1 -right-1 bg-primary-600 text-white font-bold text-[10px] min-w-4.5 h-4.5 px-1 rounded-full flex items-center justify-center shadow-xs"
+                            x-text="cartCount"></span>
+                    </button>
+                @else
+                    <a href="{{ route('peminjam.katalog.index', ['open_cart' => 1]) }}"
+                        class="relative p-2 text-gray-700 hover:text-primary-600 hover:bg-primary-50 rounded-xl transition-colors flex items-center justify-center"
+                        title="Keranjang Peminjaman">
+                        <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                        </svg>
+                        <!-- Cart Badge Counter -->
+                        <span x-show="cartCount > 0" x-transition
+                            class="absolute -top-1 -right-1 bg-primary-600 text-white font-bold text-[10px] min-w-4.5 h-4.5 px-1 rounded-full flex items-center justify-center shadow-xs"
+                            x-text="cartCount"></span>
+                    </a>
+                @endif
 
                 <!-- Desktop User Section (Profile & Logout) -->
                 <div class="hidden md:flex items-center space-x-3">
