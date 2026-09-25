@@ -546,7 +546,7 @@
                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @click="cartDrawerOpen = false"
                 class="fixed inset-0 bg-gray-900/60 backdrop-blur-xs transition-opacity"></div>
 
-            <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+            <div class="fixed inset-y-0 right-0 max-w-full flex pl-0 sm:pl-10">
                 <div x-show="cartDrawerOpen" x-transition:enter="transform transition ease-in-out duration-300"
                     x-transition:enter-start="translate-x-full" x-transition:enter-end="translate-x-0"
                     x-transition:leave="transform transition ease-in-out duration-200"
@@ -643,13 +643,14 @@
                                 <!-- Stepper & Delete -->
                                 <div class="flex items-center space-x-2 shrink-0">
                                     <div
-                                        class="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden">
-                                        <button @click="decreaseQty(cItem.id)"
-                                            class="px-2 py-1 text-gray-600 hover:bg-gray-200 font-bold text-xs">-</button>
-                                        <span class="px-2 py-1 text-xs font-bold text-gray-800 min-w-5 text-center"
+                                        class="flex items-center border border-gray-200 rounded-lg bg-gray-50 overflow-hidden shadow-2xs">
+                                        <button @click="decreaseQty(cItem.id)" type="button"
+                                            class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 font-bold text-sm transition-colors">-</button>
+                                        <span class="px-2 py-1 text-xs font-bold text-gray-900 min-w-6 text-center"
                                             x-text="cItem.qty"></span>
                                         <button @click="increaseQty(cItem.id)" :disabled="cItem.qty >= cItem.stok"
-                                            class="px-2 py-1 text-gray-600 hover:bg-gray-200 font-bold text-xs disabled:opacity-30 disabled:cursor-not-allowed">+</button>
+                                            type="button"
+                                            class="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center text-gray-700 hover:bg-gray-200 font-bold text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-colors">+</button>
                                     </div>
                                     <button @click="removeFromCart(cItem.id)"
                                         class="text-gray-400 hover:text-red-600 p-1 transition-colors" title="Hapus">
@@ -705,7 +706,7 @@
                     x-transition:leave-end="scale-95 opacity-0"
                     class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all w-full max-w-lg border border-gray-100">
 
-                    <form method="POST" action="{{ route('peminjam.pengajuan.store') }}" @submit="prepareFormSubmit()">
+                    <form method="POST" action="{{ route('peminjam.pengajuan.store') }}" @submit="isSubmitting = true">
                         @csrf
                         <input type="hidden" name="bengkel_id" :value="cart[0]?.bengkelId || '{{ $bengkel?->id }}'">
                         <input type="hidden" name="items"
@@ -768,7 +769,7 @@
                                                     </template>
                                                 </div>
                                                 <span class="font-bold text-gray-900" x-text="item.nama"></span>
-                                                <span class="text-[10px] font-semibold px-1.5 py-0.2 rounded"
+                                                <span class="text-[10px] font-semibold px-1.5 py-0.5 rounded"
                                                     :class="item.tipe === 'inventaris' ? 'bg-emerald-100 text-emerald-800' :
                                                         'bg-amber-100 text-amber-800'"
                                                     x-text="item.tipe === 'inventaris' ? 'Alat' : 'BHP'"></span>
@@ -801,15 +802,21 @@
                                         <div>
                                             <label class="block text-[11px] font-semibold text-gray-700">Batas Pengembalian
                                                 (Wajib):</label>
+                                            @php
+                                                $defaultBatasKembali =
+                                                    now()->hour >= 15
+                                                        ? now()->addDay()->setTime(16, 0)->format('Y-m-d\TH:i')
+                                                        : now()->setTime(16, 0)->format('Y-m-d\TH:i');
+                                            @endphp
                                             <input type="datetime-local" name="batas_kembali"
                                                 min="{{ now()->format('Y-m-d\TH:i') }}"
-                                                value="{{ now()->hour >= 16 ? now()->addHours(2)->format('Y-m-d\TH:i') : now()->setTime(16, 0)->format('Y-m-d\TH:i') }}"
+                                                value="{{ $defaultBatasKembali }}"
                                                 class="mt-1 block w-full text-xs bg-white border-amber-300 text-amber-900 font-bold rounded-lg shadow-2xs focus:ring-primary-500 focus:border-primary-500">
                                         </div>
                                     </div>
                                     <p class="text-[11px] text-amber-800 font-medium">
-                                        *Aturan Bengkel: Alat inventaris wajib dikembalikan pada hari yang sama sebelum jam
-                                        bengkel berakhir (PRD 3.5).
+                                        *Aturan Bengkel: Alat inventaris wajib dikembalikan sebelum jam operasional bengkel
+                                        berakhir.
                                     </p>
                                 </div>
                             </template>
@@ -834,22 +841,35 @@
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 mb-1">Keperluan / Praktik: <span
                                         class="text-red-500">*</span></label>
-                                <textarea name="keperluan" rows="3" required
+                                <textarea name="keperluan" rows="3" required minlength="5" maxlength="1000"
                                     placeholder="Jelaskan keperluan peminjaman barang, contoh: Praktik Jaringan Dasar modul konfigurasi routing bersama Pak Yono di Lab 2..."
                                     class="w-full text-xs border-gray-300 rounded-xl focus:ring-primary-500 focus:border-primary-500 placeholder:text-gray-400"></textarea>
+                                <p class="text-[11px] text-gray-400 mt-1">Minimal 5 karakter. Jelaskan mata pelajaran atau
+                                    keperluan penggunaan.</p>
                             </div>
                         </div>
 
                         <!-- Footer -->
                         <div class="p-4 sm:p-5 bg-gray-50 border-t border-gray-100 flex items-center justify-end gap-2.5">
-                            <button type="button" @click="checkoutModalOpen = false"
-                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors">
+                            <button type="button" @click="checkoutModalOpen = false" :disabled="isSubmitting"
+                                class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-50 transition-colors disabled:opacity-50">
                                 Batal
                             </button>
-                            <button type="submit"
-                                class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
-                                <span>Kirim Pengajuan</span>
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <button type="submit" :disabled="isSubmitting || cart.length === 0"
+                                class="px-5 py-2.5 bg-primary-600 hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-xs font-bold shadow-sm transition-all flex items-center gap-1.5">
+                                <span x-show="!isSubmitting">Kirim Pengajuan</span>
+                                <span x-show="isSubmitting" class="flex items-center gap-1.5">
+                                    <svg class="animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10"
+                                            stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    <span>Mengirim...</span>
+                                </span>
+                                <svg x-show="!isSubmitting" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
                                 </svg>
@@ -871,6 +891,7 @@
                 activeItem: null,
                 cartDrawerOpen: false,
                 checkoutModalOpen: false,
+                isSubmitting: false,
                 toast: {
                     show: false,
                     title: '',
@@ -945,7 +966,7 @@
                     // Pastikan item tidak bercampur dari bengkel berbeda jika ada
                     if (this.cart.length > 0 && this.cart[0].bengkelId && this.cart[0].bengkelId !== item.bengkelId) {
                         this.showToast('Bengkel Berbeda',
-                            'Semua barang dalam 1 pengajuan wajib dari bengkel yang sama (PRD 3.5). Kosongkan keranjang untuk memilih bengkel lain.',
+                            'Semua barang dalam 1 pengajuan wajib berasal dari bengkel yang sama. Kosongkan keranjang jika ingin memilih barang dari bengkel ini.',
                             'warning');
                         return;
                     }
@@ -1004,9 +1025,7 @@
                 },
 
                 prepareFormSubmit() {
-                    // Clear cart from storage upon form submission
-                    localStorage.removeItem('sibenka_cart');
-                    window.dispatchEvent(new CustomEvent('cart-updated'));
+                    this.isSubmitting = true;
                 },
 
                 showToast(title, message, type = 'success') {

@@ -507,19 +507,6 @@
 
                 </div>
 
-                {{-- Info Sesi Aktif --}}
-                <div class="max-w-xl bg-gray-50/80 border border-gray-200 rounded-xl p-4 text-xs space-y-1">
-                    <p class="font-bold text-gray-800 flex items-center gap-1.5">
-                        <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                        </svg>
-                        Sesi Login Terverifikasi
-                    </p>
-                    <p class="text-gray-500">Sistem Informasi Manajemen Inventaris & Bengkel SMKN 3 Yogyakarta (Sibenka)
-                    </p>
-                </div>
-
                 <div class="flex justify-end pt-3 border-t border-gray-100">
                     <button type="submit"
                         class="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold text-white bg-primary-600 hover:bg-primary-700 active:scale-[0.98] shadow-sm transition-all flex items-center justify-center gap-2">

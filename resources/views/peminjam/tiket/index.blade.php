@@ -7,6 +7,12 @@
 
         <!-- Flash Notification Alerts -->
         @if (session('success'))
+            <script>
+                try {
+                    localStorage.removeItem('sibenka_cart');
+                    window.dispatchEvent(new CustomEvent('cart-updated'));
+                } catch (e) {}
+            </script>
             <div
                 class="bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
                 <div
@@ -198,7 +204,8 @@
                                                 d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                         </svg>
                                         <span>Terlambat: Batas {{ $batasKembali->translatedFormat('d M Y, H:i') }} WIB
-                                            ({{ $batasKembali->diffForHumans() }})</span>
+                                            ({{ $batasKembali->diffForHumans() }})
+                                        </span>
                                     </div>
                                 @elseif ($isDueSoon)
                                     <div
