@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bon Pinjam Alat & Bahan #TRX-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} - {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3 Yogyakarta</title>
+    <title>Bon Pinjam Alat & Bahan #TRX-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} -
+        {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3 Yogyakarta</title>
     <style>
         /* === RESET & PAGE SETUP === */
         * {
@@ -255,7 +257,7 @@
             margin: 12px 0 16px 0;
         }
 
-        .items-table th, 
+        .items-table th,
         .items-table td {
             border: 1px solid #000000;
             padding: 6px 8px;
@@ -270,9 +272,17 @@
             font-size: 9.5pt;
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
 
         /* PERNYATAAN KESANGGUPAN */
         .statement-box {
@@ -366,6 +376,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="preview-wrapper">
@@ -382,9 +393,11 @@
                 <span class="toolbar-badge">A4 Portrait</span>
             </div>
             <div class="toolbar-actions">
-                <a href="{{ auth()->check() && auth()->user()->role === 'peminjam' ? route('peminjam.tiket.show', $peminjaman->id) : route('toolman.pengembalian.index') }}" class="btn-toolbar btn-back">
+                <a href="{{ auth()->check() && auth()->user()->role === 'peminjam' ? route('peminjam.tiket.show', $peminjaman->id) : route('toolman.pengembalian.index') }}"
+                    class="btn-toolbar btn-back">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Kembali
                 </a>
@@ -413,7 +426,8 @@
                         <div class="kop-instansi-2">DINAS PENDIDIKAN, PEMUDA, DAN OLAHRAGA</div>
                         <div class="kop-sekolah">SMK NEGERI 3 YOGYAKARTA</div>
                         <div class="kop-bengkel">{{ strtoupper($bengkel->nama ?? 'BENGKEL PRAKTIK KEJURUAN') }}</div>
-                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274) 513507 &bull; Laman: smkn3jogja.sch.id</div>
+                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274)
+                            513507 &bull; Laman: smkn3jogja.sch.id</div>
                     </td>
                 </tr>
             </table>
@@ -459,16 +473,20 @@
                 <tr>
                     <td class="identitas-label">Tanggal Pinjam</td>
                     <td class="identitas-separator">:</td>
-                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}</td>
+                    <td class="identitas-value">
+                        {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}
+                    </td>
                 </tr>
                 <tr>
                     <td class="identitas-label">Batas Pengembalian</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
                         @if ($peminjaman->batas_kembali)
-                            {{ \Carbon\Carbon::parse($peminjaman->batas_kembali)->locale('id')->translatedFormat('l, d F Y, H:i') }} WIB
+                            {{ \Carbon\Carbon::parse($peminjaman->batas_kembali)->locale('id')->translatedFormat('l, d F Y, H:i') }}
+                            WIB
                         @else
-                            <span style="color: #047857; font-weight: normal; font-style: italic;">Barang Habis Pakai (Tidak Perlu Dikembalikan)</span>
+                            <span style="color: #047857; font-weight: normal; font-style: italic;">Barang Habis Pakai
+                                (Tidak Perlu Dikembalikan)</span>
                         @endif
                     </td>
                 </tr>
@@ -510,9 +528,11 @@
                             </td>
                             <td class="text-center">
                                 @if ($isBhp)
-                                    <span style="font-size: 8.5pt; font-weight: bold; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 3px; border: 1px solid #fde68a;">BHP</span>
+                                    <span
+                                        style="font-size: 8.5pt; font-weight: bold; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 3px; border: 1px solid #fde68a;">BHP</span>
                                 @else
-                                    <span style="font-size: 8.5pt; font-weight: bold; color: #047857; background: #ecfdf5; padding: 2px 6px; border-radius: 3px; border: 1px solid #a7f3d0;">Alat</span>
+                                    <span
+                                        style="font-size: 8.5pt; font-weight: bold; color: #047857; background: #ecfdf5; padding: 2px 6px; border-radius: 3px; border: 1px solid #a7f3d0;">Alat</span>
                                 @endif
                             </td>
                             <td class="text-center font-bold">
@@ -527,7 +547,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau bahan.</td>
+                            <td colspan="7" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau
+                                bahan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -535,7 +556,9 @@
 
             <!-- PERNYATAAN KESANGGUPAN -->
             <div class="statement-box">
-                Meminjam alat dan/atau bahan seperti tersebut di atas untuk keperluan praktik, dan sanggup memenuhi seluruh tata tertib bengkel serta bertanggung jawab penuh atas keutuhan dan pengembalian alat tepat waktu.
+                Meminjam alat dan/atau bahan seperti tersebut di atas untuk keperluan praktik, dan sanggup memenuhi
+                seluruh tata tertib bengkel serta bertanggung jawab penuh atas keutuhan dan pengembalian alat tepat
+                waktu.
             </div>
 
             <!-- TANDA TANGAN (SESUAI ATURAN RESMI) -->
@@ -564,11 +587,15 @@
                         <div class="signature-title">NIP. {{ $toolmanNip }}</div>
                     </td>
                     <td style="text-align: right; padding-right: 20px;">
-                        <div>Yogyakarta, {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('d F Y') }}</div>
+                        <div>Yogyakarta,
+                            {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('d F Y') }}
+                        </div>
                         <div style="font-weight: bold; margin-top: 2px;">Peminjam,</div>
                         <div class="signature-space"></div>
                         <div class="signature-name">{{ strtoupper($peminjaman->user->name ?? 'Peminjam') }}</div>
-                        <div class="signature-title">NIS/NIP. {{ $peminjaman->user->nomor_identitas ?? '.........................................' }}</div>
+                        <div class="signature-title">NIS/NIP.
+                            {{ $peminjaman->user->nomor_identitas ?? '.........................................' }}
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -577,4 +604,5 @@
     </div>
 
 </body>
+
 </html>

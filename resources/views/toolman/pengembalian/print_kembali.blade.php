@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bukti Pengembalian Alat & Bahan #KMB-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} - {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3 Yogyakarta</title>
+    <title>Bukti Pengembalian Alat & Bahan #KMB-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} -
+        {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3 Yogyakarta</title>
     <style>
         /* === RESET & PAGE SETUP === */
         * {
@@ -255,7 +257,7 @@
             margin: 12px 0 16px 0;
         }
 
-        .items-table th, 
+        .items-table th,
         .items-table td {
             border: 1px solid #000000;
             padding: 6px 6px;
@@ -270,9 +272,17 @@
             font-size: 9pt;
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
 
         .badge-cond {
             font-weight: bold;
@@ -373,6 +383,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="preview-wrapper">
@@ -389,9 +400,11 @@
                 <span class="toolbar-badge">A4 Portrait</span>
             </div>
             <div class="toolbar-actions">
-                <a href="{{ auth()->check() && auth()->user()->role === 'peminjam' ? route('peminjam.tiket.show', $peminjaman->id) : route('toolman.pengembalian.index') }}" class="btn-toolbar btn-back">
+                <a href="{{ auth()->check() && auth()->user()->role === 'peminjam' ? route('peminjam.tiket.show', $peminjaman->id) : route('toolman.pengembalian.index') }}"
+                    class="btn-toolbar btn-back">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Kembali
                 </a>
@@ -420,7 +433,8 @@
                         <div class="kop-instansi-2">DINAS PENDIDIKAN, PEMUDA, DAN OLAHRAGA</div>
                         <div class="kop-sekolah">SMK NEGERI 3 YOGYAKARTA</div>
                         <div class="kop-bengkel">{{ strtoupper($bengkel->nama ?? 'BENGKEL PRAKTIK KEJURUAN') }}</div>
-                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274) 513507 &bull; Laman: smkn3jogja.sch.id</div>
+                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274)
+                            513507 &bull; Laman: smkn3jogja.sch.id</div>
                     </td>
                 </tr>
             </table>
@@ -430,7 +444,8 @@
             <!-- JUDUL DOKUMEN & NOMOR -->
             <div class="doc-header">
                 <div class="doc-title">BUKTI PENGEMBALIAN ALAT / BAHAN</div>
-                <div class="doc-number">No. : #KMB-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} &bull; (Ref: #TRX-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }})</div>
+                <div class="doc-number">No. : #KMB-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }} &bull; (Ref:
+                    #TRX-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }})</div>
             </div>
 
             <!-- PERNYATAAN & IDENTITAS PEMINJAM (SESUAI KARTU PINJAM.MD) -->
@@ -466,7 +481,9 @@
                 <tr>
                     <td class="identitas-label">Tanggal Pinjam</td>
                     <td class="identitas-separator">:</td>
-                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}</td>
+                    <td class="identitas-value">
+                        {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}
+                    </td>
                 </tr>
                 <tr>
                     <td class="identitas-label">Batas Pengembalian</td>
@@ -480,7 +497,8 @@
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
                         @if ($peminjaman->status === 'selesai' && $peminjaman->updated_at)
-                            {{ \Carbon\Carbon::parse($peminjaman->updated_at)->locale('id')->translatedFormat('l, d F Y, H:i') }} WIB
+                            {{ \Carbon\Carbon::parse($peminjaman->updated_at)->locale('id')->translatedFormat('l, d F Y, H:i') }}
+                            WIB
                         @else
                             <span style="color: #64748b; font-style: italic;">(Sedang Dalam Pengecekan Fisik)</span>
                         @endif
@@ -555,7 +573,8 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau bahan.</td>
+                            <td colspan="8" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau
+                                bahan.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -563,7 +582,9 @@
 
             <!-- PERNYATAAN PENGEMBALIAN (SESUAI KARTU PINJAM.MD) -->
             <div class="statement-box">
-                Telah mengembalikan alat / bahan seperti tersebut di atas dalam kondisi yang telah diperiksa bersama oleh Toolman / Petugas Bengkel, dan sanggup menyelesaikan segala kewajiban atau penggantian atas kerusakan/kehilangan jika ada sesuai ketentuan yang berlaku.
+                Telah mengembalikan alat / bahan seperti tersebut di atas dalam kondisi yang telah diperiksa bersama
+                oleh Toolman / Petugas Bengkel, dan sanggup menyelesaikan segala kewajiban atau penggantian atas
+                kerusakan/kehilangan jika ada sesuai ketentuan yang berlaku.
             </div>
 
             <!-- TANDA TANGAN SERAH TERIMA PENGEMBALIAN -->
@@ -593,7 +614,7 @@
                     </td>
                     <td style="text-align: right; padding-right: 20px;">
                         <div>
-                            Yogyakarta, 
+                            Yogyakarta,
                             @if ($peminjaman->status === 'selesai' && $peminjaman->updated_at)
                                 {{ \Carbon\Carbon::parse($peminjaman->updated_at)->locale('id')->translatedFormat('d F Y') }}
                             @else
@@ -603,7 +624,9 @@
                         <div style="font-weight: bold; margin-top: 2px;">Peminjam,</div>
                         <div class="signature-space"></div>
                         <div class="signature-name">{{ strtoupper($peminjaman->user->name ?? 'Peminjam') }}</div>
-                        <div class="signature-title">NIS/NIP. {{ $peminjaman->user->nomor_identitas ?? '.........................................' }}</div>
+                        <div class="signature-title">NIS/NIP.
+                            {{ $peminjaman->user->nomor_identitas ?? '.........................................' }}
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -612,5 +635,5 @@
     </div>
 
 </body>
-</html>
 
+</html>

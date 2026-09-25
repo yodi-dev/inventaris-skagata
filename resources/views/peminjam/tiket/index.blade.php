@@ -7,6 +7,12 @@
 
         <!-- Flash Notification Alerts -->
         @if (session('success'))
+            <script>
+                try {
+                    localStorage.removeItem('sibenka_cart');
+                    window.dispatchEvent(new CustomEvent('cart-updated'));
+                } catch (e) {}
+            </script>
             <div
                 class="bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-2xl p-4 flex items-start gap-3 shadow-xs">
                 <div
