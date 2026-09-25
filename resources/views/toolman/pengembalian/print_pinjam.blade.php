@@ -235,12 +235,12 @@
         }
 
         .identitas-label {
-            width: 130px;
+            width: 175px;
             font-weight: normal;
         }
 
         .identitas-separator {
-            width: 20px;
+            width: 18px;
             text-align: center;
         }
 
@@ -337,10 +337,31 @@
                 padding: 0 !important;
             }
 
+            .items-table {
+                page-break-inside: auto;
+            }
+
+            .items-table thead {
+                display: table-header-group;
+            }
+
+            .items-table tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
             .items-table th {
                 background-color: #e5e7eb !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+
+            .signature-table,
+            .statement-box,
+            .kop-table,
+            .identitas-table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
@@ -405,17 +426,17 @@
                 <div class="doc-number">No. : #TRX-{{ str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT) }}</div>
             </div>
 
-            <!-- PERNYATAAN & IDENTITAS PEMINJAM (SESUAI KARTU PINJAM.MD) -->
+            <!-- PERNYATAAN & IDENTITAS PEMINJAM -->
             <div class="section-intro">Yang bertanda tangan di bawah ini saya :</div>
 
             <table class="identitas-table">
                 <tr>
-                    <td class="identitas-label">Nama</td>
+                    <td class="identitas-label">Nama Peminjam</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">{{ strtoupper($peminjaman->user->name ?? '-') }}</td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Jabatan</td>
+                    <td class="identitas-label">Profesi / Status</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
                         @if ($peminjaman->user && $peminjaman->user->isGuru())
@@ -426,25 +447,29 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Alamat / No. Identitas</td>
+                    <td class="identitas-label">No. Identitas (NIS/NIP)</td>
+                    <td class="identitas-separator">:</td>
+                    <td class="identitas-value">{{ $peminjaman->user->nomor_identitas ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="identitas-label">No. Kontak / WhatsApp</td>
+                    <td class="identitas-separator">:</td>
+                    <td class="identitas-value">{{ $peminjaman->user->nomor_wa ?? '-' }}</td>
+                </tr>
+                <tr>
+                    <td class="identitas-label">Tanggal Pinjam</td>
+                    <td class="identitas-separator">:</td>
+                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}</td>
+                </tr>
+                <tr>
+                    <td class="identitas-label">Batas Pengembalian</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
-                        {{ $peminjaman->user->nomor_identitas ?? '-' }}
-                        @if ($peminjaman->user && $peminjaman->user->nomor_wa)
-                            &bull; Kontak: {{ $peminjaman->user->nomor_wa }}
+                        @if ($peminjaman->batas_kembali)
+                            {{ \Carbon\Carbon::parse($peminjaman->batas_kembali)->locale('id')->translatedFormat('l, d F Y, H:i') }} WIB
+                        @else
+                            <span style="color: #047857; font-weight: normal; font-style: italic;">Barang Habis Pakai (Tidak Perlu Dikembalikan)</span>
                         @endif
-                    </td>
-                </tr>
-                <tr>
-                    <td class="identitas-label">Tgl_pinjam</td>
-                    <td class="identitas-separator">:</td>
-                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->translatedFormat('l, d F Y') }}</td>
-                </tr>
-                <tr>
-                    <td class="identitas-label">Tgl Kembali</td>
-                    <td class="identitas-separator">:</td>
-                    <td class="identitas-value">
-                        {{ $peminjaman->batas_kembali ? \Carbon\Carbon::parse($peminjaman->batas_kembali)->translatedFormat('l, d F Y') : 'Hari ini' }}
                     </td>
                 </tr>
                 <tr>
@@ -459,61 +484,87 @@
                 <thead>
                     <tr>
                         <th style="width: 35px;">No.</th>
-                        <th style="width: 110px;">Kode Barang</th>
+                        <th style="width: 105px;">Kode Barang</th>
                         <th>Nama Alat / Bahan</th>
+                        <th style="width: 70px;">Jenis</th>
                         <th style="width: 80px;">Jumlah</th>
-                        <th style="width: 130px;">Lokasi Simpan</th>
-                        <th style="width: 100px;">Kondisi Awal</th>
+                        <th style="width: 120px;">Lokasi Simpan</th>
+                        <th style="width: 95px;">Kondisi Awal</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($peminjaman->detailPeminjamans as $index => $detail)
+                        @php
+                            $isBhp = $detail->barang?->jenis_barang === 'bhp';
+                        @endphp
                         <tr>
                             <td class="text-center">{{ $index + 1 }}.</td>
-                            <td class="font-mono text-center font-bold">{{ $detail->barang->kode_barang ?? '-' }}</td>
+                            <td class="font-mono text-center font-bold">{{ $detail->barang?->kode_barang ?? '-' }}</td>
                             <td>
-                                <strong>{{ $detail->barang->nama ?? '-' }}</strong>
+                                <strong>{{ $detail->barang?->nama ?? 'Barang Terhapus' }}</strong>
                                 @if ($detail->barang && $detail->barang->spesifikasi)
                                     <div style="font-size: 8.5pt; color: #444444; font-family: Arial, sans-serif;">
                                         {{ $detail->barang->spesifikasi }}
                                     </div>
                                 @endif
                             </td>
+                            <td class="text-center">
+                                @if ($isBhp)
+                                    <span style="font-size: 8.5pt; font-weight: bold; color: #b45309; background: #fef3c7; padding: 2px 6px; border-radius: 3px; border: 1px solid #fde68a;">BHP</span>
+                                @else
+                                    <span style="font-size: 8.5pt; font-weight: bold; color: #047857; background: #ecfdf5; padding: 2px 6px; border-radius: 3px; border: 1px solid #a7f3d0;">Alat</span>
+                                @endif
+                            </td>
                             <td class="text-center font-bold">
-                                {{ $detail->jumlah }} {{ $detail->barang->satuan ?? 'Unit' }}
+                                {{ $detail->jumlah }} {{ $detail->barang?->satuan ?? 'Unit' }}
                             </td>
                             <td style="font-size: 9pt;">
-                                {{ $detail->barang->lokasiPenyimpanan->nama ?? 'Gudang Utama' }}
+                                {{ $detail->barang?->lokasiPenyimpanan?->nama ?? 'Gudang Utama' }}
                             </td>
                             <td class="text-center" style="font-size: 9pt;">
-                                Baik / Lengkap
+                                {{ $isBhp ? 'Siap Pakai' : 'Baik / Lengkap' }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau bahan.</td>
+                            <td colspan="7" class="text-center" style="padding: 15px;">Tidak ada rincian alat atau bahan.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
 
-            <!-- PERNYATAAN KESANGGUPAN (SESUAI KARTU PINJAM.MD) -->
+            <!-- PERNYATAAN KESANGGUPAN -->
             <div class="statement-box">
-                Meminjam alat seperti tersebut di atas, dan sanggup memenuhi ketentuan yang berlaku.
+                Meminjam alat dan/atau bahan seperti tersebut di atas untuk keperluan praktik, dan sanggup memenuhi seluruh tata tertib bengkel serta bertanggung jawab penuh atas keutuhan dan pengembalian alat tepat waktu.
             </div>
 
-            <!-- TANDA TANGAN (SESUAI FORMAT KARTU PINJAM.MD) -->
+            <!-- TANDA TANGAN (SESUAI ATURAN RESMI) -->
+            @php
+                $toolmanName = null;
+                $toolmanNip = '.........................................';
+
+                if ($peminjaman->diprosesOleh) {
+                    $toolmanName = $peminjaman->diprosesOleh->name;
+                    $toolmanNip = $peminjaman->diprosesOleh->nomor_identitas ?? $toolmanNip;
+                } elseif (auth()->check() && (auth()->user()->isToolman() || auth()->user()->isWaka())) {
+                    $toolmanName = auth()->user()->name;
+                    $toolmanNip = auth()->user()->nomor_identitas ?? $toolmanNip;
+                }
+            @endphp
+
             <table class="signature-table">
                 <tr>
                     <td style="text-align: left; padding-left: 20px;">
                         <div>Mengetahui / Menyetujui:</div>
                         <div style="font-weight: bold; margin-top: 2px;">Kepala Laboratorium / Toolman,</div>
                         <div class="signature-space"></div>
-                        <div class="signature-name">{{ strtoupper($peminjaman->diprosesOleh->name ?? (auth()->user()->name ?? 'Toolman Bengkel')) }}</div>
-                        <div class="signature-title">NIP. {{ $peminjaman->diprosesOleh->nomor_identitas ?? '.........................................' }}</div>
+                        <div class="signature-name">
+                            {{ $toolmanName ? strtoupper($toolmanName) : '( ......................................... )' }}
+                        </div>
+                        <div class="signature-title">NIP. {{ $toolmanNip }}</div>
                     </td>
                     <td style="text-align: right; padding-right: 20px;">
-                        <div>Yogyakarta, {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->translatedFormat('d F Y') }}</div>
+                        <div>Yogyakarta, {{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('d F Y') }}</div>
                         <div style="font-weight: bold; margin-top: 2px;">Peminjam,</div>
                         <div class="signature-space"></div>
                         <div class="signature-name">{{ strtoupper($peminjaman->user->name ?? 'Peminjam') }}</div>
@@ -527,4 +578,3 @@
 
 </body>
 </html>
-
