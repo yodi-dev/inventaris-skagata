@@ -344,10 +344,31 @@
                 padding: 0 !important;
             }
 
+            .items-table {
+                page-break-inside: auto;
+            }
+
+            .items-table thead {
+                display: table-header-group;
+            }
+
+            .items-table tr {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
+            }
+
             .items-table th {
                 background-color: #e5e7eb !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
+            }
+
+            .signature-table,
+            .statement-box,
+            .kop-table,
+            .identitas-table {
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
     </style>
@@ -417,12 +438,12 @@
 
             <table class="identitas-table">
                 <tr>
-                    <td class="identitas-label">Nama</td>
+                    <td class="identitas-label">Nama Peminjam</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">{{ strtoupper($peminjaman->user->name ?? '-') }}</td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Jabatan</td>
+                    <td class="identitas-label">Profesi / Status</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
                         @if ($peminjaman->user && $peminjaman->user->isGuru())
@@ -433,25 +454,25 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Alamat / No. Identitas</td>
+                    <td class="identitas-label">No. Identitas (NIS/NIP)</td>
                     <td class="identitas-separator">:</td>
-                    <td class="identitas-value">
-                        {{ $peminjaman->user->nomor_identitas ?? '-' }}
-                        @if ($peminjaman->user && $peminjaman->user->nomor_wa)
-                            &bull; Kontak: {{ $peminjaman->user->nomor_wa }}
-                        @endif
-                    </td>
+                    <td class="identitas-value">{{ $peminjaman->user->nomor_identitas ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Tgl_pinjam</td>
+                    <td class="identitas-label">No. Kontak / WhatsApp</td>
                     <td class="identitas-separator">:</td>
-                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->translatedFormat('l, d F Y') }}</td>
+                    <td class="identitas-value">{{ $peminjaman->user->nomor_wa ?? '-' }}</td>
                 </tr>
                 <tr>
-                    <td class="identitas-label">Batas Kembali</td>
+                    <td class="identitas-label">Tanggal Pinjam</td>
+                    <td class="identitas-separator">:</td>
+                    <td class="identitas-value">{{ \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->locale('id')->translatedFormat('l, d F Y') }}</td>
+                </tr>
+                <tr>
+                    <td class="identitas-label">Batas Pengembalian</td>
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
-                        {{ $peminjaman->batas_kembali ? \Carbon\Carbon::parse($peminjaman->batas_kembali)->translatedFormat('l, d F Y') : '-' }}
+                        {{ $peminjaman->batas_kembali ? \Carbon\Carbon::parse($peminjaman->batas_kembali)->locale('id')->translatedFormat('l, d F Y, H:i') . ' WIB' : '-' }}
                     </td>
                 </tr>
                 <tr>
@@ -459,7 +480,7 @@
                     <td class="identitas-separator">:</td>
                     <td class="identitas-value">
                         @if ($peminjaman->status === 'selesai' && $peminjaman->updated_at)
-                            {{ \Carbon\Carbon::parse($peminjaman->updated_at)->translatedFormat('l, d F Y, H:i') }} WIB
+                            {{ \Carbon\Carbon::parse($peminjaman->updated_at)->locale('id')->translatedFormat('l, d F Y, H:i') }} WIB
                         @else
                             <span style="color: #64748b; font-style: italic;">(Sedang Dalam Pengecekan Fisik)</span>
                         @endif
@@ -546,22 +567,37 @@
             </div>
 
             <!-- TANDA TANGAN SERAH TERIMA PENGEMBALIAN -->
+            @php
+                $toolmanName = null;
+                $toolmanNip = '.........................................';
+
+                if ($peminjaman->diprosesOleh) {
+                    $toolmanName = $peminjaman->diprosesOleh->name;
+                    $toolmanNip = $peminjaman->diprosesOleh->nomor_identitas ?? $toolmanNip;
+                } elseif (auth()->check() && (auth()->user()->isToolman() || auth()->user()->isWaka())) {
+                    $toolmanName = auth()->user()->name;
+                    $toolmanNip = auth()->user()->nomor_identitas ?? $toolmanNip;
+                }
+            @endphp
+
             <table class="signature-table">
                 <tr>
                     <td style="text-align: left; padding-left: 20px;">
                         <div>Telah diterima &amp; diperiksa oleh:</div>
                         <div style="font-weight: bold; margin-top: 2px;">Kepala Laboratorium / Toolman,</div>
                         <div class="signature-space"></div>
-                        <div class="signature-name">{{ strtoupper($peminjaman->diprosesOleh->name ?? (auth()->user()->name ?? 'Toolman Bengkel')) }}</div>
-                        <div class="signature-title">NIP. {{ $peminjaman->diprosesOleh->nomor_identitas ?? '.........................................' }}</div>
+                        <div class="signature-name">
+                            {{ $toolmanName ? strtoupper($toolmanName) : '( ......................................... )' }}
+                        </div>
+                        <div class="signature-title">NIP. {{ $toolmanNip }}</div>
                     </td>
                     <td style="text-align: right; padding-right: 20px;">
                         <div>
                             Yogyakarta, 
                             @if ($peminjaman->status === 'selesai' && $peminjaman->updated_at)
-                                {{ \Carbon\Carbon::parse($peminjaman->updated_at)->translatedFormat('d F Y') }}
+                                {{ \Carbon\Carbon::parse($peminjaman->updated_at)->locale('id')->translatedFormat('d F Y') }}
                             @else
-                                {{ now()->translatedFormat('d F Y') }}
+                                {{ now()->locale('id')->translatedFormat('d F Y') }}
                             @endif
                         </div>
                         <div style="font-weight: bold; margin-top: 2px;">Peminjam,</div>
