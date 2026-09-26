@@ -195,34 +195,43 @@
         </div>
 
         <!-- Filter & Search Bar -->
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-            <form action="{{ route('superadmin.pengadaan.index') }}" method="GET" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
-                    <!-- Search Input -->
-                    <div>
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <form action="{{ route('superadmin.pengadaan.index') }}" method="GET" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-end">
+                    <!-- Search Input (6 Kolom) -->
+                    <div class="sm:col-span-2 lg:col-span-6">
                         <label for="search" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Pencarian Kata Kunci
                         </label>
                         <div class="relative">
-                            <input type="text" id="search" name="search" value="{{ $search }}"
-                                placeholder="Cari judul RAB, alat, toolman..."
-                                class="w-full rounded-lg border-gray-300 focus:border-emerald-600 focus:ring-emerald-600 text-sm py-2 pl-9 pr-3 border shadow-xs outline-none transition-all">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                 </svg>
                             </div>
+                            <input type="text" id="search" name="search" value="{{ $search }}"
+                                placeholder="Cari judul RAB, nama barang, spesifikasi, atau toolman..."
+                                class="w-full rounded-xl border border-gray-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-sm py-2.5 pl-9 pr-9 shadow-2xs outline-none transition-all">
+                            @if ($search)
+                                <a href="{{ route('superadmin.pengadaan.index', array_merge(request()->query(), ['search' => null, 'page' => 1])) }}"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    title="Hapus kata kunci pencarian">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </a>
+                            @endif
                         </div>
                     </div>
 
-                    <!-- Filter Bengkel -->
-                    <div>
+                    <!-- Filter Bengkel (3 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-3">
                         <label for="bengkel_id" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Bengkel / Unit Praktik
                         </label>
-                        <select id="bengkel_id" name="bengkel_id"
-                            class="w-full rounded-lg border-gray-300 focus:border-emerald-600 focus:ring-emerald-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all bg-white">
+                        <select id="bengkel_id" name="bengkel_id" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-sm py-2.5 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
                             <option value="">Semua Bengkel</option>
                             @foreach ($bengkels as $b)
                                 <option value="{{ $b->id }}" {{ (string) $filterBengkel === (string) $b->id ? 'selected' : '' }}>
@@ -232,13 +241,13 @@
                         </select>
                     </div>
 
-                    <!-- Filter Status -->
-                    <div>
+                    <!-- Filter Status (3 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-3">
                         <label for="status" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Status Pengajuan
                         </label>
-                        <select id="status" name="status"
-                            class="w-full rounded-lg border-gray-300 focus:border-emerald-600 focus:ring-emerald-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all bg-white">
+                        <select id="status" name="status" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20 text-sm py-2.5 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
                             <option value="" {{ $filterStatus === '' ? 'selected' : '' }}>Semua Status</option>
                             <option value="pending" {{ $filterStatus === 'pending' ? 'selected' : '' }}>Menunggu Disposisi (Pending)</option>
                             <option value="revisi" {{ $filterStatus === 'revisi' ? 'selected' : '' }}>Perlu Revisi (Revisi)</option>
@@ -246,31 +255,31 @@
                             <option value="rejected" {{ $filterStatus === 'rejected' ? 'selected' : '' }}>Ditolak (Rejected)</option>
                         </select>
                     </div>
-
-                    <!-- Tombol Aksi Filter -->
-                    <div class="flex items-center gap-2">
-                        <button type="submit"
-                            class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold rounded-lg shadow-sm transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                </path>
-                            </svg>
-                            Terapkan Filter
-                        </button>
-                        @if ($filterStatus || $filterBengkel || $search)
-                            <a href="{{ route('superadmin.pengadaan.index') }}"
-                                class="p-2 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-lg transition-colors border border-gray-200"
-                                title="Reset Filter">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15">
-                                    </path>
-                                </svg>
-                            </a>
-                        @endif
-                    </div>
                 </div>
+
+                <!-- Hidden Submit for Enter Key Support -->
+                <button type="submit" class="hidden" aria-hidden="true"></button>
+
+                <!-- Active Filter Indicator & Reset Action -->
+                @if ($filterStatus || $filterBengkel || $search)
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-gray-100 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Filter aktif diterapkan ({{ $pengadaans->total() }} usulan ditemukan)
+                            </span>
+                            <span class="text-xs text-gray-400 hidden sm:inline">&bull; Hasil diperbarui secara otomatis</span>
+                        </div>
+
+                        <a href="{{ route('superadmin.pengadaan.index') }}"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors self-start sm:self-auto">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Reset Filter
+                        </a>
+                    </div>
+                @endif
             </form>
         </div>
 
