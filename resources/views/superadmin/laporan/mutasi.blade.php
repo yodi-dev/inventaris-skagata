@@ -107,34 +107,43 @@
         </div>
 
         <!-- Filter & Search Card -->
-        <div class="bg-white p-5 rounded-2xl border border-gray-200 shadow-sm">
-            <form action="{{ route('superadmin.laporan.mutasi') }}" method="GET" class="space-y-4">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
-                    <!-- Filter Tanggal Mulai -->
-                    <div>
-                        <label for="start_date" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                            Tanggal Mulai
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-gray-200 shadow-sm">
+            <form action="{{ route('superadmin.laporan.mutasi') }}" method="GET" class="space-y-3">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 sm:gap-4 items-end">
+                    <!-- Pencarian Kata Kunci (4 Kolom) -->
+                    <div class="sm:col-span-2 lg:col-span-4">
+                        <label for="search" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Cari Kata Kunci
                         </label>
-                        <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}"
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all">
+                        <div class="relative">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <input type="text" id="search" name="search" value="{{ request('search') }}"
+                                placeholder="Nama barang, kode, petugas..."
+                                class="w-full rounded-xl border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 text-sm py-2 pl-9 pr-9 shadow-2xs outline-none transition-all">
+                            @if (request('search'))
+                                <a href="{{ route('superadmin.laporan.mutasi', array_merge(request()->query(), ['search' => null, 'page' => 1])) }}"
+                                    class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                                    title="Hapus kata kunci pencarian">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </a>
+                            @endif
+                        </div>
                     </div>
 
-                    <!-- Filter Tanggal Akhir -->
-                    <div>
-                        <label for="end_date" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                            Tanggal Akhir
-                        </label>
-                        <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}"
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all">
-                    </div>
-
-                    <!-- Filter Bengkel -->
-                    <div>
+                    <!-- Filter Bengkel (2 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-2">
                         <label for="bengkel" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Bengkel / Kejuruan
                         </label>
-                        <select id="bengkel" name="bengkel"
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all bg-white">
+                        <select id="bengkel" name="bengkel" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 text-sm py-2 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
                             <option value="">Semua Bengkel</option>
                             @foreach ($bengkels as $bengkel)
                                 <option value="{{ $bengkel->id }}" {{ request('bengkel') == $bengkel->id ? 'selected' : '' }}>
@@ -144,13 +153,13 @@
                         </select>
                     </div>
 
-                    <!-- Filter Jenis Mutasi -->
-                    <div>
+                    <!-- Filter Jenis Mutasi (2 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-2">
                         <label for="jenis" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
                             Jenis Mutasi
                         </label>
-                        <select id="jenis" name="jenis"
-                            class="w-full rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 px-3 border shadow-xs outline-none transition-all bg-white">
+                        <select id="jenis" name="jenis" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 text-sm py-2 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
                             <option value="">Semua Jenis Mutasi</option>
                             <option value="stok_masuk" {{ request('jenis') == 'stok_masuk' ? 'selected' : '' }}>Barang Masuk Baru (+)</option>
                             <option value="peminjaman" {{ request('jenis') == 'peminjaman' ? 'selected' : '' }}>Peminjaman (-)</option>
@@ -163,53 +172,48 @@
                         </select>
                     </div>
 
-                    <!-- Pencarian Kata Kunci -->
-                    <div>
-                        <label for="search" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
-                            Cari Kata Kunci
+                    <!-- Filter Tanggal Mulai (2 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-2">
+                        <label for="start_date" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Tanggal Mulai
                         </label>
-                        <div class="relative">
-                            <input type="text" id="search" name="search" value="{{ request('search') }}"
-                                placeholder="Nama barang, kode, petugas..."
-                                class="w-full pl-9 pr-3 rounded-lg border-gray-300 focus:border-green-600 focus:ring-green-600 text-sm py-2 border shadow-xs outline-none transition-all">
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                        </div>
+                        <input type="date" id="start_date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 text-sm py-2 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
+                    </div>
+
+                    <!-- Filter Tanggal Akhir (2 Kolom) -->
+                    <div class="sm:col-span-1 lg:col-span-2">
+                        <label for="end_date" class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-1">
+                            Tanggal Akhir
+                        </label>
+                        <input type="date" id="end_date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()"
+                            class="w-full rounded-xl border border-gray-300 focus:border-green-600 focus:ring-2 focus:ring-green-500/20 text-sm py-2 px-3 shadow-2xs outline-none transition-all bg-white font-medium text-gray-800">
                     </div>
                 </div>
+
+                <!-- Hidden Submit for Enter Key Support -->
+                <button type="submit" class="hidden" aria-hidden="true"></button>
 
                 <!-- Action Button Toolbar Filter -->
-                <div class="flex flex-col sm:flex-row items-center justify-between pt-2 border-t border-gray-100 gap-3">
-                    <div class="text-xs text-gray-500">
-                        Menampilkan riwayat audit mutasi seluruh barang inventaris &amp; bahan habis pakai.
-                    </div>
+                @if (request()->anyFilled(['start_date', 'end_date', 'bengkel', 'jenis', 'search']))
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between pt-3 border-t border-gray-100 gap-2">
+                        <div class="flex items-center gap-2">
+                            <span class="inline-flex items-center gap-1.5 text-xs text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200 font-medium">
+                                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                Filter aktif diterapkan ({{ $movements->total() }} catatan ditemukan)
+                            </span>
+                            <span class="text-xs text-gray-400 hidden sm:inline">&bull; Hasil diperbarui secara otomatis</span>
+                        </div>
 
-                    <div class="flex items-center gap-2">
-                        @if (request()->anyFilled(['start_date', 'end_date', 'bengkel', 'jenis', 'search']))
-                            <a href="{{ route('superadmin.laporan.mutasi') }}"
-                                class="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium text-red-600 hover:text-red-800 hover:bg-red-50 border border-transparent transition-colors">
-                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                </svg>
-                                Reset Filter
-                            </a>
-                        @endif
-
-                        <button type="submit"
-                            class="inline-flex items-center gap-2 px-5 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg text-sm font-semibold shadow-xs transition-colors cursor-pointer">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
-                                </path>
+                        <a href="{{ route('superadmin.laporan.mutasi') }}"
+                            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-red-600 hover:text-red-800 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors self-start sm:self-auto">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                             </svg>
-                            Terapkan Filter
-                        </button>
+                            Reset Filter
+                        </a>
                     </div>
-                </div>
+                @endif
             </form>
         </div>
 
