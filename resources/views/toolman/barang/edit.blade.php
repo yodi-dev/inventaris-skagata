@@ -25,7 +25,7 @@
                 batasMinimum: {{ (int) $barang->minimum_stok }},
 
                 // Estimasi Harga & Spesifikasi
-                estimasiHarga: '0',
+                estimasiHarga: '{{ old('estimasi_harga', $barang->harga ? (float) $barang->harga : '') }}',
                 spesifikasi: {!! json_encode($barang->deskripsi ?? '') !!},
 
                 // Image state

@@ -19,7 +19,7 @@
                 stokBahan: 1,
                 batasMinimum: 1,
                 // Estimasi Harga
-                estimasiHarga: '',
+                estimasiHarga: '{{ old('estimasi_harga', '') }}',
                 // Import Excel Modal State
                 showImportModal: false,
                 importLoading: false,

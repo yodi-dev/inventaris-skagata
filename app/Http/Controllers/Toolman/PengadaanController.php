@@ -352,6 +352,7 @@ class PengadaanController extends Controller
                         'nama' => $detail->nama_barang,
                         'jenis_barang' => 'inventaris',
                         'satuan' => $detail->satuan,
+                        'harga' => $detail->harga_satuan ?? 0,
                         'stok_total' => $detail->jumlah,
                         'stok_tersedia' => $detail->jumlah,
                         'stok_dipinjam' => 0,

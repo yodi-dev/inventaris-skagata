@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kartu Barang - {{ $barang->nama }} ({{ $barang->kode_barang }}) - {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3 Yogyakarta</title>
+    <title>Kartu Barang - {{ $barang->nama }} ({{ $barang->kode_barang }}) - {{ $bengkel->nama ?? 'Bengkel' }} - SMKN 3
+        Yogyakarta</title>
     <style>
         /* === RESET & PAGE SETUP === */
         * {
@@ -251,7 +253,7 @@
             margin-bottom: 12px;
         }
 
-        .ledger-table th, 
+        .ledger-table th,
         .ledger-table td {
             border: 1px solid #000000;
             padding: 4px 5px;
@@ -266,9 +268,17 @@
             font-size: 7.5pt;
         }
 
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-mono { font-family: 'Courier New', Courier, monospace; }
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: 'Courier New', Courier, monospace;
+        }
 
         /* TANDA TANGAN */
         .signature-table {
@@ -327,6 +337,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="preview-wrapper">
@@ -345,7 +356,8 @@
             <div class="toolbar-actions">
                 <a href="{{ route('toolman.barang.index') }}" class="btn-toolbar btn-back">
                     <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Kembali ke Katalog
                 </a>
@@ -374,7 +386,8 @@
                         <div class="kop-instansi-2">DINAS PENDIDIKAN, PEMUDA, DAN OLAHRAGA</div>
                         <div class="kop-sekolah">SMK NEGERI 3 YOGYAKARTA</div>
                         <div class="kop-bengkel">{{ strtoupper($bengkel->nama ?? 'BENGKEL PRAKTIK KEJURUAN') }}</div>
-                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274) 513507 &bull; Laman: smkn3jogja.sch.id</div>
+                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 &bull; Telepon: (0274)
+                            513507 &bull; Laman: smkn3jogja.sch.id</div>
                     </td>
                 </tr>
             </table>
@@ -421,7 +434,16 @@
                         <tr>
                             <td class="meta-label">Sumber Dana</td>
                             <td class="meta-sep">:</td>
-                            <td class="meta-val">{{ $barang->sumberDana ? $barang->sumberDana->nama . ($barang->sumberDana->kode ? ' (' . $barang->sumberDana->kode . ')' : '') : '-' }}</td>
+                            <td class="meta-val">
+                                {{ $barang->sumberDana ? $barang->sumberDana->nama . ($barang->sumberDana->kode ? ' (' . $barang->sumberDana->kode . ')' : '') : '-' }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Harga Satuan</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val">
+                                {{ $barang->harga > 0 ? 'Rp ' . number_format($barang->harga, 0, ',', '.') : '-' }}
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -457,7 +479,9 @@
                         <tr>
                             <td class="meta-label" style="padding-left: 15px;">&bull; Lemari / Rak</td>
                             <td class="meta-sep">:</td>
-                            <td class="meta-val">{{ $barang->lokasiPenyimpanan->nama ?? '-' }} {{ $barang->lokasiPenyimpanan ? '(' . $barang->lokasiPenyimpanan->kode . ')' : '' }}</td>
+                            <td class="meta-val">{{ $barang->lokasiPenyimpanan->nama ?? '-' }}
+                                {{ $barang->lokasiPenyimpanan ? '(' . $barang->lokasiPenyimpanan->kode . ')' : '' }}
+                            </td>
                         </tr>
                     </table>
                 </div>
@@ -496,8 +520,10 @@
                             <td class="text-center font-bold" style="color: #b91c1c;">{{ $row['masuk_rusak'] }}</td>
                             <td class="text-center font-bold">{{ $row['keluar_baik'] }}</td>
                             <td class="text-center font-bold" style="color: #b91c1c;">{{ $row['keluar_rusak'] }}</td>
-                            <td class="text-center font-bold" style="background-color: #f8fafc;">{{ $row['sisa_baik'] }}</td>
-                            <td class="text-center font-bold" style="background-color: #f8fafc; color: #b91c1c;">{{ $row['sisa_rusak'] }}</td>
+                            <td class="text-center font-bold" style="background-color: #f8fafc;">
+                                {{ $row['sisa_baik'] }}</td>
+                            <td class="text-center font-bold" style="background-color: #f8fafc; color: #b91c1c;">
+                                {{ $row['sisa_rusak'] }}</td>
                             <td class="text-center font-mono" style="font-size: 7pt;"></td>
                             <td style="font-size: 7.5pt;">{{ $row['keterangan'] }}</td>
                         </tr>
@@ -527,15 +553,19 @@
                         <div>Mengetahui,</div>
                         <div style="font-weight: bold; margin-top: 1px;">Kepala Bengkel / Laboratorium</div>
                         <div class="signature-space"></div>
-                        <div class="signature-name">( ............................................................ )</div>
-                        <div style="font-size: 8pt; color: #333333; margin-top: 1px;">NIP. .......................................................</div>
+                        <div class="signature-name">( ............................................................ )
+                        </div>
+                        <div style="font-size: 8pt; color: #333333; margin-top: 1px;">NIP.
+                            .......................................................</div>
                     </td>
                     <td style="text-align: right; padding-right: 30px;">
                         <div>Yogyakarta, {{ now()->translatedFormat('d F Y') }}</div>
                         <div style="font-weight: bold; margin-top: 1px;">Pengurus Barang / Toolman</div>
                         <div class="signature-space"></div>
                         <div class="signature-name">{{ strtoupper(auth()->user()->name ?? 'Toolman Bengkel') }}</div>
-                        <div style="font-size: 8pt; color: #333333; margin-top: 1px;">NIP/ID. {{ auth()->user()->nomor_identitas ?? '.......................................................' }}</div>
+                        <div style="font-size: 8pt; color: #333333; margin-top: 1px;">NIP/ID.
+                            {{ auth()->user()->nomor_identitas ?? '.......................................................' }}
+                        </div>
                     </td>
                 </tr>
             </table>
@@ -544,5 +574,5 @@
     </div>
 
 </body>
-</html>
 
+</html>
