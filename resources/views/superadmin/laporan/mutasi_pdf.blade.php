@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -18,7 +19,8 @@
             margin: 8mm 10mm 10mm 10mm;
         }
 
-        html, body {
+        html,
+        body {
             min-width: 297mm;
         }
 
@@ -110,6 +112,7 @@
             gap: 6px;
             transition: all 0.2s;
         }
+
         .btn-print:hover {
             background: #1d4ed8;
         }
@@ -128,6 +131,7 @@
             gap: 6px;
             transition: all 0.2s;
         }
+
         .btn-back:hover {
             background: #475569;
             color: #ffffff;
@@ -139,22 +143,26 @@
             border-collapse: collapse;
             margin-bottom: 2px;
         }
+
         .kop-logo {
             width: 70px;
             text-align: center;
             vertical-align: middle;
         }
+
         .kop-text {
             text-align: center;
             line-height: 1.15;
             vertical-align: middle;
         }
+
         .kop-instansi {
             font-size: 9pt;
             font-weight: bold;
             color: #1e293b;
             letter-spacing: 0.8px;
         }
+
         .kop-sekolah {
             font-size: 13pt;
             font-weight: 800;
@@ -162,11 +170,13 @@
             margin-top: 1px;
             letter-spacing: 0.5px;
         }
+
         .kop-alamat {
             font-size: 7pt;
             color: #475569;
             margin-top: 2px;
         }
+
         .kop-divider {
             border-top: 2.5px solid #0f172a;
             border-bottom: 0.8px solid #0f172a;
@@ -179,6 +189,7 @@
             text-align: center;
             margin-bottom: 8px;
         }
+
         .report-title {
             font-size: 11pt;
             font-weight: 800;
@@ -186,6 +197,7 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
+
         .report-subtitle {
             font-size: 8pt;
             font-weight: 600;
@@ -211,15 +223,18 @@
             gap: 3px 8px;
             font-size: 7.2pt;
         }
+
         .meta-item {
             display: flex;
             gap: 4px;
         }
+
         .meta-label {
             font-weight: 600;
             color: #475569;
             min-width: 90px;
         }
+
         .meta-value {
             font-weight: bold;
             color: #0f172a;
@@ -230,6 +245,7 @@
             display: flex;
             gap: 5px;
         }
+
         .kpi-card {
             flex: 1;
             border-radius: 4px;
@@ -241,11 +257,13 @@
             flex-direction: column;
             justify-content: center;
         }
+
         .kpi-num {
             font-size: 10pt;
             font-weight: 800;
             line-height: 1;
         }
+
         .kpi-desc {
             font-size: 6pt;
             font-weight: 600;
@@ -253,10 +271,30 @@
             color: #64748b;
             margin-top: 2px;
         }
-        .kpi-slate { background: #f8fafc; border-color: #94a3b8; color: #1e293b; }
-        .kpi-emerald { background: #ecfdf5; border-color: #10b981; color: #047857; }
-        .kpi-rose { background: #fff1f2; border-color: #f43f5e; color: #be123c; }
-        .kpi-amber { background: #fffbeb; border-color: #f59e0b; color: #b45309; }
+
+        .kpi-slate {
+            background: #f8fafc;
+            border-color: #94a3b8;
+            color: #1e293b;
+        }
+
+        .kpi-emerald {
+            background: #ecfdf5;
+            border-color: #10b981;
+            color: #047857;
+        }
+
+        .kpi-rose {
+            background: #fff1f2;
+            border-color: #f43f5e;
+            color: #be123c;
+        }
+
+        .kpi-amber {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            color: #b45309;
+        }
 
         /* === TABEL DATA === */
         .data-table {
@@ -265,6 +303,7 @@
             font-size: 7.2pt;
             margin-bottom: 10px;
         }
+
         .data-table th {
             background-color: #1e3a8a;
             color: #ffffff;
@@ -274,22 +313,48 @@
             border: 1px solid #172554;
             font-size: 7.2pt;
         }
+
         .data-table td {
             padding: 3.5px 5px;
             border: 1px solid #cbd5e1;
             vertical-align: middle;
         }
+
         .data-table tr:nth-child(even) {
             background-color: #f8fafc;
         }
-        .text-center { text-align: center; }
-        .text-right { text-align: right; }
-        .font-mono { font-family: Consolas, monospace; font-size: 6.8pt; }
-        .font-bold { font-weight: bold; }
-        
-        .badge-masuk { color: #15803d; font-weight: 700; }
-        .badge-keluar { color: #b91c1c; font-weight: 700; }
-        .badge-rusak { color: #b45309; font-weight: 700; }
+
+        .text-center {
+            text-align: center;
+        }
+
+        .text-right {
+            text-align: right;
+        }
+
+        .font-mono {
+            font-family: Consolas, monospace;
+            font-size: 6.8pt;
+        }
+
+        .font-bold {
+            font-weight: bold;
+        }
+
+        .badge-masuk {
+            color: #15803d;
+            font-weight: 700;
+        }
+
+        .badge-keluar {
+            color: #b91c1c;
+            font-weight: 700;
+        }
+
+        .badge-rusak {
+            color: #b45309;
+            font-weight: 700;
+        }
 
         /* === LEMBAR PENGESAHAN === */
         .signature-container {
@@ -298,20 +363,24 @@
             justify-content: flex-end;
             page-break-inside: avoid;
         }
+
         .signature-block {
             width: 240px;
             text-align: center;
             font-size: 7.5pt;
             line-height: 1.3;
         }
+
         .sign-space {
             height: 46px;
         }
+
         .sign-name {
             font-weight: bold;
             text-decoration: underline;
             color: #0f172a;
         }
+
         .sign-nip {
             font-size: 7pt;
             color: #475569;
@@ -324,14 +393,17 @@
                 color: #000000 !important;
                 font-size: 7.2pt;
             }
+
             .preview-wrapper {
                 padding: 0 !important;
                 margin: 0 !important;
                 width: 100% !important;
             }
+
             .no-print-toolbar {
                 display: none !important;
             }
+
             .page-container {
                 width: 100% !important;
                 min-height: auto !important;
@@ -341,12 +413,14 @@
                 box-shadow: none !important;
                 background: #ffffff !important;
             }
+
             .data-table th {
                 background-color: #1e3a8a !important;
                 color: #ffffff !important;
                 -webkit-print-color-adjust: exact;
                 print-color-adjust: exact;
             }
+
             .data-table tr:nth-child(even) {
                 background-color: #f8fafc !important;
                 -webkit-print-color-adjust: exact;
@@ -355,6 +429,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="preview-wrapper">
@@ -373,7 +448,8 @@
             <div class="toolbar-actions">
                 <a href="{{ route('superadmin.laporan.mutasi', request()->query()) }}" class="btn-back">
                     <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
                     Kembali ke Laporan
                 </a>
@@ -395,13 +471,15 @@
             <table class="kop-table">
                 <tr>
                     <td class="kop-logo">
-                        <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta" style="width: 58px; height: auto; max-height: 65px; object-fit: contain; margin: 0 auto; display: block;">
+                        <img src="{{ asset('logo.png') }}" alt="Logo SMKN 3 Yogyakarta"
+                            style="width: 58px; height: auto; max-height: 65px; object-fit: contain; margin: 0 auto; display: block;">
                     </td>
                     <td class="kop-text">
                         <div class="kop-instansi">PEMERINTAH DAERAH ISTIMEWA YOGYAKARTA</div>
                         <div class="kop-instansi">DINAS PENDIDIKAN, PEMUDA, DAN OLAHRAGA</div>
                         <div class="kop-sekolah">SMK NEGERI 3 YOGYAKARTA</div>
-                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 | Telepon (0274) 513507 | Laman: smkn3jogja.sch.id</div>
+                        <div class="kop-alamat">Jalan R.W. Monginsidi No. 2 Yogyakarta 55233 | Telepon (0274) 513507 |
+                            Laman: smkn3jogja.sch.id</div>
                     </td>
                 </tr>
             </table>
@@ -410,7 +488,8 @@
             <!-- JUDUL LAPORAN -->
             <div class="report-header">
                 <div class="report-title">LAPORAN AUDIT &amp; REKAPITULASI MUTASI SIRKULASI STOK</div>
-                <div class="report-subtitle">Sistem Informasi Inventaris Bengkel (SIBENKA) - Waka Bidang Sarana &amp; Prasarana</div>
+                <div class="report-subtitle">Sistem Informasi Inventaris Bengkel (SIBENKA) - Waka Bidang Sarana &amp;
+                    Prasarana</div>
             </div>
 
             <!-- METADATA DOKUMEN & KPI CARDS -->
@@ -433,10 +512,10 @@
                         <span class="meta-value">{{ $filters['jenis'] }}</span>
                     </div>
                     @if (!empty($filters['search']))
-                    <div class="meta-item" style="grid-column: span 2;">
-                        <span class="meta-label">Kata Kunci:</span>
-                        <span class="meta-value">"{{ $filters['search'] }}"</span>
-                    </div>
+                        <div class="meta-item" style="grid-column: span 2;">
+                            <span class="meta-label">Kata Kunci:</span>
+                            <span class="meta-value">"{{ $filters['search'] }}"</span>
+                        </div>
                     @endif
                 </div>
 
@@ -483,8 +562,16 @@
                         $jenisMap = [
                             'stok_masuk' => ['label' => 'Barang Masuk Baru', 'sign' => '+', 'class' => 'badge-masuk'],
                             'peminjaman' => ['label' => 'Peminjaman', 'sign' => '-', 'class' => 'badge-keluar'],
-                            'pengembalian_baik' => ['label' => 'Kembali (Baik)', 'sign' => '+', 'class' => 'badge-masuk'],
-                            'pengembalian_rusak' => ['label' => 'Kembali (Rusak)', 'sign' => '+', 'class' => 'badge-rusak'],
+                            'pengembalian_baik' => [
+                                'label' => 'Kembali (Baik)',
+                                'sign' => '+',
+                                'class' => 'badge-masuk',
+                            ],
+                            'pengembalian_rusak' => [
+                                'label' => 'Kembali (Rusak)',
+                                'sign' => '+',
+                                'class' => 'badge-rusak',
+                            ],
                             'barang_hilang' => ['label' => 'Barang Hilang', 'sign' => '-', 'class' => 'badge-keluar'],
                             'bhp_keluar' => ['label' => 'BHP Digunakan', 'sign' => '-', 'class' => 'badge-keluar'],
                             'perbaikan' => ['label' => 'Perbaikan/Servis', 'sign' => '0', 'class' => 'badge-rusak'],
@@ -501,12 +588,16 @@
                             ];
                             $sign = $tipe['sign'];
                             $qtyDisplay = ($sign ? $sign : '') . abs($m->jumlah);
-                            $hargaItem = $m->barang?->harga 
-                                ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
+                            $hargaItem =
+                                $m->barang?->harga ??
+                                ($m->barang && $m->barang->detailPengadaans->isNotEmpty()
+                                    ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan
+                                    : 0);
                         @endphp
                         <tr>
                             <td class="text-center">{{ $idx + 1 }}</td>
-                            <td class="text-center font-mono">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
+                            <td class="text-center font-mono">
+                                {{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
                             <td class="text-center font-mono">{{ $m->barang->kode_barang ?? '-' }}</td>
                             <td class="font-bold">{{ $m->barang->nama ?? 'Aset Dihapus' }}</td>
                             <td>{{ $m->barang->bengkel->nama ?? '-' }}</td>
@@ -514,7 +605,8 @@
                             <td class="text-center">{{ $tipe['label'] }}</td>
                             <td class="text-right {{ $tipe['class'] }}">{{ $qtyDisplay }}</td>
                             <td class="text-center">{{ $m->barang->satuan ?? 'unit' }}</td>
-                            <td class="text-right font-mono" style="font-size: 6.8pt;">{{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
+                            <td class="text-right font-mono" style="font-size: 6.8pt;">
+                                {{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
                             <td>{{ $m->user->name ?? 'Sistem' }}</td>
                             <td>{{ $m->keterangan ?? '-' }}</td>
                         </tr>
@@ -553,5 +645,5 @@
         });
     </script>
 </body>
-</html>
 
+</html>

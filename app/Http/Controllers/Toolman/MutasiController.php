@@ -191,10 +191,10 @@ class MutasiController extends Controller
                     $bq->where('nama', 'like', "%{$search}%")
                         ->orWhere('kode_barang', 'like', "%{$search}%");
                 })
-                ->orWhere('keterangan', 'like', "%{$search}%")
-                ->orWhereHas('user', function ($uq) use ($search) {
-                    $uq->where('name', 'like', "%{$search}%");
-                });
+                    ->orWhere('keterangan', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 

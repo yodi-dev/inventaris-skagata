@@ -1,40 +1,163 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
     <style>
-        body, table { font-family: 'Segoe UI', Calibri, Arial, sans-serif; font-size: 10pt; color: #1e293b; }
-        .main-title { font-size: 15pt; font-weight: bold; color: #1e3a8a; text-align: center; }
-        .sub-title { font-size: 12pt; font-weight: bold; color: #2563eb; text-align: center; }
-        .school-title { font-size: 9.5pt; color: #64748b; text-align: center; }
-        .section-bar { font-size: 10pt; font-weight: bold; background-color: #0f172a; color: #ffffff; padding: 6px 10px; }
-        .meta-label { font-weight: bold; color: #334155; background-color: #f1f5f9; border: 1px solid #cbd5e1; padding: 5px 8px; }
-        .meta-val { color: #0f172a; border: 1px solid #cbd5e1; padding: 5px 8px; }
-        
+        body,
+        table {
+            font-family: 'Segoe UI', Calibri, Arial, sans-serif;
+            font-size: 10pt;
+            color: #1e293b;
+        }
+
+        .main-title {
+            font-size: 15pt;
+            font-weight: bold;
+            color: #1e3a8a;
+            text-align: center;
+        }
+
+        .sub-title {
+            font-size: 12pt;
+            font-weight: bold;
+            color: #2563eb;
+            text-align: center;
+        }
+
+        .school-title {
+            font-size: 9.5pt;
+            color: #64748b;
+            text-align: center;
+        }
+
+        .section-bar {
+            font-size: 10pt;
+            font-weight: bold;
+            background-color: #0f172a;
+            color: #ffffff;
+            padding: 6px 10px;
+        }
+
+        .meta-label {
+            font-weight: bold;
+            color: #334155;
+            background-color: #f1f5f9;
+            border: 1px solid #cbd5e1;
+            padding: 5px 8px;
+        }
+
+        .meta-val {
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 5px 8px;
+        }
+
         /* KPI Cards */
-        .kpi-title { font-size: 8pt; font-weight: bold; text-transform: uppercase; color: #475569; text-align: center; }
-        .kpi-val { font-size: 13pt; font-weight: bold; text-align: center; }
-        .kpi-card-log { background-color: #f8fafc; border: 1px solid #94a3b8; }
-        .kpi-card-masuk { background-color: #ecfdf5; border: 1px solid #10b981; }
-        .kpi-card-keluar { background-color: #fef2f2; border: 1px solid #ef4444; }
-        .kpi-card-rusak { background-color: #fffbeb; border: 1px solid #f59e0b; }
-        
+        .kpi-title {
+            font-size: 8pt;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #475569;
+            text-align: center;
+        }
+
+        .kpi-val {
+            font-size: 13pt;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .kpi-card-log {
+            background-color: #f8fafc;
+            border: 1px solid #94a3b8;
+        }
+
+        .kpi-card-masuk {
+            background-color: #ecfdf5;
+            border: 1px solid #10b981;
+        }
+
+        .kpi-card-keluar {
+            background-color: #fef2f2;
+            border: 1px solid #ef4444;
+        }
+
+        .kpi-card-rusak {
+            background-color: #fffbeb;
+            border: 1px solid #f59e0b;
+        }
+
         /* Data Table */
-        .th-col { background-color: #2563eb; color: #ffffff; font-weight: bold; text-align: center; border: 1px solid #1d4ed8; padding: 8px 6px; }
-        .td-cell { border: 1px solid #cbd5e1; padding: 6px 8px; vertical-align: middle; }
-        .td-center { text-align: center; }
-        .td-right { text-align: right; }
-        .row-alt { background-color: #f8fafc; }
-        
+        .th-col {
+            background-color: #2563eb;
+            color: #ffffff;
+            font-weight: bold;
+            text-align: center;
+            border: 1px solid #1d4ed8;
+            padding: 8px 6px;
+        }
+
+        .td-cell {
+            border: 1px solid #cbd5e1;
+            padding: 6px 8px;
+            vertical-align: middle;
+        }
+
+        .td-center {
+            text-align: center;
+        }
+
+        .td-right {
+            text-align: right;
+        }
+
+        .row-alt {
+            background-color: #f8fafc;
+        }
+
         /* Badges */
-        .badge-masuk { background-color: #dcfce7; color: #15803d; font-weight: bold; }
-        .badge-keluar { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
-        .badge-pinjam { background-color: #dbeafe; color: #1e40af; font-weight: bold; }
-        .badge-bhp { background-color: #fef3c7; color: #b45309; font-weight: bold; }
-        .badge-rusak { background-color: #fee2e2; color: #991b1b; font-weight: bold; }
-        
-        .footer-total { background-color: #e2e8f0; font-weight: bold; border-top: 2px solid #0f172a; border-bottom: 2px double #0f172a; }
-        .signature-box { border: 1px dashed #cbd5e1; padding: 12px; }
+        .badge-masuk {
+            background-color: #dcfce7;
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        .badge-keluar {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            font-weight: bold;
+        }
+
+        .badge-pinjam {
+            background-color: #dbeafe;
+            color: #1e40af;
+            font-weight: bold;
+        }
+
+        .badge-bhp {
+            background-color: #fef3c7;
+            color: #b45309;
+            font-weight: bold;
+        }
+
+        .badge-rusak {
+            background-color: #fee2e2;
+            color: #991b1b;
+            font-weight: bold;
+        }
+
+        .footer-total {
+            background-color: #e2e8f0;
+            font-weight: bold;
+            border-top: 2px solid #0f172a;
+            border-bottom: 2px double #0f172a;
+        }
+
+        .signature-box {
+            border: 1px dashed #cbd5e1;
+            padding: 12px;
+        }
     </style>
 </head>
+
 <body>
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <!-- KOP LAPORAN -->
@@ -45,9 +168,12 @@
             <td colspan="16" class="sub-title">LAPORAN RESMI AUDIT &amp; RIWAYAT MUTASI SIRKULASI STOK</td>
         </tr>
         <tr>
-            <td colspan="16" class="school-title">Manajemen Inventaris, Peredaran Alat &amp; Bahan Habis Pakai (PRD v1.1)</td>
+            <td colspan="16" class="school-title">Manajemen Inventaris, Peredaran Alat &amp; Bahan Habis Pakai (PRD
+                v1.1)</td>
         </tr>
-        <tr><td colspan="16">&nbsp;</td></tr>
+        <tr>
+            <td colspan="16">&nbsp;</td>
+        </tr>
 
         <!-- PARAMETER INFORMASI DOKUMEN -->
         <tr>
@@ -77,7 +203,9 @@
             <td colspan="2" class="meta-label">Kata Kunci Pencarian</td>
             <td colspan="7" class="meta-val">{{ $filters['search'] }}</td>
         </tr>
-        <tr><td colspan="16">&nbsp;</td></tr>
+        <tr>
+            <td colspan="16">&nbsp;</td>
+        </tr>
 
         <!-- RINGKASAN EKSEKUTIF METRIK MUTASI -->
         <tr>
@@ -101,7 +229,9 @@
                 <div class="kpi-val" style="color: #b45309;">{{ number_format($totalMasalah) }} Item</div>
             </td>
         </tr>
-        <tr><td colspan="16">&nbsp;</td></tr>
+        <tr>
+            <td colspan="16">&nbsp;</td>
+        </tr>
 
         <!-- TABEL DATA AUDIT -->
         <tr>
@@ -158,34 +288,45 @@
 
                 $refTipe = strtolower($m->referensi_tipe ?? '');
                 $refText = match (true) {
-                    str_contains($refTipe, 'peminjam') => 'Peminjaman #' . str_pad($m->referensi_id, 4, '0', STR_PAD_LEFT),
-                    str_contains($refTipe, 'pengadaan') => 'Pengadaan RAB #' . str_pad($m->referensi_id, 4, '0', STR_PAD_LEFT),
+                    str_contains($refTipe, 'peminjam') => 'Peminjaman #' .
+                        str_pad($m->referensi_id, 4, '0', STR_PAD_LEFT),
+                    str_contains($refTipe, 'pengadaan') => 'Pengadaan RAB #' .
+                        str_pad($m->referensi_id, 4, '0', STR_PAD_LEFT),
                     !empty($m->referensi_tipe) => ucfirst(rtrim($m->referensi_tipe, 's')) . " #{$m->referensi_id}",
                     default => '-',
                 };
 
                 $stokText = $m->barang
-                    ? ($m->barang->stok_tersedia . ' / ' . $m->barang->stok_total . ' ' . ($m->barang->satuan ?? 'unit'))
+                    ? $m->barang->stok_tersedia . ' / ' . $m->barang->stok_total . ' ' . ($m->barang->satuan ?? 'unit')
                     : '-';
 
-                $hargaItem = $m->barang?->harga 
-                    ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
+                $hargaItem =
+                    $m->barang?->harga ??
+                    ($m->barang && $m->barang->detailPengadaans->isNotEmpty()
+                        ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan
+                        : 0);
             @endphp
             <tr class="{{ $isAlt ? 'row-alt' : '' }}">
                 <td class="td-cell td-center">{{ $no++ }}</td>
-                <td class="td-cell td-center font-bold" style="font-weight: bold; color: #2563eb;">#LOG-{{ str_pad($m->id, 5, '0', STR_PAD_LEFT) }}</td>
+                <td class="td-cell td-center font-bold" style="font-weight: bold; color: #2563eb;">
+                    #LOG-{{ str_pad($m->id, 5, '0', STR_PAD_LEFT) }}</td>
                 <td class="td-cell td-center">{{ $m->created_at->format('d/m/Y') }}</td>
                 <td class="td-cell td-center">{{ $m->created_at->format('H:i') }} WIB</td>
-                <td class="td-cell td-center" style="font-family: monospace; font-weight: bold;">{{ $m->barang->kode_barang ?? '-' }}</td>
-                <td class="td-cell font-bold" style="font-weight: 600;">{{ $m->barang->nama ?? 'Barang Terhapus' }}</td>
-                <td class="td-cell td-center">{{ ($m->barang && $m->barang->jenis_barang === 'bhp') ? 'BHP' : 'Inventaris' }}</td>
+                <td class="td-cell td-center" style="font-family: monospace; font-weight: bold;">
+                    {{ $m->barang->kode_barang ?? '-' }}</td>
+                <td class="td-cell font-bold" style="font-weight: 600;">{{ $m->barang->nama ?? 'Barang Terhapus' }}
+                </td>
+                <td class="td-cell td-center">
+                    {{ $m->barang && $m->barang->jenis_barang === 'bhp' ? 'BHP' : 'Inventaris' }}</td>
                 <td class="td-cell">{{ $m->barang?->lokasiPenyimpanan?->nama ?? 'Bengkel' }}</td>
                 <td class="td-cell td-center {{ $jenisClass }}">{{ $jenisLabel }}</td>
-                <td class="td-cell td-right" style="font-weight: bold; color: {{ $sign === '+' ? '#15803d' : ($sign === '-' ? '#b91c1c' : '#334155') }};">
+                <td class="td-cell td-right"
+                    style="font-weight: bold; color: {{ $sign === '+' ? '#15803d' : ($sign === '-' ? '#b91c1c' : '#334155') }};">
                     {{ $sign }}{{ $m->jumlah }}
                 </td>
                 <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
-                <td class="td-cell td-right">{{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
+                <td class="td-cell td-right">
+                    {{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
                 <td class="td-cell td-center" style="font-size: 9pt;">{{ $stokText }}</td>
                 <td class="td-cell">{{ $m->user->name ?? 'Sistem Otomatis' }}</td>
                 <td class="td-cell td-center" style="font-size: 9pt;">{{ $refText }}</td>
@@ -202,7 +343,8 @@
         <!-- FOOTER TOTAL REKAPITULASI -->
         <tr>
             <td colspan="2" class="td-cell footer-total td-center">TOTAL REKAPITULASI</td>
-            <td colspan="7" class="td-cell footer-total">Total {{ number_format($totalRecords) }} Transaksi Audit Log Terfilter</td>
+            <td colspan="7" class="td-cell footer-total">Total {{ number_format($totalRecords) }} Transaksi Audit
+                Log Terfilter</td>
             <td class="td-cell footer-total td-right" style="color: #1e3a8a;">
                 +{{ number_format($totalMasuk) }} / -{{ number_format($totalKeluar) }}
             </td>
@@ -211,7 +353,9 @@
                 Rusak &amp; Hilang: {{ number_format($totalMasalah) }} Item
             </td>
         </tr>
-        <tr><td colspan="16">&nbsp;</td></tr>
+        <tr>
+            <td colspan="16">&nbsp;</td>
+        </tr>
 
         <!-- LEMBAR PENGESAHAN DOKUMEN -->
         <tr>
@@ -222,8 +366,10 @@
                 <div style="font-weight: bold; color: #334155;">Mengetahui,</div>
                 <div style="font-size: 9pt; color: #64748b;">Kepala Program Keahlian / Kepala Bengkel</div>
                 <br><br><br><br>
-                <div style="font-weight: bold; text-decoration: underline;">( ............................................................ )</div>
-                <div style="font-size: 9pt; color: #64748b;">NIP. .........................................................</div>
+                <div style="font-weight: bold; text-decoration: underline;">(
+                    ............................................................ )</div>
+                <div style="font-size: 9pt; color: #64748b;">NIP.
+                    .........................................................</div>
             </td>
             <td colspan="4">&nbsp;</td>
             <td colspan="6" class="td-cell signature-box">
@@ -236,4 +382,5 @@
         </tr>
     </table>
 </body>
+
 </html>
