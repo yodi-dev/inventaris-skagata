@@ -19,6 +19,7 @@ class Barang extends Model
         'nama',
         'jenis_barang',
         'satuan',
+        'harga',
         'stok_total',
         'stok_tersedia',
         'stok_dipinjam',
@@ -26,6 +27,13 @@ class Barang extends Model
         'minimum_stok',
         'deskripsi',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'harga' => 'decimal:2',
+        ];
+    }
 
     public function bengkel()
     {

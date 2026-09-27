@@ -129,6 +129,13 @@
                                                 {{ $barang->sumberDana->nama }}
                                             </span>
                                         @endif
+                                        @if ($barang->harga > 0)
+                                            <span
+                                                class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200"
+                                                title="Estimasi Harga Satuan">
+                                                Rp {{ number_format($barang->harga, 0, ',', '.') }}
+                                            </span>
+                                        @endif
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">

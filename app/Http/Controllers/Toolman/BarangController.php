@@ -105,6 +105,8 @@ class BarangController extends Controller
             ],
             'sumber_dana_id' => 'nullable|exists:sumber_danas,id',
             'satuan' => 'required|string|max:50',
+            'estimasi_harga' => 'nullable|numeric|min:0',
+            'harga' => 'nullable|numeric|min:0',
             'spesifikasi' => 'nullable|string',
             // Field khusus inventaris
             'stok_baik' => 'nullable|integer|min:0',
@@ -149,6 +151,7 @@ class BarangController extends Controller
                 'nama' => trim($request->input('nama_barang')),
                 'jenis_barang' => $jenisBarang,
                 'satuan' => trim($request->input('satuan')),
+                'harga' => $request->input('estimasi_harga') ?? $request->input('harga') ?? 0,
                 'stok_total' => $stokTotal,
                 'stok_tersedia' => $stokTersedia,
                 'stok_dipinjam' => $stokDipinjam,
@@ -237,6 +240,8 @@ class BarangController extends Controller
             ],
             'sumber_dana_id' => 'nullable|exists:sumber_danas,id',
             'satuan' => 'required|string|max:50',
+            'estimasi_harga' => 'nullable|numeric|min:0',
+            'harga' => 'nullable|numeric|min:0',
             'spesifikasi' => 'nullable|string',
             'stok_baik' => 'nullable|integer|min:0',
             'stok_rusak_ringan' => 'nullable|integer|min:0',
@@ -275,6 +280,7 @@ class BarangController extends Controller
                 'kode_barang' => strtoupper(trim($request->input('kode_barang'))),
                 'nama' => trim($request->input('nama_barang')),
                 'satuan' => trim($request->input('satuan')),
+                'harga' => $request->input('estimasi_harga') ?? $request->input('harga') ?? 0,
                 'stok_total' => $stokTotal,
                 'stok_tersedia' => $stokTersedia,
                 'stok_rusak' => $stokRusak,
@@ -569,7 +575,8 @@ class BarangController extends Controller
     <col min="8" max="8" width="18" customWidth="1"/>
     <col min="9" max="9" width="18" customWidth="1"/>
     <col min="10" max="10" width="16" customWidth="1"/>
-    <col min="11" max="11" width="42" customWidth="1"/>
+    <col min="11" max="11" width="20" customWidth="1"/>
+    <col min="12" max="12" width="42" customWidth="1"/>
   </cols>';
 
                 $s1Rows = '
@@ -584,7 +591,8 @@ class BarangController extends Controller
       <c r="H1" t="inlineStr" s="1"><is><t>Stok Rusak Ringan</t></is></c>
       <c r="I1" t="inlineStr" s="1"><is><t>Stok Rusak Berat</t></is></c>
       <c r="J1" t="inlineStr" s="1"><is><t>Batas Minimum</t></is></c>
-      <c r="K1" t="inlineStr" s="1"><is><t>Spesifikasi / Keterangan</t></is></c>
+      <c r="K1" t="inlineStr" s="1"><is><t>Harga Satuan (Rp)</t></is></c>
+      <c r="L1" t="inlineStr" s="1"><is><t>Spesifikasi / Keterangan</t></is></c>
     </row>
     <row r="2" ht="20" customHeight="1">
       <c r="A2" t="inlineStr" s="3"><is><t>' . $xmlEsc("INV-{$bengkelCode}-101") . '</t></is></c>
@@ -597,7 +605,8 @@ class BarangController extends Controller
       <c r="H2" s="3"><v>1</v></c>
       <c r="I2" s="3"><v>0</v></c>
       <c r="J2" s="3"><v>2</v></c>
-      <c r="K2" t="inlineStr" s="3"><is><t>Intel Core i5, RAM 16GB, SSD 512GB, Windows 11 Pro</t></is></c>
+      <c r="K2" s="3"><v>8500000</v></c>
+      <c r="L2" t="inlineStr" s="3"><is><t>Intel Core i5, RAM 16GB, SSD 512GB, Windows 11 Pro</t></is></c>
     </row>
     <row r="3" ht="20" customHeight="1">
       <c r="A3" t="inlineStr" s="3"><is><t>' . $xmlEsc("BHP-{$bengkelCode}-201") . '</t></is></c>
@@ -610,7 +619,8 @@ class BarangController extends Controller
       <c r="H3" s="3"><v>0</v></c>
       <c r="I3" s="3"><v>0</v></c>
       <c r="J3" s="3"><v>1</v></c>
-      <c r="K3" t="inlineStr" s="3"><is><t>Kabel LAN Cat6 original panjang 305 meter</t></is></c>
+      <c r="K3" s="3"><v>1650000</v></c>
+      <c r="L3" t="inlineStr" s="3"><is><t>Kabel LAN Cat6 original panjang 305 meter</t></is></c>
     </row>
     <row r="4" ht="20" customHeight="1">
       <c r="A4" t="inlineStr" s="3"><is><t></t></is></c>
@@ -623,7 +633,8 @@ class BarangController extends Controller
       <c r="H4" s="3"><v>0</v></c>
       <c r="I4" s="3"><v>0</v></c>
       <c r="J4" s="3"><v>3</v></c>
-      <c r="K4" t="inlineStr" s="3"><is><t>Mata obeng magnetik lengkap dengan pinset presisi</t></is></c>
+      <c r="K4" s="3"><v>125000</v></c>
+      <c r="L4" t="inlineStr" s="3"><is><t>Mata obeng magnetik lengkap dengan pinset presisi</t></is></c>
     </row>';
 
                 $sheet1Xml = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -642,7 +653,8 @@ class BarangController extends Controller
                     "7. Lokasi/Sumber Dana baru akan didaftarkan otomatis jika opsinya dicentang saat import.",
                     "8. Untuk tipe 'bhp', jumlah stok diisi pada 'Stok Baik / Bahan'.",
                     "9. 'Stok Rusak Ringan' dan 'Rusak Berat' khusus untuk barang inventaris.",
-                    "10. 'Batas Minimum' menentukan ambang batas peringatan stok menipis."
+                    "10. 'Batas Minimum' menentukan ambang batas peringatan stok menipis.",
+                    "11. 'Harga Satuan' diisi estimasi harga per unit dalam rupiah (opsional, contoh: 1500000)."
                 ];
 
                 $lokasiList = $lokasis->map(fn($l) => $l->nama . ($l->kode ? " ({$l->kode})" : ''))->toArray();
@@ -718,6 +730,7 @@ class BarangController extends Controller
             'Stok Rusak Ringan',
             'Stok Rusak Berat',
             'Batas Minimum',
+            'Harga Satuan (Rp)',
             'Spesifikasi / Keterangan',
         ];
 
@@ -733,6 +746,7 @@ class BarangController extends Controller
                 '1',
                 '0',
                 '2',
+                '8500000',
                 'Intel Core i5, RAM 16GB, SSD 512GB, Windows 11 Pro',
             ],
             [
@@ -746,6 +760,7 @@ class BarangController extends Controller
                 '0',
                 '0',
                 '1',
+                '1650000',
                 'Kabel LAN Cat6 original panjang 305 meter',
             ],
             [
@@ -759,6 +774,7 @@ class BarangController extends Controller
                 '0',
                 '0',
                 '3',
+                '125000',
                 'Mata obeng magnetik lengkap dengan pinset presisi',
             ],
         ];
@@ -835,6 +851,8 @@ class BarangController extends Controller
                 $colMap['stok_baik'] = $idx;
             } elseif (str_contains($norm, 'minimum') || str_contains($norm, 'batas') || str_contains($norm, 'min')) {
                 $colMap['batas_minimum'] = $idx;
+            } elseif (str_contains($norm, 'harga') || str_contains($norm, 'biaya') || str_contains($norm, 'tarif') || str_contains($norm, 'price')) {
+                $colMap['harga'] = $idx;
             } elseif (str_contains($norm, 'spesifikasi') || str_contains($norm, 'deskripsi') || str_contains($norm, 'keterangan')) {
                 $colMap['spesifikasi'] = $idx;
             }
@@ -1011,6 +1029,25 @@ class BarangController extends Controller
 
                 $deskripsi = isset($colMap['spesifikasi']) ? trim((string) ($row[$colMap['spesifikasi']] ?? '')) : null;
 
+                // Tentukan harga satuan
+                $harga = 0;
+                if (isset($colMap['harga'])) {
+                    $rawHarga = (string) ($row[$colMap['harga']] ?? '0');
+                    $cleaned = trim($rawHarga);
+                    if ($cleaned !== '') {
+                        $cleaned = preg_replace('/[^\d.,]/', '', $cleaned);
+                        if (str_contains($cleaned, ',') && str_contains($cleaned, '.')) {
+                            $cleaned = str_replace('.', '', $cleaned);
+                            $cleaned = str_replace(',', '.', $cleaned);
+                        } elseif (str_contains($cleaned, ',')) {
+                            $cleaned = str_replace(',', '.', $cleaned);
+                        } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $cleaned)) {
+                            $cleaned = str_replace('.', '', $cleaned);
+                        }
+                        $harga = max(0, (float) $cleaned);
+                    }
+                }
+
                 // Buat record barang baru
                 $barang = Barang::create([
                     'bengkel_id' => $bengkelId,
@@ -1020,6 +1057,7 @@ class BarangController extends Controller
                     'nama' => $nama,
                     'jenis_barang' => $jenisBarang,
                     'satuan' => $satuan,
+                    'harga' => $harga,
                     'stok_total' => $stokTotal,
                     'stok_tersedia' => $stokTersedia,
                     'stok_dipinjam' => $stokDipinjam,
