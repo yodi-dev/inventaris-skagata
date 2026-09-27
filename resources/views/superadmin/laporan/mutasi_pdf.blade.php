@@ -464,17 +464,18 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th width="4%">No</th>
-                        <th width="11%">Waktu Transaksi</th>
-                        <th width="11%">Kode Barang</th>
-                        <th width="18%">Nama Barang / Aset</th>
-                        <th width="13%">Unit Bengkel</th>
-                        <th width="11%">Lokasi Simpan</th>
-                        <th width="13%">Kategori Mutasi</th>
-                        <th width="7%">Perubahan</th>
+                        <th width="3%">No</th>
+                        <th width="8%">Waktu Transaksi</th>
+                        <th width="8%">Kode Barang</th>
+                        <th width="15%">Nama Barang / Aset</th>
+                        <th width="10%">Unit Bengkel</th>
+                        <th width="9%">Lokasi Simpan</th>
+                        <th width="10%">Kategori Mutasi</th>
+                        <th width="6%">Perubahan</th>
                         <th width="5%">Satuan</th>
-                        <th width="11%">Petugas / Staf</th>
-                        <th width="16%">Keterangan</th>
+                        <th width="8%">Harga Satuan</th>
+                        <th width="8%">Petugas / Staf</th>
+                        <th width="10%">Keterangan</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -500,6 +501,8 @@
                             ];
                             $sign = $tipe['sign'];
                             $qtyDisplay = ($sign ? $sign : '') . abs($m->jumlah);
+                            $hargaItem = $m->barang?->harga 
+                                ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
                         @endphp
                         <tr>
                             <td class="text-center">{{ $idx + 1 }}</td>
@@ -511,12 +514,13 @@
                             <td class="text-center">{{ $tipe['label'] }}</td>
                             <td class="text-right {{ $tipe['class'] }}">{{ $qtyDisplay }}</td>
                             <td class="text-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                            <td class="text-right font-mono" style="font-size: 6.8pt;">{{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
                             <td>{{ $m->user->name ?? 'Sistem' }}</td>
                             <td>{{ $m->keterangan ?? '-' }}</td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="11" class="text-center" style="padding: 16px; color: #64748b;">
+                            <td colspan="12" class="text-center" style="padding: 16px; color: #64748b;">
                                 <em>Tidak ada data riwayat mutasi stok pada periode dan kriteria filter ini.</em>
                             </td>
                         </tr>

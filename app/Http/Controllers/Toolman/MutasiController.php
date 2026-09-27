@@ -178,7 +178,7 @@ class MutasiController extends Controller
      */
     protected function buildMovementQuery(Request $request, $bengkelId)
     {
-        $query = StockMovement::with(['barang.lokasiPenyimpanan', 'user'])
+        $query = StockMovement::with(['barang.lokasiPenyimpanan', 'barang.detailPengadaans', 'user'])
             ->whereHas('barang', function ($q) use ($bengkelId) {
                 $q->where('bengkel_id', $bengkelId);
             })

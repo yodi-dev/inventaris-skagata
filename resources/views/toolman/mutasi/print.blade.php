@@ -500,19 +500,20 @@
         <table class="data-table">
             <thead>
                 <tr>
-                    <th style="width: 2.8%;">No</th>
-                    <th style="width: 8.5%;">Tgl &amp; Waktu</th>
-                    <th style="width: 6.2%;">ID Log</th>
-                    <th style="width: 7.5%;">Kode</th>
-                    <th style="width: 16%;">Nama Barang</th>
-                    <th style="width: 5.5%;">Tipe</th>
-                    <th style="width: 8%;">Lokasi Simpan</th>
-                    <th style="width: 9%;">Jenis Mutasi</th>
-                    <th style="width: 4%;">Qty</th>
-                    <th style="width: 4%;">Satuan</th>
-                    <th style="width: 6.5%;">Stok Akhir</th>
-                    <th style="width: 8%;">Petugas</th>
-                    <th style="width: 6.5%;">No. Ref</th>
+                    <th style="width: 2.5%;">No</th>
+                    <th style="width: 7.5%;">Tgl &amp; Waktu</th>
+                    <th style="width: 5%;">ID Log</th>
+                    <th style="width: 6.5%;">Kode</th>
+                    <th style="width: 14.5%;">Nama Barang</th>
+                    <th style="width: 4.5%;">Tipe</th>
+                    <th style="width: 7%;">Lokasi Simpan</th>
+                    <th style="width: 8%;">Jenis Mutasi</th>
+                    <th style="width: 3.5%;">Qty</th>
+                    <th style="width: 3.5%;">Satuan</th>
+                    <th style="width: 7.5%;">Harga Satuan</th>
+                    <th style="width: 6%;">Stok Akhir</th>
+                    <th style="width: 7%;">Petugas</th>
+                    <th style="width: 6%;">No. Ref</th>
                     <th style="width: 7.5%;">Keterangan Audit</th>
                 </tr>
             </thead>
@@ -549,6 +550,9 @@
                         $stokText = $m->barang
                             ? ($m->barang->stok_tersedia . ' / ' . $m->barang->stok_total)
                             : '-';
+
+                        $hargaItem = $m->barang?->harga 
+                            ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
                     @endphp
                     <tr>
                         <td class="text-center">{{ $no++ }}</td>
@@ -566,6 +570,9 @@
                             {{ $sign }}{{ $m->jumlah }}
                         </td>
                         <td class="text-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                        <td class="text-right" style="font-size: 6.8pt;">
+                            {{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}
+                        </td>
                         <td class="text-center" style="font-size: 6.8pt;">{{ $stokText }}</td>
                         <td style="font-size: 6.8pt;">{{ $m->user->name ?? 'Sistem' }}</td>
                         <td class="text-center font-mono" style="font-size: 6.8pt;">{{ $refText }}</td>
@@ -573,7 +580,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="14" class="text-center" style="padding: 14px;">
+                        <td colspan="15" class="text-center" style="padding: 14px;">
                             Tidak ada data transaksi mutasi stok yang sesuai dengan kriteria filter.
                         </td>
                     </tr>
@@ -586,7 +593,7 @@
                     <td class="text-right">
                         +{{ number_format($totalMasuk) }} / -{{ number_format($totalKeluar) }}
                     </td>
-                    <td colspan="2" class="text-center">Kuantitas Fisik</td>
+                    <td colspan="3" class="text-center">Kuantitas Fisik</td>
                     <td colspan="3">Rusak &amp; Hilang: {{ number_format($totalMasalah) }} Item</td>
                 </tr>
             </tbody>

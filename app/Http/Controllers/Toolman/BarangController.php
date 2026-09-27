@@ -837,7 +837,9 @@ class BarangController extends Controller
                 $colMap['nama'] = $idx;
             } elseif (str_contains($norm, 'tipe') || str_contains($norm, 'jenis')) {
                 $colMap['tipe'] = $idx;
-            } elseif (str_contains($norm, 'satuan') || str_contains($norm, 'unit')) {
+            } elseif (str_contains($norm, 'harga') || str_contains($norm, 'biaya') || str_contains($norm, 'tarif') || str_contains($norm, 'price')) {
+                $colMap['harga'] = $idx;
+            } elseif ((str_contains($norm, 'satuan') || str_contains($norm, 'unit') || str_contains($norm, 'uom')) && !str_contains($norm, 'harga')) {
                 $colMap['satuan'] = $idx;
             } elseif (str_contains($norm, 'lokasi') || str_contains($norm, 'tempat') || str_contains($norm, 'rak')) {
                 $colMap['lokasi'] = $idx;
@@ -851,8 +853,6 @@ class BarangController extends Controller
                 $colMap['stok_baik'] = $idx;
             } elseif (str_contains($norm, 'minimum') || str_contains($norm, 'batas') || str_contains($norm, 'min')) {
                 $colMap['batas_minimum'] = $idx;
-            } elseif (str_contains($norm, 'harga') || str_contains($norm, 'biaya') || str_contains($norm, 'tarif') || str_contains($norm, 'price')) {
-                $colMap['harga'] = $idx;
             } elseif (str_contains($norm, 'spesifikasi') || str_contains($norm, 'deskripsi') || str_contains($norm, 'keterangan')) {
                 $colMap['spesifikasi'] = $idx;
             }

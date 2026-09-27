@@ -39,52 +39,52 @@
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
         <!-- KOP LAPORAN -->
         <tr>
-            <td colspan="15" class="main-title">SISTEM INVENTARIS BENGKEL (SIBENKA) - SMKN 3 YOGYAKARTA</td>
+            <td colspan="16" class="main-title">SISTEM INVENTARIS BENGKEL (SIBENKA) - SMKN 3 YOGYAKARTA</td>
         </tr>
         <tr>
-            <td colspan="15" class="sub-title">LAPORAN RESMI AUDIT &amp; RIWAYAT MUTASI SIRKULASI STOK</td>
+            <td colspan="16" class="sub-title">LAPORAN RESMI AUDIT &amp; RIWAYAT MUTASI SIRKULASI STOK</td>
         </tr>
         <tr>
-            <td colspan="15" class="school-title">Manajemen Inventaris, Peredaran Alat &amp; Bahan Habis Pakai (PRD v1.1)</td>
+            <td colspan="16" class="school-title">Manajemen Inventaris, Peredaran Alat &amp; Bahan Habis Pakai (PRD v1.1)</td>
         </tr>
-        <tr><td colspan="15">&nbsp;</td></tr>
+        <tr><td colspan="16">&nbsp;</td></tr>
 
         <!-- PARAMETER INFORMASI DOKUMEN -->
         <tr>
-            <td colspan="15" class="section-bar">A. INFORMASI DOKUMEN &amp; PARAMETER FILTER</td>
+            <td colspan="16" class="section-bar">A. INFORMASI DOKUMEN &amp; PARAMETER FILTER</td>
         </tr>
         <tr>
             <td colspan="2" class="meta-label">Nama Bengkel / Laboratorium</td>
             <td colspan="5" class="meta-val">{{ $bengkel->nama ?? 'Semua Bengkel' }}</td>
             <td colspan="2" class="meta-label">Waktu Cetak / Unduh</td>
-            <td colspan="6" class="meta-val">{{ date('d/m/Y H:i:s') }} WIB</td>
+            <td colspan="7" class="meta-val">{{ date('d/m/Y H:i:s') }} WIB</td>
         </tr>
         <tr>
             <td colspan="2" class="meta-label">Kode Bengkel</td>
             <td colspan="5" class="meta-val">{{ $bengkel->kode ?? '-' }}</td>
             <td colspan="2" class="meta-label">Petugas Operator / Toolman</td>
-            <td colspan="6" class="meta-val">{{ $user->name }} ({{ ucfirst($user->role) }})</td>
+            <td colspan="7" class="meta-val">{{ $user->name }} ({{ ucfirst($user->role) }})</td>
         </tr>
         <tr>
             <td colspan="2" class="meta-label">Periode Data</td>
             <td colspan="5" class="meta-val">{{ $filters['period'] }}</td>
             <td colspan="2" class="meta-label">Filter Kategori Mutasi</td>
-            <td colspan="6" class="meta-val">{{ $filters['jenis'] }}</td>
+            <td colspan="7" class="meta-val">{{ $filters['jenis'] }}</td>
         </tr>
         <tr>
             <td colspan="2" class="meta-label">Filter Tipe Aset</td>
             <td colspan="5" class="meta-val">{{ $filters['tipe'] }}</td>
             <td colspan="2" class="meta-label">Kata Kunci Pencarian</td>
-            <td colspan="6" class="meta-val">{{ $filters['search'] }}</td>
+            <td colspan="7" class="meta-val">{{ $filters['search'] }}</td>
         </tr>
-        <tr><td colspan="15">&nbsp;</td></tr>
+        <tr><td colspan="16">&nbsp;</td></tr>
 
         <!-- RINGKASAN EKSEKUTIF METRIK MUTASI -->
         <tr>
-            <td colspan="15" class="section-bar">B. RINGKASAN EKSEKUTIF AUDIT (DATA TERFILTER)</td>
+            <td colspan="16" class="section-bar">B. RINGKASAN EKSEKUTIF AUDIT (DATA TERFILTER)</td>
         </tr>
         <tr>
-            <td colspan="3" class="kpi-card-log">
+            <td colspan="4" class="kpi-card-log">
                 <div class="kpi-title">Total Catatan Log</div>
                 <div class="kpi-val" style="color: #0f172a;">{{ number_format($totalRecords) }} Log</div>
             </td>
@@ -101,11 +101,11 @@
                 <div class="kpi-val" style="color: #b45309;">{{ number_format($totalMasalah) }} Item</div>
             </td>
         </tr>
-        <tr><td colspan="15">&nbsp;</td></tr>
+        <tr><td colspan="16">&nbsp;</td></tr>
 
         <!-- TABEL DATA AUDIT -->
         <tr>
-            <td colspan="15" class="section-bar">C. TABEL RINCIAN AUDIT MUTASI STOK</td>
+            <td colspan="16" class="section-bar">C. TABEL RINCIAN AUDIT MUTASI STOK</td>
         </tr>
         <tr>
             <th class="th-col" width="40">No</th>
@@ -119,6 +119,7 @@
             <th class="th-col" width="180">Jenis Mutasi</th>
             <th class="th-col" width="90">Perubahan</th>
             <th class="th-col" width="70">Satuan</th>
+            <th class="th-col" width="110">Harga Satuan</th>
             <th class="th-col" width="130">Stok Saat Ini</th>
             <th class="th-col" width="160">Petugas Pemroses</th>
             <th class="th-col" width="140">No. Referensi</th>
@@ -166,6 +167,9 @@
                 $stokText = $m->barang
                     ? ($m->barang->stok_tersedia . ' / ' . $m->barang->stok_total . ' ' . ($m->barang->satuan ?? 'unit'))
                     : '-';
+
+                $hargaItem = $m->barang?->harga 
+                    ?? ($m->barang && $m->barang->detailPengadaans->isNotEmpty() ? $m->barang->detailPengadaans->sortByDesc('id')->first()->harga_satuan : 0);
             @endphp
             <tr class="{{ $isAlt ? 'row-alt' : '' }}">
                 <td class="td-cell td-center">{{ $no++ }}</td>
@@ -181,6 +185,7 @@
                     {{ $sign }}{{ $m->jumlah }}
                 </td>
                 <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                <td class="td-cell td-right">{{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
                 <td class="td-cell td-center" style="font-size: 9pt;">{{ $stokText }}</td>
                 <td class="td-cell">{{ $m->user->name ?? 'Sistem Otomatis' }}</td>
                 <td class="td-cell td-center" style="font-size: 9pt;">{{ $refText }}</td>
@@ -188,7 +193,7 @@
             </tr>
         @empty
             <tr>
-                <td colspan="15" class="td-cell td-center" style="padding: 20px; color: #64748b;">
+                <td colspan="16" class="td-cell td-center" style="padding: 20px; color: #64748b;">
                     Tidak ada catatan mutasi stok yang sesuai dengan kriteria filter.
                 </td>
             </tr>
@@ -201,16 +206,16 @@
             <td class="td-cell footer-total td-right" style="color: #1e3a8a;">
                 +{{ number_format($totalMasuk) }} / -{{ number_format($totalKeluar) }}
             </td>
-            <td colspan="2" class="td-cell footer-total td-center">Total Pergerakan Fisik</td>
+            <td colspan="3" class="td-cell footer-total td-center">Total Pergerakan Fisik</td>
             <td colspan="3" class="td-cell footer-total" style="color: #b45309;">
                 Rusak &amp; Hilang: {{ number_format($totalMasalah) }} Item
             </td>
         </tr>
-        <tr><td colspan="15">&nbsp;</td></tr>
+        <tr><td colspan="16">&nbsp;</td></tr>
 
         <!-- LEMBAR PENGESAHAN DOKUMEN -->
         <tr>
-            <td colspan="15" class="section-bar">D. LEMBAR PENGESAHAN DOKUMEN</td>
+            <td colspan="16" class="section-bar">D. LEMBAR PENGESAHAN DOKUMEN</td>
         </tr>
         <tr>
             <td colspan="6" class="td-cell signature-box">
@@ -220,7 +225,7 @@
                 <div style="font-weight: bold; text-decoration: underline;">( ............................................................ )</div>
                 <div style="font-size: 9pt; color: #64748b;">NIP. .........................................................</div>
             </td>
-            <td colspan="3">&nbsp;</td>
+            <td colspan="4">&nbsp;</td>
             <td colspan="6" class="td-cell signature-box">
                 <div style="font-weight: bold; color: #334155;">Yogyakarta, {{ date('d F Y') }}</div>
                 <div style="font-size: 9pt; color: #64748b;">Petugas Pengelola Bengkel (Toolman)</div>
