@@ -10,6 +10,7 @@ use App\Models\Pengadaan;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PengadaanController extends Controller
 {
@@ -310,18 +311,52 @@ class PengadaanController extends Controller
         $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
         $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
 
-        $pengadaan = Pengadaan::with('detailPengadaans')->where('bengkel_id', $bengkelId)->findOrFail($id);
+        try {
+            $formattedRabCode = DB::transaction(function () use ($id, $bengkelId, $bengkel, $user) {
+                // 1. Kunci dan ambil record Pengadaan (Lock Order #1)
+                $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-        if ($pengadaan->status !== 'approved') {
-            return redirect()->back()->with('error', "Penerimaan fisik barang hanya dapat dilakukan untuk usulan RAB yang telah disetujui (Approved).");
-        }
+                // 2. Validasi status di DALAM transaksi yang terkunci
+                if ($pengadaan->status !== 'approved') {
+                    throw new \DomainException("Penerimaan fisik barang hanya dapat dilakukan untuk usulan RAB yang telah disetujui (status saat ini: {$pengadaan->status}).");
+                }
 
-        DB::transaction(function () use ($pengadaan, $user, $bengkelId, $bengkel) {
-            foreach ($pengadaan->detailPengadaans as $detail) {
-                if ($detail->barang_id) {
-                    // Barang sudah ada di master -> Tambah stoknya
-                    $barang = Barang::where('bengkel_id', $bengkelId)->lockForUpdate()->find($detail->barang_id);
-                    if ($barang) {
+                $details = $pengadaan->detailPengadaans()->lockForUpdate()->get();
+                if ($details->isEmpty()) {
+                    throw new \DomainException("Usulan RAB #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) . " tidak memiliki rincian barang.");
+                }
+
+                // 3. Kunci seluruh barang existing yang direferensikan dalam urutan id menaik (Lock Order #2: ORDER BY id ASC)
+                $existingBarangIds = $details->pluck('barang_id')->filter()->unique()->sort()->values()->all();
+                $existingBarangs = Barang::whereIn('id', $existingBarangIds)
+                    ->lockForUpdate()
+                    ->orderBy('id', 'asc')
+                    ->get()
+                    ->keyBy('id');
+
+                // 4. Validasi kepemilikan bengkel dan integritas seluruh barang existing
+                foreach ($details as $detail) {
+                    if ($detail->barang_id) {
+                        $barang = $existingBarangs->get($detail->barang_id);
+                        if (!$barang || (int) $barang->bengkel_id !== (int) $bengkelId) {
+                            throw new \DomainException("Barang '{$detail->nama_barang}' (ID #{$detail->barang_id}) tidak ditemukan atau bukan milik bengkel ini.");
+                        }
+                    }
+                    if ($detail->jumlah <= 0) {
+                        throw new \DomainException("Kuantitas barang '{$detail->nama_barang}' harus lebih dari 0.");
+                    }
+                }
+
+                $rabCode = '#RAB-' . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT);
+
+                // 5. Terapkan penambahan stok / pembuatan master barang dan StockMovement
+                foreach ($details as $detail) {
+                    if ($detail->barang_id) {
+                        // Barang sudah ada di master -> Tambah stoknya
+                        $barang = $existingBarangs->get($detail->barang_id);
                         $barang->increment('stok_total', $detail->jumlah);
                         $barang->increment('stok_tersedia', $detail->jumlah);
 
@@ -330,59 +365,66 @@ class PengadaanController extends Controller
                             'user_id' => $user->id,
                             'jenis' => 'stok_masuk',
                             'jumlah' => $detail->jumlah,
-                            'keterangan' => "Penerimaan fisik barang pengadaan #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) . " ({$pengadaan->judul})",
+                            'keterangan' => "Penerimaan fisik barang pengadaan {$rabCode} ({$pengadaan->judul})",
+                            'referensi_tipe' => 'pengadaan',
+                            'referensi_id' => $pengadaan->id,
+                            'created_at' => now(),
+                        ]);
+                    } else {
+                        // Barang baru belum ada di master -> Buat master barang baru
+                        $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', $bengkel->kode ?? 'BGL');
+                        $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
+
+                        // Pastikan kode unik
+                        while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists()) {
+                            $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
+                        }
+
+                        $newBarang = Barang::create([
+                            'bengkel_id' => $bengkelId,
+                            'kode_barang' => $kodeBarangBaru,
+                            'nama' => $detail->nama_barang,
+                            'jenis_barang' => 'inventaris',
+                            'satuan' => $detail->satuan,
+                            'harga' => $detail->harga_satuan ?? 0,
+                            'stok_total' => $detail->jumlah,
+                            'stok_tersedia' => $detail->jumlah,
+                            'stok_dipinjam' => 0,
+                            'stok_rusak' => 0,
+                            'minimum_stok' => 2,
+                            'deskripsi' => $detail->spesifikasi,
+                        ]);
+
+                        $detail->update(['barang_id' => $newBarang->id]);
+
+                        StockMovement::create([
+                            'barang_id' => $newBarang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'stok_masuk',
+                            'jumlah' => $detail->jumlah,
+                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode}",
                             'referensi_tipe' => 'pengadaan',
                             'referensi_id' => $pengadaan->id,
                             'created_at' => now(),
                         ]);
                     }
-                } else {
-                    // Barang baru belum ada di master -> Buat master barang baru
-                    $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', $bengkel->kode ?? 'BGL');
-                    $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
-
-                    // Pastikan kode unik
-                    while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists()) {
-                        $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
-                    }
-
-                    $newBarang = Barang::create([
-                        'bengkel_id' => $bengkelId,
-                        'kode_barang' => $kodeBarangBaru,
-                        'nama' => $detail->nama_barang,
-                        'jenis_barang' => 'inventaris',
-                        'satuan' => $detail->satuan,
-                        'harga' => $detail->harga_satuan ?? 0,
-                        'stok_total' => $detail->jumlah,
-                        'stok_tersedia' => $detail->jumlah,
-                        'stok_dipinjam' => 0,
-                        'stok_rusak' => 0,
-                        'minimum_stok' => 2,
-                        'deskripsi' => $detail->spesifikasi,
-                    ]);
-
-                    $detail->update(['barang_id' => $newBarang->id]);
-
-                    StockMovement::create([
-                        'barang_id' => $newBarang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'stok_masuk',
-                        'jumlah' => $detail->jumlah,
-                        'keterangan' => "Penerimaan fisik barang baru pengadaan #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT),
-                        'referensi_tipe' => 'pengadaan',
-                        'referensi_id' => $pengadaan->id,
-                        'created_at' => now(),
-                    ]);
                 }
-            }
 
-            // Tandai pengadaan selesai (barang fisik telah diterima)
-            $pengadaan->update([
-                'status' => 'selesai',
-            ]);
-        });
+                // 6. Tandai pengadaan selesai
+                $pengadaan->update([
+                    'status' => 'selesai',
+                ]);
 
-        return redirect()->route('toolman.pengadaan.show', $pengadaan->id)
-            ->with('success', "Konfirmasi penerimaan barang fisik berhasil! Seluruh kuota stok telah ditambahkan ke inventaris bengkel dan dicatat pada riwayat mutasi stok.");
+                return $rabCode;
+            });
+
+            return redirect()->route('toolman.pengadaan.show', $id)
+                ->with('success', "Konfirmasi penerimaan barang fisik {$formattedRabCode} berhasil! Seluruh kuota stok telah ditambahkan ke inventaris bengkel dan dicatat pada riwayat mutasi stok.");
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("Gagal memproses penerimaan barang RAB #{$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal memproses penerimaan barang fisik: Terjadi kesalahan sistem atau konflik transaksi.");
+        }
     }
 }
