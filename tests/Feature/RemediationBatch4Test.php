@@ -599,4 +599,168 @@ class RemediationBatch4Test extends TestCase
         $this->assertEquals($barang->stok_rusak, $rows[8]['sisa_rusak']);
         $this->assertEquals($barang->stok_total, $rows[8]['sisa_baik'] + $rows[8]['sisa_rusak']);
     }
+
+    public function test_freeform_description_with_part_number_does_not_misclassify_positive_adjustment(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 10,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 0,
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'stok_masuk',
+            'jumlah' => 10,
+            'keterangan' => 'Stok awal',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        // Catat mutasi penyesuaian yang memuat tanda minus pada nomor part (SN-7400) tetapi merupakan penambahan (+5)
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 5,
+            'referensi_tipe' => null, // Simulasi data historis tanpa referensi_tipe
+            'keterangan' => 'Penyesuaian stok IC 74LS00 (SN-7400) stok opname (+5)',
+            'created_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($toolman)->get(route('toolman.barang.print-kartu', $barang->id));
+        $response->assertOk();
+
+        $rows = $response->viewData('movementRows');
+        $this->assertCount(2, $rows);
+
+        // Harus diklasifikasikan sebagai masuk_baik = 5, BUKAN keluar_baik
+        $this->assertEquals(5, $rows[1]['masuk_baik']);
+        $this->assertSame('', $rows[1]['keluar_baik']);
+        $this->assertEquals(15, $rows[1]['sisa_baik']);
+    }
+
+    public function test_freeform_description_with_good_condition_found_does_not_misclassify_as_damaged_transfer(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 10,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 0,
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'stok_masuk',
+            'jumlah' => 10,
+            'keterangan' => 'Stok awal',
+            'created_at' => now()->subDays(2),
+        ]);
+
+        // Catat mutasi penyesuaian yang mengandung kata "ditemukan", "kondisi", dan "rusak"
+        // tetapi konteksnya "kondisi baik bukan rusak"
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 3,
+            'referensi_tipe' => null,
+            'keterangan' => 'Penyesuaian stok: Ditemukan 3 unit di rak alat, kondisi baik bukan rusak',
+            'created_at' => now()->subDay(),
+        ]);
+
+        $response = $this->actingAs($toolman)->get(route('toolman.barang.print-kartu', $barang->id));
+        $response->assertOk();
+
+        $rows = $response->viewData('movementRows');
+        $this->assertCount(2, $rows);
+
+        // Harus menambah saldo baik (masuk_baik = 3), TIDAK boleh menambah saldo rusak
+        $this->assertEquals(3, $rows[1]['masuk_baik']);
+        $this->assertSame('', $rows[1]['masuk_rusak']);
+        $this->assertSame('', $rows[1]['keluar_baik']);
+        $this->assertEquals(13, $rows[1]['sisa_baik']);
+        $this->assertEquals(0, $rows[1]['sisa_rusak']);
+    }
+
+    public function test_discarding_damaged_stock_afkir_reduces_damaged_balance_without_reducing_available_balance(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 13,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 3,
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'stok_masuk',
+            'jumlah' => 13,
+            'keterangan' => 'Stok awal',
+            'created_at' => now()->subDays(5),
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 3,
+            'referensi_tipe' => 'alih_kondisi_rusak',
+            'keterangan' => 'Pengalihan kondisi stok: Baik ke Rusak (-3 baik, +3 rusak)',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        // Toolman membuang/afkir 3 unit rusak. Stok tersedia tetap 10, stok rusak menjadi 0, total stok menjadi 10.
+        $response = $this->actingAs($toolman)->put(route('toolman.barang.update', $barang->id), [
+            'kode_barang' => $barang->kode_barang,
+            'nama_barang' => $barang->nama,
+            'lokasi_penyimpanan_id' => $lokasi->id,
+            'satuan' => 'Unit',
+            'stok_baik' => 10,
+            'stok_rusak_ringan' => 0,
+            'stok_rusak_berat' => 0,
+        ]);
+
+        $response->assertRedirect(route('toolman.barang.index'));
+
+        $barang->refresh();
+        $this->assertEquals(10, $barang->stok_total);
+        $this->assertEquals(10, $barang->stok_tersedia);
+        $this->assertEquals(0, $barang->stok_rusak);
+
+        // Verifikasi mutasi afkir tercatat khusus pengurangan rusak
+        $this->assertDatabaseHas('stock_movements', [
+            'barang_id' => $barang->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 3,
+            'referensi_tipe' => 'penyesuaian_rusak_kurang',
+        ]);
+
+        // Verifikasi kartu barang: keluar_rusak = 3, sisa_rusak = 0, sisa_baik tetap 10
+        $printResponse = $this->actingAs($toolman)->get(route('toolman.barang.print-kartu', $barang->id));
+        $printResponse->assertOk();
+
+        $rows = $printResponse->viewData('movementRows');
+        $this->assertCount(3, $rows);
+
+        $this->assertEquals(3, $rows[2]['keluar_rusak']);
+        $this->assertSame('', $rows[2]['keluar_baik']);
+        $this->assertEquals(10, $rows[2]['sisa_baik']);
+        $this->assertEquals(0, $rows[2]['sisa_rusak']);
+    }
 }

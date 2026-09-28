@@ -290,18 +290,38 @@ class BarangController extends Controller
                 'deskripsi' => $request->input('spesifikasi'),
             ]);
 
-            // 1. Jika ada perubahan pada total stok, catat penyesuaian master
-            if ($oldStokTotal !== $stokTotal) {
-                $selisih = $stokTotal - $oldStokTotal;
-                $isNegative = $selisih < 0;
-                StockMovement::create([
-                    'barang_id' => $barang->id,
-                    'user_id' => $user->id,
-                    'jenis' => 'penyesuaian',
-                    'jumlah' => abs($selisih),
-                    'referensi_tipe' => $isNegative ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
-                    'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($selisih > 0 ? "+{$selisih}" : "{$selisih}") . ')',
-                ]);
+            // Periksa perubahan stok per kompartemen (tersedia vs rusak)
+            $diffTersedia = $stokTersedia - $oldStokTersedia;
+            $diffRusak = $stokRusak - $oldStokRusak;
+            $diffTotal = $stokTotal - $oldStokTotal;
+
+            if ($diffTotal !== 0) {
+                // 1. Total stok berubah (penyesuaian master)
+                if ($diffTersedia !== 0) {
+                    $isNegTersedia = $diffTersedia < 0;
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'penyesuaian',
+                        'jumlah' => abs($diffTersedia),
+                        'referensi_tipe' => $isNegTersedia ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
+                        'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($diffTersedia > 0 ? "+{$diffTersedia}" : "{$diffTersedia}") . ')',
+                    ]);
+                }
+
+                if ($diffRusak !== 0 && $barang->jenis_barang === 'inventaris') {
+                    $isNegRusak = $diffRusak < 0;
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'penyesuaian',
+                        'jumlah' => abs($diffRusak),
+                        'referensi_tipe' => $isNegRusak ? 'penyesuaian_rusak_kurang' : 'penyesuaian_rusak_tambah',
+                        'keterangan' => $isNegRusak
+                            ? 'Penghapusan/afkir barang rusak oleh Toolman (-' . abs($diffRusak) . ' rusak)'
+                            : "Penyesuaian fisik barang rusak oleh Toolman (+{$diffRusak} rusak)",
+                    ]);
+                }
             } elseif ($barang->jenis_barang === 'inventaris') {
                 // 2. Jika total stok tetap tetapi terjadi alih kondisi antara stok tersedia dan stok rusak
                 if ($stokTersedia < $oldStokTersedia && $stokRusak > $oldStokRusak) {
@@ -466,9 +486,12 @@ class BarangController extends Controller
                     $rawKet = strtolower($m->keterangan ?? '');
                     $refTipe = strtolower($m->referensi_tipe ?? '');
 
-                    if ($refTipe === 'alih_kondisi_rusak'
+                    if (
+                        $refTipe === 'alih_kondisi_rusak'
                         || str_contains($rawKet, 'baik ke rusak')
-                        || (str_contains($rawKet, 'rusak') && (str_contains($rawKet, 'ditemukan') || str_contains($rawKet, 'kondisi') || str_contains($rawKet, 'alih')))) {
+                        || preg_match('/ditemukan dalam kondisi rusak/i', $rawKet)
+                        || str_contains($rawKet, 'kondisi rusak berat saat inventarisasi')
+                    ) {
                         // Alih kondisi: Tersedia/Baik ke Rusak tanpa mengubah stok total
                         $qty = abs($jml);
                         $keluarBaik = $qty;
@@ -482,18 +505,35 @@ class BarangController extends Controller
                         $masukBaik = $qty;
                         $saldoRusak = max(0, $saldoRusak - $keluarRusak);
                         $saldoBaik += $masukBaik;
-                    } elseif ($jml < 0
+                    } elseif (
+                        $refTipe === 'penyesuaian_rusak_kurang'
+                        || (str_contains($rawKet, 'rusak') && (str_contains($rawKet, 'afkir') || str_contains($rawKet, 'dihapus') || str_contains($rawKet, 'penghapusan')))
+                    ) {
+                        // Pengurangan stok rusak (misal pembuangan/afkir barang rusak)
+                        $qty = abs($jml);
+                        $keluarRusak = $qty;
+                        $saldoRusak = max(0, $saldoRusak - $keluarRusak);
+                    } elseif ($refTipe === 'penyesuaian_rusak_tambah') {
+                        // Penambahan stok rusak secara langsung
+                        $qty = abs($jml);
+                        $masukRusak = $qty;
+                        $saldoRusak += $masukRusak;
+                    } elseif (
+                        $jml < 0
                         || $refTipe === 'penyesuaian_kurang'
-                        || preg_match('/\(-(\d+)\)/', $m->keterangan ?? '')
+                        || preg_match('/(?:^| oleh Toolman )\(-(\d+)\)$/', trim($m->keterangan ?? ''))
                         || str_contains($rawKet, 'pengurangan')
                         || str_contains($rawKet, 'penurunan')
-                        || str_contains($rawKet, 'penyusutan')) {
-                        // Penyesuaian stok berkurang (stok opname minus)
-                        $keluarBaik = abs($jml);
+                        || str_contains($rawKet, 'penyusutan')
+                    ) {
+                        // Penyesuaian stok baik berkurang (stok opname minus pada stok tersedia)
+                        $qty = abs($jml);
+                        $keluarBaik = $qty;
                         $saldoBaik = max(0, $saldoBaik - $keluarBaik);
                     } else {
-                        // Penyesuaian stok bertambah (stok opname plus)
-                        $masukBaik = abs($jml);
+                        // Penyesuaian stok baik bertambah (stok opname plus pada stok tersedia)
+                        $qty = abs($jml);
+                        $masukBaik = $qty;
                         $saldoBaik += $masukBaik;
                     }
                     break;

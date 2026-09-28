@@ -286,12 +286,26 @@
                                         'sign' => '±',
                                         'sign_class' => 'text-indigo-700 font-bold',
                                     ],
-                                    'penyesuaian' => [
-                                        'label' => 'Penyesuaian',
-                                        'class' => 'bg-purple-50 text-purple-700 border-purple-200',
-                                        'sign' => '±',
-                                        'sign_class' => 'text-purple-700 font-bold',
-                                    ],
+                                    'penyesuaian' => match ($m->referensi_tipe) {
+                                        'penyesuaian_tambah' => [
+                                            'label' => 'Penyesuaian (+)',
+                                            'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                            'sign' => '+',
+                                            'sign_class' => 'text-emerald-700 font-bold',
+                                        ],
+                                        'penyesuaian_kurang', 'penyesuaian_rusak_kurang' => [
+                                            'label' => 'Penyesuaian (-)',
+                                            'class' => 'bg-rose-50 text-rose-700 border-rose-200',
+                                            'sign' => '-',
+                                            'sign_class' => 'text-rose-700 font-bold',
+                                        ],
+                                        default => [
+                                            'label' => 'Penyesuaian',
+                                            'class' => 'bg-purple-50 text-purple-700 border-purple-200',
+                                            'sign' => '±',
+                                            'sign_class' => 'text-purple-700 font-bold',
+                                        ],
+                                    },
                                     default => [
                                         'label' => ucfirst(str_replace('_', ' ', $m->jenis)),
                                         'class' => 'bg-gray-100 text-gray-700 border-gray-200',

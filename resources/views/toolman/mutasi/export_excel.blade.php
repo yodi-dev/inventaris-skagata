@@ -263,6 +263,11 @@
                 $sign = match ($m->jenis) {
                     'stok_masuk', 'pengembalian_baik' => '+',
                     'peminjaman', 'bhp_keluar', 'barang_hilang' => '-',
+                    'penyesuaian' => match ($m->referensi_tipe) {
+                        'penyesuaian_tambah' => '+',
+                        'penyesuaian_kurang', 'penyesuaian_rusak_kurang' => '-',
+                        default => '',
+                    },
                     default => '',
                 };
 
@@ -271,6 +276,11 @@
                     'peminjaman' => 'badge-pinjam',
                     'bhp_keluar' => 'badge-bhp',
                     'pengembalian_rusak', 'barang_hilang' => 'badge-rusak',
+                    'penyesuaian' => match ($m->referensi_tipe) {
+                        'penyesuaian_tambah' => 'badge-masuk',
+                        'penyesuaian_kurang', 'penyesuaian_rusak_kurang' => 'badge-rusak',
+                        default => '',
+                    },
                     default => '',
                 };
 
@@ -282,7 +292,12 @@
                     'barang_hilang' => 'Barang Hilang (Penyusutan)',
                     'bhp_keluar' => 'BHP Keluar (Konsumsi)',
                     'perbaikan' => 'Perbaikan Alat',
-                    'penyesuaian' => 'Penyesuaian (Opname)',
+                    'penyesuaian' => match ($m->referensi_tipe) {
+                        'alih_kondisi_rusak' => 'Penyesuaian (Baik ke Rusak)',
+                        'alih_kondisi_baik' => 'Penyesuaian (Rusak ke Baik)',
+                        'penyesuaian_rusak_kurang' => 'Penyesuaian (Afkir Rusak)',
+                        default => 'Penyesuaian (Opname)',
+                    },
                     default => ucfirst(str_replace('_', ' ', $m->jenis)),
                 };
 
