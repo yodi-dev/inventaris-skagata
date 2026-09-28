@@ -21,8 +21,11 @@ class BarangController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         SumberDanaController::ensureSchemaReady();
 
@@ -65,8 +68,11 @@ class BarangController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
 
         SumberDanaController::ensureSchemaReady();
@@ -81,7 +87,10 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         SumberDanaController::ensureSchemaReady();
 
@@ -184,8 +193,11 @@ class BarangController extends Controller
     public function edit($id = null)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         SumberDanaController::ensureSchemaReady();
 
@@ -216,7 +228,10 @@ class BarangController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         SumberDanaController::ensureSchemaReady();
 
@@ -419,7 +434,10 @@ class BarangController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $barang = Barang::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -472,23 +490,23 @@ class BarangController extends Controller
     public function printKartu($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Barang::with([
+        $barang = Barang::with([
             'bengkel',
             'lokasiPenyimpanan',
             'sumberDana',
             'stockMovements' => function ($q) {
                 $q->with('user')->orderBy('created_at', 'asc');
             }
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $barang = $query->findOrFail($id);
-        $bengkel = $barang->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $barang->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         // Kalkulasi mutasi kartu barang dan saldo berjalannya
         $movementRows = [];
@@ -643,8 +661,11 @@ class BarangController extends Controller
     public function downloadTemplate()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BENGKEL') : 'BENGKEL';
 
         SumberDanaController::ensureSchemaReady();
@@ -996,8 +1017,11 @@ class BarangController extends Controller
         ]);
 
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BGK') : 'BGK';
 
         SumberDanaController::ensureSchemaReady();

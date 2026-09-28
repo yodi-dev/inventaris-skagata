@@ -11,6 +11,7 @@ use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PengadaanController extends Controller
 {
@@ -20,8 +21,11 @@ class PengadaanController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $filterStatus = $request->query('status', '');
         $search = trim($request->query('search', ''));
@@ -67,8 +71,11 @@ class PengadaanController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         // Rekomendasi barang yang menipis atau rusak untuk fitur generate otomatis
         $limitItems = Barang::where('bengkel_id', $bengkelId)
@@ -87,7 +94,10 @@ class PengadaanController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $request->validate([
             'judul' => 'required|string|max:255',
@@ -99,7 +109,12 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
-            'items.*.barang_id' => 'nullable|exists:barangs,id',
+            'items.*.barang_id' => [
+                'nullable',
+                Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
+                    return $query->where('bengkel_id', $bengkelId);
+                }),
+            ],
         ], [
             'items.required' => 'Usulan pengadaan harus mencantumkan minimal 1 item barang.',
             'items.min' => 'Usulan pengadaan harus mencantumkan minimal 1 item barang.',
@@ -153,8 +168,11 @@ class PengadaanController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $pengadaan = Pengadaan::with(['bengkel', 'dibuatOleh', 'direviewOleh', 'detailPengadaans.barang'])
             ->where('bengkel_id', $bengkelId)
@@ -169,8 +187,11 @@ class PengadaanController extends Controller
     public function edit($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $pengadaan = Pengadaan::with(['detailPengadaans.barang'])
             ->where('bengkel_id', $bengkelId)
@@ -190,7 +211,10 @@ class PengadaanController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -209,7 +233,12 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
-            'items.*.barang_id' => 'nullable|exists:barangs,id',
+            'items.*.barang_id' => [
+                'nullable',
+                Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
+                    return $query->where('bengkel_id', $bengkelId);
+                }),
+            ],
         ]);
 
         $isSubmit = $request->input('action') === 'submit';
@@ -260,7 +289,10 @@ class PengadaanController extends Controller
     public function submit($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -287,7 +319,10 @@ class PengadaanController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -308,8 +343,11 @@ class PengadaanController extends Controller
     public function receive(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         try {
             $formattedRabCode = DB::transaction(function () use ($id, $bengkelId, $bengkel, $user) {
@@ -422,6 +460,8 @@ class PengadaanController extends Controller
                 ->with('success', "Konfirmasi penerimaan barang fisik {$formattedRabCode} berhasil! Seluruh kuota stok telah ditambahkan ke inventaris bengkel dan dicatat pada riwayat mutasi stok.");
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error("Gagal memproses penerimaan barang RAB #{$id}: " . $e->getMessage());
             return redirect()->back()->with('error', "Gagal memproses penerimaan barang fisik: Terjadi kesalahan sistem atau konflik transaksi.");

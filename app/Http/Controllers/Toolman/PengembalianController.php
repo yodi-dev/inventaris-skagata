@@ -16,8 +16,11 @@ class PengembalianController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $tab = $request->input('tab', 'aktif'); // 'aktif' | 'riwayat'
 
         $query = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang.lokasiPenyimpanan', 'diprosesOleh'])
@@ -59,8 +62,11 @@ class PengembalianController extends Controller
     public function check($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang.lokasiPenyimpanan'])
             ->where('bengkel_id', $bengkelId)
@@ -77,7 +83,10 @@ class PengembalianController extends Controller
     public function processCheck(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
         $items = $request->input('items', []);
 
         try {
@@ -236,6 +245,8 @@ class PengembalianController extends Controller
                 ->with('success', "Pengecekan fisik berhasil! Peminjaman {$trxCode} telah selesai diperiksa dan stok bengkel telah diperbarui.");
         } catch (\DomainException $e) {
             return redirect()->back()->withInput()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error("Gagal memproses pengecekan fisik tiket #{$id}: " . $e->getMessage());
             return redirect()->back()->withInput()->with('error', "Gagal memproses pengecekan fisik: Terjadi kesalahan sistem atau konflik transaksi.");
@@ -249,21 +260,21 @@ class PengembalianController extends Controller
     public function printPinjam($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Peminjaman::with([
+        $peminjaman = Peminjaman::with([
             'user',
             'bengkel',
             'detailPeminjamans.barang.lokasiPenyimpanan',
             'diprosesOleh'
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $peminjaman = $query->findOrFail($id);
-        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         return view('toolman.pengembalian.print_pinjam', compact('peminjaman', 'bengkel'));
     }
@@ -275,21 +286,21 @@ class PengembalianController extends Controller
     public function printKembali($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Peminjaman::with([
+        $peminjaman = Peminjaman::with([
             'user',
             'bengkel',
             'detailPeminjamans.barang.lokasiPenyimpanan',
             'diprosesOleh'
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $peminjaman = $query->findOrFail($id);
-        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         return view('toolman.pengembalian.print_kembali', compact('peminjaman', 'bengkel'));
     }

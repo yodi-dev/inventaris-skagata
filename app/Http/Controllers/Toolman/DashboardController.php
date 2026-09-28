@@ -16,8 +16,13 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         // 1. Auto-update: Sinkronisasi status pinjaman 'active' yang melewati batas kembali menjadi 'terlambat'
         Peminjaman::where('bengkel_id', $bengkelId)
@@ -66,13 +71,13 @@ class DashboardController extends Controller
         // 4. Jadwal Pengembalian Hari Ini & Aktif
         // Memuat pinjaman aktif, terlambat, dan menunggu pengecekan untuk barang inventaris
         $jadwalPengembalian = Peminjaman::with([
-                'user',
-                'detailPeminjamans' => function ($q) {
-                    $q->with(['barang' => function ($b) {
-                        $b->select('id', 'bengkel_id', 'lokasi_penyimpanan_id', 'kode_barang', 'nama', 'jenis_barang', 'satuan');
-                    }]);
-                }
-            ])
+            'user',
+            'detailPeminjamans' => function ($q) {
+                $q->with(['barang' => function ($b) {
+                    $b->select('id', 'bengkel_id', 'lokasi_penyimpanan_id', 'kode_barang', 'nama', 'jenis_barang', 'satuan');
+                }]);
+            }
+        ])
             ->where('bengkel_id', $bengkelId)
             ->whereIn('status', ['active', 'terlambat', 'menunggu_pengecekan'])
             ->whereHas('detailPeminjamans.barang', function ($q) {
@@ -93,13 +98,13 @@ class DashboardController extends Controller
 
         // 6. Antrean Permohonan Peminjaman Menunggu Persetujuan (Quick Approval)
         $antreanPeminjaman = Peminjaman::with([
-                'user',
-                'detailPeminjamans' => function ($q) {
-                    $q->with(['barang' => function ($b) {
-                        $b->select('id', 'bengkel_id', 'kode_barang', 'nama', 'jenis_barang', 'satuan', 'stok_tersedia');
-                    }]);
-                }
-            ])
+            'user',
+            'detailPeminjamans' => function ($q) {
+                $q->with(['barang' => function ($b) {
+                    $b->select('id', 'bengkel_id', 'kode_barang', 'nama', 'jenis_barang', 'satuan', 'stok_tersedia');
+                }]);
+            }
+        ])
             ->where('bengkel_id', $bengkelId)
             ->whereIn('status', ['pending', 'menunggu_acc'])
             ->latest()

@@ -16,8 +16,11 @@ class PeminjamanController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $tab = $request->input('tab', 'pending'); // 'pending' | 'riwayat'
 
@@ -53,8 +56,11 @@ class PeminjamanController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang', 'diprosesOleh'])
             ->where('bengkel_id', $bengkelId)
@@ -66,7 +72,10 @@ class PeminjamanController extends Controller
     public function approve($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         try {
             $trxCode = DB::transaction(function () use ($id, $bengkelId, $user) {
@@ -161,6 +170,8 @@ class PeminjamanController extends Controller
                 ->with('success', "Tiket {$trxCode} berhasil disetujui dan diserahkan kepada peminjam.");
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error("Gagal memproses persetujuan tiket #{$id}: " . $e->getMessage());
             return redirect()->back()->with('error', "Gagal memproses persetujuan: Terjadi kesalahan sistem atau konflik transaksi.");
@@ -170,7 +181,10 @@ class PeminjamanController extends Controller
     public function reject(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $request->validate([
             'alasan_penolakan' => 'required|string|min:3|max:500',
@@ -206,6 +220,8 @@ class PeminjamanController extends Controller
                 ->with('success', "Pengajuan peminjaman {$trxCode} berhasil ditolak.");
         } catch (\DomainException $e) {
             return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
         } catch (\Throwable $e) {
             Log::error("Gagal menolak tiket peminjaman #{$id}: " . $e->getMessage());
             return redirect()->back()->with('error', "Gagal memproses penolakan: Terjadi kesalahan sistem atau konflik transaksi.");

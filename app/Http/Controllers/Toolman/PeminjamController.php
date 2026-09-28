@@ -12,8 +12,11 @@ class PeminjamController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $tab = $request->input('tab', 'pending'); // 'pending' | 'active' | 'suspended'
         $search = $request->input('search');
@@ -71,12 +74,21 @@ class PeminjamController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $peminjam = User::with(['bengkel', 'peminjamans' => function ($q) use ($bengkelId) {
             $q->where('bengkel_id', $bengkelId)->with('detailPeminjamans.barang')->latest();
-        }])->where('role', 'peminjam')->findOrFail($id);
+        }])
+            ->where('role', 'peminjam')
+            ->where(function ($q) use ($bengkelId) {
+                $q->where('bengkel_id', $bengkelId)
+                    ->orWhere('jenis_peminjam', 'guru');
+            })
+            ->findOrFail($id);
 
         return view('toolman.peminjam.show', compact('peminjam', 'bengkel'));
     }
@@ -84,7 +96,10 @@ class PeminjamController extends Controller
     public function approveUser($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $targetUser = User::where('role', 'peminjam')
             ->where(function ($q) use ($bengkelId) {
@@ -108,7 +123,10 @@ class PeminjamController extends Controller
     public function rejectUser(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $targetUser = User::where('role', 'peminjam')
             ->where(function ($q) use ($bengkelId) {
@@ -131,7 +149,10 @@ class PeminjamController extends Controller
     public function suspendUser(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $targetUser = User::where('role', 'peminjam')
             ->where(function ($q) use ($bengkelId) {
@@ -159,7 +180,10 @@ class PeminjamController extends Controller
     public function activateUser(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $targetUser = User::where('role', 'peminjam')
             ->where(function ($q) use ($bengkelId) {
