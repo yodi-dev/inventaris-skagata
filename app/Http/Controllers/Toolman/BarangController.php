@@ -293,10 +293,111 @@ class BarangController extends Controller
             // Periksa perubahan stok per kompartemen (tersedia vs rusak)
             $diffTersedia = $stokTersedia - $oldStokTersedia;
             $diffRusak = $stokRusak - $oldStokRusak;
-            $diffTotal = $stokTotal - $oldStokTotal;
 
-            if ($diffTotal !== 0) {
-                // 1. Total stok berubah (penyesuaian master)
+            if ($barang->jenis_barang === 'inventaris') {
+                // Evaluasi apakah terjadi transfer antar kondisi (berlawanan tanda)
+                if ($diffTersedia > 0 && $diffRusak < 0) {
+                    // Kasus Perbaikan: sebagian/seluruh stok rusak dialihkan ke tersedia
+                    $repaired = min($diffTersedia, abs($diffRusak));
+                    $extraTersedia = $diffTersedia - $repaired;
+                    $discardedRusak = abs($diffRusak) - $repaired;
+
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'perbaikan',
+                        'jumlah' => $repaired,
+                        'referensi_tipe' => 'alih_kondisi_baik',
+                        'keterangan' => "Perbaikan alat: Pengalihan kondisi dari rusak ke baik (+{$repaired} baik, -{$repaired} rusak)",
+                    ]);
+
+                    if ($extraTersedia > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $extraTersedia,
+                            'referensi_tipe' => 'penyesuaian_tambah',
+                            'keterangan' => "Penyesuaian stok master oleh Toolman (+{$extraTersedia})",
+                        ]);
+                    }
+
+                    if ($discardedRusak > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $discardedRusak,
+                            'referensi_tipe' => 'penyesuaian_rusak_kurang',
+                            'keterangan' => "Penghapusan/afkir barang rusak oleh Toolman (-{$discardedRusak} rusak)",
+                        ]);
+                    }
+                } elseif ($diffTersedia < 0 && $diffRusak > 0) {
+                    // Kasus Kerusakan: sebagian/seluruh pengurangan tersedia dialihkan menjadi rusak
+                    $transferredDamaged = min(abs($diffTersedia), $diffRusak);
+                    $lostAvailable = abs($diffTersedia) - $transferredDamaged;
+                    $extraDamaged = $diffRusak - $transferredDamaged;
+
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'penyesuaian',
+                        'jumlah' => $transferredDamaged,
+                        'referensi_tipe' => 'alih_kondisi_rusak',
+                        'keterangan' => "Pengalihan kondisi stok: Baik ke Rusak (-{$transferredDamaged} baik, +{$transferredDamaged} rusak)",
+                    ]);
+
+                    if ($lostAvailable > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $lostAvailable,
+                            'referensi_tipe' => 'penyesuaian_kurang',
+                            'keterangan' => "Penyesuaian stok master oleh Toolman (-{$lostAvailable})",
+                        ]);
+                    }
+
+                    if ($extraDamaged > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $extraDamaged,
+                            'referensi_tipe' => 'penyesuaian_rusak_tambah',
+                            'keterangan' => "Penyesuaian fisik barang rusak oleh Toolman (+{$extraDamaged} rusak)",
+                        ]);
+                    }
+                } else {
+                    // Tanda sama atau salah satu bernilai 0 (tidak ada alih kondisi langsung)
+                    if ($diffTersedia !== 0) {
+                        $isNegTersedia = $diffTersedia < 0;
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => abs($diffTersedia),
+                            'referensi_tipe' => $isNegTersedia ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
+                            'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($diffTersedia > 0 ? "+{$diffTersedia}" : "{$diffTersedia}") . ')',
+                        ]);
+                    }
+
+                    if ($diffRusak !== 0) {
+                        $isNegRusak = $diffRusak < 0;
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => abs($diffRusak),
+                            'referensi_tipe' => $isNegRusak ? 'penyesuaian_rusak_kurang' : 'penyesuaian_rusak_tambah',
+                            'keterangan' => $isNegRusak
+                                ? 'Penghapusan/afkir barang rusak oleh Toolman (-' . abs($diffRusak) . ' rusak)'
+                                : "Penyesuaian fisik barang rusak oleh Toolman (+{$diffRusak} rusak)",
+                        ]);
+                    }
+                }
+            } else {
+                // Tipe BHP/Bahan (hanya stok tersedia)
                 if ($diffTersedia !== 0) {
                     $isNegTersedia = $diffTersedia < 0;
                     StockMovement::create([
@@ -306,43 +407,6 @@ class BarangController extends Controller
                         'jumlah' => abs($diffTersedia),
                         'referensi_tipe' => $isNegTersedia ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
                         'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($diffTersedia > 0 ? "+{$diffTersedia}" : "{$diffTersedia}") . ')',
-                    ]);
-                }
-
-                if ($diffRusak !== 0 && $barang->jenis_barang === 'inventaris') {
-                    $isNegRusak = $diffRusak < 0;
-                    StockMovement::create([
-                        'barang_id' => $barang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'penyesuaian',
-                        'jumlah' => abs($diffRusak),
-                        'referensi_tipe' => $isNegRusak ? 'penyesuaian_rusak_kurang' : 'penyesuaian_rusak_tambah',
-                        'keterangan' => $isNegRusak
-                            ? 'Penghapusan/afkir barang rusak oleh Toolman (-' . abs($diffRusak) . ' rusak)'
-                            : "Penyesuaian fisik barang rusak oleh Toolman (+{$diffRusak} rusak)",
-                    ]);
-                }
-            } elseif ($barang->jenis_barang === 'inventaris') {
-                // 2. Jika total stok tetap tetapi terjadi alih kondisi antara stok tersedia dan stok rusak
-                if ($stokTersedia < $oldStokTersedia && $stokRusak > $oldStokRusak) {
-                    $qty = $stokRusak - $oldStokRusak;
-                    StockMovement::create([
-                        'barang_id' => $barang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'penyesuaian',
-                        'jumlah' => $qty,
-                        'referensi_tipe' => 'alih_kondisi_rusak',
-                        'keterangan' => "Pengalihan kondisi stok: Baik ke Rusak (-{$qty} baik, +{$qty} rusak)",
-                    ]);
-                } elseif ($stokTersedia > $oldStokTersedia && $stokRusak < $oldStokRusak) {
-                    $qty = $stokTersedia - $oldStokTersedia;
-                    StockMovement::create([
-                        'barang_id' => $barang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'perbaikan',
-                        'jumlah' => $qty,
-                        'referensi_tipe' => 'alih_kondisi_baik',
-                        'keterangan' => "Perbaikan alat: Pengalihan kondisi dari rusak ke baik (+{$qty} baik, -{$qty} rusak)",
                     ]);
                 }
             }

@@ -263,10 +263,11 @@
                 $sign = match ($m->jenis) {
                     'stok_masuk', 'pengembalian_baik' => '+',
                     'peminjaman', 'bhp_keluar', 'barang_hilang' => '-',
+                    'perbaikan' => '±',
                     'penyesuaian' => match ($m->referensi_tipe) {
-                        'penyesuaian_tambah' => '+',
+                        'penyesuaian_tambah', 'penyesuaian_rusak_tambah' => '+',
                         'penyesuaian_kurang', 'penyesuaian_rusak_kurang' => '-',
-                        default => '',
+                        default => '±',
                     },
                     default => '',
                 };
@@ -276,8 +277,10 @@
                     'peminjaman' => 'badge-pinjam',
                     'bhp_keluar' => 'badge-bhp',
                     'pengembalian_rusak', 'barang_hilang' => 'badge-rusak',
+                    'perbaikan' => 'badge-pinjam',
                     'penyesuaian' => match ($m->referensi_tipe) {
                         'penyesuaian_tambah' => 'badge-masuk',
+                        'penyesuaian_rusak_tambah' => 'badge-rusak',
                         'penyesuaian_kurang', 'penyesuaian_rusak_kurang' => 'badge-rusak',
                         default => '',
                     },
@@ -296,6 +299,9 @@
                         'alih_kondisi_rusak' => 'Penyesuaian (Baik ke Rusak)',
                         'alih_kondisi_baik' => 'Penyesuaian (Rusak ke Baik)',
                         'penyesuaian_rusak_kurang' => 'Penyesuaian (Afkir Rusak)',
+                        'penyesuaian_rusak_tambah' => 'Penyesuaian (Tambah Rusak)',
+                        'penyesuaian_tambah' => 'Penyesuaian (+)',
+                        'penyesuaian_kurang' => 'Penyesuaian (-)',
                         default => 'Penyesuaian (Opname)',
                     },
                     default => ucfirst(str_replace('_', ' ', $m->jenis)),

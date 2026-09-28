@@ -763,4 +763,231 @@ class RemediationBatch4Test extends TestCase
         $this->assertEquals(10, $rows[2]['sisa_baik']);
         $this->assertEquals(0, $rows[2]['sisa_rusak']);
     }
+
+    /**
+     * Uji Compound Edit Skenario 1:
+     * available 10, damaged 3, total 13 -> available 9, damaged 1, total 10.
+     * Pengurangan 1 stok tersedia (hilang/opname minus) DAN penghapusan/afkir 2 stok rusak.
+     */
+    public function test_compound_edit_available_and_damaged_both_decrease(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 13,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 3,
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'stok_masuk',
+            'jumlah' => 13,
+            'keterangan' => 'Stok awal',
+            'created_at' => now()->subDays(5),
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 3,
+            'referensi_tipe' => 'alih_kondisi_rusak',
+            'keterangan' => 'Pengalihan kondisi stok: Baik ke Rusak (-3 baik, +3 rusak)',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        // Toolman update master: stok_baik = 9, stok_rusak = 1 (total = 10)
+        $response = $this->actingAs($toolman)->put(route('toolman.barang.update', $barang->id), [
+            'kode_barang' => $barang->kode_barang,
+            'nama_barang' => $barang->nama,
+            'lokasi_penyimpanan_id' => $lokasi->id,
+            'satuan' => 'Unit',
+            'stok_baik' => 9,
+            'stok_rusak_ringan' => 1,
+            'stok_rusak_berat' => 0,
+        ]);
+
+        $response->assertRedirect(route('toolman.barang.index'));
+
+        $barang->refresh();
+        $this->assertEquals(10, $barang->stok_total);
+        $this->assertEquals(9, $barang->stok_tersedia);
+        $this->assertEquals(1, $barang->stok_rusak);
+
+        // Verifikasi mutasi: 1 penyesuaian_kurang dan 2 penyesuaian_rusak_kurang
+        $this->assertDatabaseHas('stock_movements', [
+            'barang_id' => $barang->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 1,
+            'referensi_tipe' => 'penyesuaian_kurang',
+        ]);
+        $this->assertDatabaseHas('stock_movements', [
+            'barang_id' => $barang->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 2,
+            'referensi_tipe' => 'penyesuaian_rusak_kurang',
+        ]);
+
+        // Verifikasi print kartu barang
+        $printResponse = $this->actingAs($toolman)->get(route('toolman.barang.print-kartu', $barang->id));
+        $printResponse->assertOk();
+
+        $rows = $printResponse->viewData('movementRows');
+        $this->assertCount(4, $rows);
+
+        // Saldo akhir baris ke-4 harus tepat sisa_baik = 9 dan sisa_rusak = 1
+        $lastRow = end($rows);
+        $this->assertEquals(9, $lastRow['sisa_baik']);
+        $this->assertEquals(1, $lastRow['sisa_rusak']);
+    }
+
+    /**
+     * Uji Compound Edit Skenario 2:
+     * available 10, damaged 3, total 13 -> available 12, damaged 0, total 12.
+     * Fisik: 2 unit diperbaiki (pindah dari rusak ke baik) DAN 1 unit rusak diapkir/dibuang.
+     */
+    public function test_compound_edit_two_repaired_one_discarded(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 13,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 3,
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'stok_masuk',
+            'jumlah' => 13,
+            'keterangan' => 'Stok awal',
+            'created_at' => now()->subDays(5),
+        ]);
+
+        StockMovement::create([
+            'barang_id' => $barang->id,
+            'user_id' => $toolman->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 3,
+            'referensi_tipe' => 'alih_kondisi_rusak',
+            'keterangan' => 'Pengalihan kondisi stok: Baik ke Rusak (-3 baik, +3 rusak)',
+            'created_at' => now()->subDays(3),
+        ]);
+
+        // Toolman update master: stok_baik = 12, stok_rusak = 0 (total = 12)
+        $response = $this->actingAs($toolman)->put(route('toolman.barang.update', $barang->id), [
+            'kode_barang' => $barang->kode_barang,
+            'nama_barang' => $barang->nama,
+            'lokasi_penyimpanan_id' => $lokasi->id,
+            'satuan' => 'Unit',
+            'stok_baik' => 12,
+            'stok_rusak_ringan' => 0,
+            'stok_rusak_berat' => 0,
+        ]);
+
+        $response->assertRedirect(route('toolman.barang.index'));
+
+        $barang->refresh();
+        $this->assertEquals(12, $barang->stok_total);
+        $this->assertEquals(12, $barang->stok_tersedia);
+        $this->assertEquals(0, $barang->stok_rusak);
+
+        // Verifikasi mutasi tercatat:
+        // 1. perbaikan (alih_kondisi_baik) sebanyak 2 unit
+        $this->assertDatabaseHas('stock_movements', [
+            'barang_id' => $barang->id,
+            'jenis' => 'perbaikan',
+            'jumlah' => 2,
+            'referensi_tipe' => 'alih_kondisi_baik',
+        ]);
+
+        // 2. penyesuaian (penyesuaian_rusak_kurang) sebanyak 1 unit
+        $this->assertDatabaseHas('stock_movements', [
+            'barang_id' => $barang->id,
+            'jenis' => 'penyesuaian',
+            'jumlah' => 1,
+            'referensi_tipe' => 'penyesuaian_rusak_kurang',
+        ]);
+
+        // Verifikasi kartu persediaan barang
+        $printResponse = $this->actingAs($toolman)->get(route('toolman.barang.print-kartu', $barang->id));
+        $printResponse->assertOk();
+
+        $rows = $printResponse->viewData('movementRows');
+        $this->assertCount(4, $rows);
+
+        // Baris ke-3: perbaikan (+2 baik, -2 rusak)
+        $this->assertEquals(2, $rows[2]['masuk_baik']);
+        $this->assertEquals(2, $rows[2]['keluar_rusak']);
+        $this->assertEquals(12, $rows[2]['sisa_baik']);
+        $this->assertEquals(1, $rows[2]['sisa_rusak']);
+
+        // Baris ke-4: afkir (-1 rusak)
+        $this->assertEquals(1, $rows[3]['keluar_rusak']);
+        $this->assertSame('', $rows[3]['keluar_baik']);
+        $this->assertEquals(12, $rows[3]['sisa_baik']);
+        $this->assertEquals(0, $rows[3]['sisa_rusak']);
+    }
+
+    /**
+     * Uji Atomisitas Transaksi: Jika terjadi kegagalan saat update stok compound,
+     * seluruh perubahan pada barangs dan stock_movements di-rollback secara utuh.
+     */
+    public function test_compound_stock_update_rolls_back_atomically_on_failure(): void
+    {
+        $bengkel = $this->createBengkel();
+        $lokasi = $this->createLokasi($bengkel);
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        $barang = $this->createBarang($bengkel, $lokasi, [
+            'stok_total' => 13,
+            'stok_tersedia' => 10,
+            'stok_dipinjam' => 0,
+            'stok_rusak' => 3,
+        ]);
+
+        $initialMovementCount = StockMovement::count();
+
+        // Paksa kegagalan pada saat membuat StockMovement kedua menggunakan model event listener
+        StockMovement::creating(function ($movement) {
+            if ($movement->referensi_tipe === 'penyesuaian_rusak_kurang') {
+                throw new \Exception('Simulated database deadlock/failure during compound movement creation');
+            }
+        });
+
+        try {
+            $this->actingAs($toolman)->put(route('toolman.barang.update', $barang->id), [
+                'kode_barang' => $barang->kode_barang,
+                'nama_barang' => $barang->nama,
+                'lokasi_penyimpanan_id' => $lokasi->id,
+                'satuan' => 'Unit',
+                'stok_baik' => 12,
+                'stok_rusak_ringan' => 0,
+                'stok_rusak_berat' => 0,
+            ]);
+        } catch (\Throwable $e) {
+            // Expected exception caught
+        }
+
+        // Hapus listener agar tidak mengganggu test berikutnya
+        StockMovement::flushEventListeners();
+
+        // Verifikasi kondisi barang TIDAK berubah (rollback)
+        $barang->refresh();
+        $this->assertEquals(13, $barang->stok_total);
+        $this->assertEquals(10, $barang->stok_tersedia);
+        $this->assertEquals(3, $barang->stok_rusak);
+
+        // Verifikasi tidak ada movement baru yang tersimpan (rollback)
+        $this->assertEquals($initialMovementCount, StockMovement::count());
+    }
 }

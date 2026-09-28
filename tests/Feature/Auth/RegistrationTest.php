@@ -23,9 +23,17 @@ class RegistrationTest extends TestCase
             'email' => 'test@example.com',
             'password' => 'password',
             'password_confirmation' => 'password',
+            'jenis_peminjam' => 'guru',
+            'nomor_identitas' => '198501012010011001',
+            'nomor_wa' => '081234567890',
         ]);
 
-        $this->assertAuthenticated();
-        $response->assertRedirect(route('dashboard', absolute: false));
+        $this->assertGuest();
+        $response->assertRedirect(route('login'));
+        $this->assertDatabaseHas('users', [
+            'email' => 'test@example.com',
+            'role' => 'peminjam',
+            'status' => 'menunggu_acc',
+        ]);
     }
 }
