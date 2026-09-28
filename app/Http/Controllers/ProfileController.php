@@ -113,13 +113,33 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
+        // Cegah penghapusan akun jika masih memiliki riwayat transaksi atau audit di sistem
+        $hasHistoricalLoans = $user->peminjamans()->exists();
+        $hasStockMovements = $user->stockMovements()->exists();
+        $hasPengadaans = $user->pengadaans()->exists();
+        $hasProcessedLoans = \App\Models\Peminjaman::where('diproses_oleh', $user->id)->exists();
+        $hasReviewedPengadaans = \App\Models\Pengadaan::where('direview_oleh', $user->id)->exists();
 
-        $user->delete();
+        if ($hasHistoricalLoans || $hasStockMovements || $hasPengadaans || $hasProcessedLoans || $hasReviewedPengadaans) {
+            return back()->withErrors([
+                'password' => 'Akun tidak dapat dihapus karena masih memiliki riwayat transaksi peminjaman, mutasi stok, atau pengadaan di sistem.',
+            ], 'userDeletion')->with('error', 'Akun tidak dapat dihapus karena masih memiliki riwayat transaksi peminjaman, mutasi stok, atau pengadaan di sistem.');
+        }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        try {
+            Auth::logout();
 
-        return Redirect::to('/');
+            $user->delete();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return Redirect::to('/');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal menghapus akun user ID {$user->id}: " . $e->getMessage());
+            return back()->withErrors([
+                'password' => 'Terjadi kesalahan saat menghapus akun karena data masih terikat dengan catatan sistem.',
+            ], 'userDeletion')->with('error', 'Terjadi kesalahan saat menghapus akun karena data masih terikat dengan catatan sistem.');
+        }
     }
 }

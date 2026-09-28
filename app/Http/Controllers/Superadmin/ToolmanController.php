@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Superadmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bengkel;
+use App\Models\Peminjaman;
+use App\Models\Pengadaan;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class ToolmanController extends Controller
@@ -167,13 +170,26 @@ class ToolmanController extends Controller
         $toolman = User::where('role', 'toolman')->findOrFail($id);
         $name = $toolman->name;
 
+        // Pengecekan integritas data: cegah penghapusan jika memiliki rekam jejak historis
+        $hasStockMovements = $toolman->stockMovements()->exists();
+        $hasPengadaans = $toolman->pengadaans()->exists();
+        $hasLoans = $toolman->peminjamans()->exists();
+        $hasProcessedLoans = Peminjaman::where('diproses_oleh', $toolman->id)->exists();
+        $hasReviewedPengadaans = Pengadaan::where('direview_oleh', $toolman->id)->exists();
+
+        if ($hasStockMovements || $hasPengadaans || $hasLoans || $hasProcessedLoans || $hasReviewedPengadaans) {
+            return redirect()->route('superadmin.toolman.index')
+                ->with('error', "Akun toolman \"{$name}\" tidak dapat dihapus karena memiliki rekam jejak mutasi stok, usulan pengadaan, atau pemrosesan peminjaman. Nonaktifkan status akun jika petugas sudah tidak aktif.");
+        }
+
         try {
             $toolman->delete();
             return redirect()->route('superadmin.toolman.index')
                 ->with('success', "Akun toolman \"{$name}\" berhasil dihapus.");
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error("Gagal menghapus akun toolman ID {$id}: " . $e->getMessage());
             return redirect()->route('superadmin.toolman.index')
-                ->with('error', "Gagal menghapus akun toolman: {$e->getMessage()}");
+                ->with('error', "Gagal menghapus akun toolman \"{$name}\" karena data masih terikat dengan catatan sistem.");
         }
     }
 

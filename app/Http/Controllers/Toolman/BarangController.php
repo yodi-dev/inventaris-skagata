@@ -327,13 +327,31 @@ class BarangController extends Controller
             return back()->with('error', "Barang {$barang->nama} tidak dapat dihapus karena masih terhubung dengan antrean/transaksi peminjaman yang belum selesai!");
         }
 
+        // Pengecekan integritas data: cegah penghapusan barang yang memiliki rekam jejak historis
+        if ($barang->detailPeminjamans()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena memiliki riwayat transaksi peminjaman di sistem!");
+        }
+
+        if ($barang->stockMovements()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena memiliki riwayat mutasi kartu stok!");
+        }
+
+        if ($barang->detailPengadaans()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena terhubung dengan riwayat usulan pengadaan (RAB)!");
+        }
+
         $nama = $barang->nama;
         $kode = $barang->kode_barang;
 
-        $barang->delete();
+        try {
+            $barang->delete();
 
-        return redirect()->route('toolman.barang.index')
-            ->with('success', "Barang {$nama} ({$kode}) berhasil dihapus dari inventaris bengkel.");
+            return redirect()->route('toolman.barang.index')
+                ->with('success', "Barang {$nama} ({$kode}) berhasil dihapus dari inventaris bengkel.");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal menghapus barang ID {$id}: " . $e->getMessage());
+            return back()->with('error', "Gagal menghapus barang {$nama} ({$kode}) karena data masih terikat dengan catatan sistem lain.");
+        }
     }
 
     /**

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Bengkel;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class BengkelController extends Controller
@@ -190,15 +191,31 @@ class BengkelController extends Controller
      */
     public function destroy($id)
     {
-        $bengkel = Bengkel::withCount(['barangs', 'peminjamans', 'pengadaans', 'users'])
+        $bengkel = Bengkel::withCount(['barangs', 'peminjamans', 'pengadaans', 'users', 'lokasiPenyimpanans'])
             ->findOrFail($id);
 
         $nama = $bengkel->nama;
 
-        // Pengecekan integritas data: cegah penghapusan jika masih ada barang atau transaksi
-        if ($bengkel->barangs_count > 0 || $bengkel->peminjamans_count > 0) {
+        // Pengecekan integritas data: cegah penghapusan jika masih ada barang, transaksi peminjaman, usulan pengadaan, atau lokasi
+        if ($bengkel->barangs_count > 0 || $bengkel->peminjamans_count > 0 || $bengkel->pengadaans_count > 0 || $bengkel->lokasi_penyimpanans_count > 0) {
+            $alasan = [];
+            if ($bengkel->barangs_count > 0) {
+                $alasan[] = "{$bengkel->barangs_count} barang inventaris/BHP";
+            }
+            if ($bengkel->peminjamans_count > 0) {
+                $alasan[] = "{$bengkel->peminjamans_count} riwayat peminjaman";
+            }
+            if ($bengkel->pengadaans_count > 0) {
+                $alasan[] = "{$bengkel->pengadaans_count} usulan pengadaan (RAB)";
+            }
+            if ($bengkel->lokasi_penyimpanans_count > 0) {
+                $alasan[] = "{$bengkel->lokasi_penyimpanans_count} lokasi penyimpanan";
+            }
+
+            $detailAlasan = implode(', ', $alasan);
+
             return redirect()->route('superadmin.bengkel.index')
-                ->with('error', "Bengkel \"{$nama}\" tidak dapat dihapus karena masih memiliki {$bengkel->barangs_count} barang inventaris/BHP dan riwayat transaksi terkait.");
+                ->with('error', "Bengkel \"{$nama}\" tidak dapat dihapus karena masih memiliki {$detailAlasan} terkait.");
         }
 
         try {
@@ -209,9 +226,10 @@ class BengkelController extends Controller
 
             return redirect()->route('superadmin.bengkel.index')
                 ->with('success', "Data bengkel \"{$nama}\" berhasil dihapus.");
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error("Gagal menghapus data bengkel ID {$id}: " . $e->getMessage());
             return redirect()->route('superadmin.bengkel.index')
-                ->with('error', "Gagal menghapus data bengkel: {$e->getMessage()}");
+                ->with('error', "Gagal menghapus data bengkel \"{$nama}\" karena data masih terikat dengan catatan sistem lain.");
         }
     }
 }
