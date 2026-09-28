@@ -36,12 +36,12 @@ class ProfileController extends Controller
         $stats = [];
         if ($role === 'superadmin') {
             $bengkelCount = Bengkel::count();
-            $rabVerified = Pengadaan::whereIn('status', ['approved', 'rejected', 'revisi'])->count();
-            $approvedRabs = Pengadaan::where('status', 'approved')->with('detailPengadaans')->get();
+            $rabVerified = Pengadaan::whereIn('status', ['approved', 'rejected', 'revisi', 'selesai'])->count();
+            $approvedRabs = Pengadaan::whereIn('status', ['approved', 'selesai'])->with('detailPengadaans')->get();
             $totalAcc = 0;
             foreach ($approvedRabs as $rab) {
                 foreach ($rab->detailPengadaans as $detail) {
-                    $totalAcc += ($detail->jumlah ?? 0) * ($detail->harga_estimasi ?? 0);
+                    $totalAcc += ($detail->jumlah ?? 0) * ($detail->harga_satuan ?? 0);
                 }
             }
             $formattedAcc = $totalAcc >= 1000000

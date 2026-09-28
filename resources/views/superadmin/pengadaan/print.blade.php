@@ -254,6 +254,11 @@
             color: #991b1b;
             border: 1px solid #fca5a5;
         }
+        .status-selesai {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
 
         /* === TABEL RINCIAN BARANG === */
         .items-table {

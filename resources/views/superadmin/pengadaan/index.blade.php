@@ -104,8 +104,8 @@
             </div>
         </div>
 
-        <!-- 5 KPI Summary Cards -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <!-- 6 KPI Summary Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 sm:gap-4">
             <!-- Total Pengajuan Masuk -->
             <div class="p-4 bg-white border border-gray-200 rounded-2xl flex items-center shadow-xs min-w-0">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
@@ -187,11 +187,31 @@
                 </div>
             </div>
 
+            <!-- Selesai (Diterima) -->
+            <div class="p-4 bg-white border border-blue-200 rounded-2xl flex items-center shadow-xs min-w-0">
+                <div class="flex items-center gap-3 min-w-0 flex-1">
+                    <div
+                        class="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold shrink-0">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M5 13l4 4L19 7">
+                            </path>
+                        </svg>
+                    </div>
+                    <div class="min-w-0 flex-1">
+                        <div class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider">Selesai</div>
+                        <div class="text-xl font-bold text-blue-700">{{ number_format($totalSelesai, 0, ',', '.') }}
+                            <span class="text-xs font-normal text-blue-600">Diterima</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Total Anggaran Disetujui -->
             <div class="p-4 bg-white border border-gray-200 rounded-2xl flex items-center shadow-xs min-w-0">
                 <div class="flex items-center gap-3 min-w-0 flex-1">
                     <div
-                        class="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold shrink-0">
+                        class="w-11 h-11 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center font-bold shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z">
@@ -200,7 +220,7 @@
                     </div>
                     <div class="min-w-0 flex-1">
                         <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pagu Disetujui</div>
-                        <div class="text-sm font-bold text-blue-800 truncate"
+                        <div class="text-sm font-bold text-indigo-800 truncate"
                             title="Rp {{ number_format($totalAnggaranDisetujui, 0, ',', '.') }}">
                             Rp {{ number_format($totalAnggaranDisetujui, 0, ',', '.') }}
                         </div>
@@ -276,6 +296,8 @@
                                 (Revisi)</option>
                             <option value="approved" {{ $filterStatus === 'approved' ? 'selected' : '' }}>Disetujui
                                 (Approved)</option>
+                            <option value="selesai" {{ $filterStatus === 'selesai' ? 'selected' : '' }}>Selesai
+                                (Diterima)</option>
                             <option value="rejected" {{ $filterStatus === 'rejected' ? 'selected' : '' }}>Ditolak
                                 (Rejected)</option>
                         </select>
@@ -351,6 +373,11 @@
                                         'label' => 'Disetujui',
                                         'class' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                                         'dot' => 'bg-emerald-500',
+                                    ],
+                                    'selesai' => [
+                                        'label' => 'Selesai',
+                                        'class' => 'bg-blue-50 text-blue-700 border-blue-200',
+                                        'dot' => 'bg-blue-500',
                                     ],
                                     'rejected' => [
                                         'label' => 'Ditolak',
