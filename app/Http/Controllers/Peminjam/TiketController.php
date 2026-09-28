@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Peminjam;
 use App\Http\Controllers\Controller;
 use App\Models\Peminjaman;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TiketController extends Controller
 {
@@ -78,17 +80,30 @@ class TiketController extends Controller
     public function ajukanPengembalian($id)
     {
         $user = auth()->user();
-        $peminjaman = Peminjaman::where('user_id', $user->id)->findOrFail($id);
 
-        if (!in_array($peminjaman->status, ['active', 'terlambat'])) {
-            return back()->with('error', 'Status tiket tidak memungkinkan untuk pengajuan pengembalian.');
+        try {
+            DB::transaction(function () use ($id, $user) {
+                $peminjaman = Peminjaman::where('user_id', $user->id)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                if (!in_array($peminjaman->status, ['active', 'terlambat'])) {
+                    throw new \DomainException('Status tiket tidak memungkinkan untuk pengajuan pengembalian.');
+                }
+
+                $peminjaman->update([
+                    'status' => 'menunggu_pengecekan',
+                ]);
+            });
+
+            return back()->with('success', 'Pengajuan pengembalian berhasil! Silakan bawa alat fisik ke meja Toolman bengkel untuk pengecekan kondisi.');
+        } catch (\DomainException $e) {
+            return back()->with('error', $e->getMessage());
+        } catch (\Throwable $e) {
+            Log::error("Gagal mengajukan pengembalian tiket #{$id}: " . $e->getMessage());
+            return back()->with('error', 'Gagal memproses pengajuan pengembalian: Terjadi kesalahan sistem.');
         }
-
-        $peminjaman->update([
-            'status' => 'menunggu_pengecekan',
-        ]);
-
-        return back()->with('success', 'Pengajuan pengembalian berhasil! Silakan bawa alat fisik ke meja Toolman bengkel untuk pengecekan kondisi.');
     }
 
     /**
