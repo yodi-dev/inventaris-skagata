@@ -353,7 +353,7 @@
                                     @click="$refs.fileInput.click()">
 
                                     <input type="file" name="file" x-ref="fileInput" required
-                                        accept=".xlsx,.xls,.csv" class="hidden"
+                                        accept=".xlsx,.csv" class="hidden"
                                         @change="fileName = $refs.fileInput.files[0]?.name || ''">
 
                                     <template x-if="!fileName">
@@ -371,7 +371,7 @@
                                                 Klik untuk memilih file atau seret file ke sini
                                             </p>
                                             <p class="text-xs text-gray-500">
-                                                Format didukung: <b>.xlsx</b>, <b>.xls</b>, atau <b>.csv</b> (Maks. 10MB)
+                                                Format didukung: <b>.xlsx</b> atau <b>.csv</b> (Maks. 10MB)
                                             </p>
                                         </div>
                                     </template>

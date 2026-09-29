@@ -410,26 +410,39 @@ class PengadaanController extends Controller
                         ]);
                     } else {
                         // Barang baru belum ada di master -> Buat master barang baru
-                        $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', $bengkel->kode ?? 'BGL');
-                        $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
+                        $jenisBarang = $this->inferJenisBarang(
+                            $detail->nama_barang,
+                            $detail->spesifikasi,
+                            $detail->satuan,
+                            $pengadaan->judul,
+                            $pengadaan->catatan
+                        );
 
-                        // Pastikan kode unik
-                        while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists()) {
-                            $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
-                        }
+                        $prefix = ($jenisBarang === 'bhp') ? 'BHP' : 'INV';
+                        $minimumStok = ($jenisBarang === 'bhp') ? 0 : 1;
+
+                        $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($bengkel->kode ?? 'BGL'));
+                        $datePrefix = date('ymd');
+                        $seq = 1;
+                        do {
+                            $kodeBarangBaru = "{$prefix}-{$bengkelCode}-{$datePrefix}" . str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+                            $seq++;
+                        } while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists());
 
                         $newBarang = Barang::create([
                             'bengkel_id' => $bengkelId,
+                            'lokasi_penyimpanan_id' => null,
+                            'sumber_dana_id' => null,
                             'kode_barang' => $kodeBarangBaru,
                             'nama' => $detail->nama_barang,
-                            'jenis_barang' => 'inventaris',
+                            'jenis_barang' => $jenisBarang,
                             'satuan' => $detail->satuan,
                             'harga' => $detail->harga_satuan ?? 0,
                             'stok_total' => $detail->jumlah,
                             'stok_tersedia' => $detail->jumlah,
                             'stok_dipinjam' => 0,
                             'stok_rusak' => 0,
-                            'minimum_stok' => 2,
+                            'minimum_stok' => $minimumStok,
                             'deskripsi' => $detail->spesifikasi,
                         ]);
 
@@ -440,7 +453,7 @@ class PengadaanController extends Controller
                             'user_id' => $user->id,
                             'jenis' => 'stok_masuk',
                             'jumlah' => $detail->jumlah,
-                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode}",
+                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode} ({$pengadaan->judul})",
                             'referensi_tipe' => 'pengadaan',
                             'referensi_id' => $pengadaan->id,
                             'created_at' => now(),
@@ -466,5 +479,43 @@ class PengadaanController extends Controller
             Log::error("Gagal memproses penerimaan barang RAB #{$id}: " . $e->getMessage());
             return redirect()->back()->with('error', "Gagal memproses penerimaan barang fisik: Terjadi kesalahan sistem atau konflik transaksi.");
         }
+    }
+
+    /**
+     * Inferensi klasifikasi jenis barang (bhp vs inventaris) berdasarkan teks usulan dan satuan.
+     */
+    private function inferJenisBarang(string $namaBarang, ?string $spesifikasi = '', ?string $satuan = '', ?string $judulPengadaan = '', ?string $catatan = ''): string
+    {
+        $combinedText = strtolower("{$namaBarang} {$spesifikasi} {$judulPengadaan} {$catatan}");
+        $satuanNorm = strtolower(trim((string) $satuan));
+
+        // Kata kunci penentu Bahan Habis Pakai (BHP) / Bahan Praktik / Konsumsi
+        $bhpKeywords = [
+            'bhp', 'habis pakai', 'bahan praktik', 'bahan praktek', 'atk', 'kabel', 'timah',
+            'pasta', 'resistor', 'konektor', 'rj45', 'rj-45', 'baut', 'mur', 'sekrup',
+            'kertas', 'tinta', 'toner', 'lem', 'cat', 'thinner', 'sabun', 'cairan',
+            'oli', 'minyak', 'bensin', 'solar', 'gas', 'amplas', 'kain', 'lakban',
+            'isolasi', 'pita', 'flux', 'mata bor', 'kawat', 'solder wick', 'batere',
+            'baterai', 'sekring', 'fuse', 'pcb polos', 'ferric chloride'
+        ];
+
+        foreach ($bhpKeywords as $kw) {
+            if (str_contains($combinedText, $kw)) {
+                return 'bhp';
+            }
+        }
+
+        // Satuan khas bahan habis pakai / konsumtif
+        $bhpUnits = [
+            'roll', 'rol', 'meter', 'm', 'cm', 'liter', 'ml', 'botol', 'kaleng',
+            'pack', 'pak', 'rim', 'lembar', 'kg', 'gram', 'gr', 'batang', 'dus',
+            'tube', 'galon', 'pasang'
+        ];
+
+        if (in_array($satuanNorm, $bhpUnits, true)) {
+            return 'bhp';
+        }
+
+        return 'inventaris';
     }
 }

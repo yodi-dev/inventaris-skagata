@@ -1019,10 +1019,10 @@ class BarangController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:10240|mimes:xlsx,xls,csv,txt,zip',
+            'file' => 'required|file|max:10240|mimes:xlsx,csv,txt,zip',
         ], [
             'file.required' => 'Silakan pilih file Excel atau CSV yang akan diunggah.',
-            'file.mimes' => 'Format file yang didukung adalah .xlsx, .xls, atau .csv.',
+            'file.mimes' => 'Format file yang didukung adalah .xlsx atau .csv.',
             'file.max' => 'Ukuran file maksimal yang diperbolehkan adalah 10MB.',
         ]);
 
@@ -1392,7 +1392,8 @@ class BarangController extends Controller
                     $isFirst = false;
                 }
                 if (count($data) > self::MAX_COLUMNS_PER_ROW) {
-                    $data = array_slice($data, 0, self::MAX_COLUMNS_PER_ROW);
+                    fclose($handle);
+                    throw new \InvalidArgumentException('File spreadsheet memiliki terlalu banyak kolom pada baris ' . $rowCount . ' (' . count($data) . ' kolom, melebihi batas maksimal ' . self::MAX_COLUMNS_PER_ROW . ' kolom). Pastikan Anda menggunakan template impor yang sesuai.');
                 }
                 $rows[] = array_map('trim', $data);
             }
@@ -1513,7 +1514,7 @@ class BarangController extends Controller
                     $coord = (string) $c['r'];
                     $colIdx = $this->coordinateToColIndex($coord);
                     if ($colIdx >= self::MAX_COLUMNS_PER_ROW) {
-                        continue; // proteksi dari koordinat sel ekstrem seperti XFD
+                        throw new \InvalidArgumentException('File spreadsheet memiliki terlalu banyak kolom pada baris ' . $rowCount . ' (melebihi batas maksimal ' . self::MAX_COLUMNS_PER_ROW . ' kolom). Pastikan Anda menggunakan template impor yang sesuai.');
                     }
                     $type = (string) $c['t'];
                     $val = '';
@@ -1531,7 +1532,7 @@ class BarangController extends Controller
                 }
 
                 if (!empty($rowData)) {
-                    $maxCol = min(max(array_keys($rowData)), self::MAX_COLUMNS_PER_ROW - 1);
+                    $maxCol = max(array_keys($rowData));
                     $fullRow = [];
                     for ($c = 0; $c <= $maxCol; $c++) {
                         $fullRow[] = $rowData[$c] ?? '';
@@ -1540,46 +1541,9 @@ class BarangController extends Controller
                 }
             }
         } elseif ($extension === 'xls') {
-            $content = file_get_contents($path);
-            if (strlen($content) > self::MAX_TOTAL_UNCOMPRESSED_SIZE) {
-                throw new \InvalidArgumentException('Ukuran file XLS melebihi batas maksimal yang diizinkan (25MB).');
-            }
-            if (stripos($content, '<table') !== false) {
-                if (preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $content, $trMatches)) {
-                    $rowCount = 0;
-                    foreach ($trMatches[1] as $tr) {
-                        if (++$rowCount > self::MAX_IMPORT_ROWS) {
-                            throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
-                        }
-                        if (preg_match_all('/<t[dh][^>]*>(.*?)<\/t[dh]>/is', $tr, $tdMatches)) {
-                            $cells = $tdMatches[1];
-                            if (count($cells) > self::MAX_COLUMNS_PER_ROW) {
-                                $cells = array_slice($cells, 0, self::MAX_COLUMNS_PER_ROW);
-                            }
-                            $row = array_map(function ($val) {
-                                return trim(html_entity_decode(strip_tags($val)));
-                            }, $cells);
-                            $rows[] = $row;
-                        }
-                    }
-                }
-            } else {
-                $handle = fopen($path, 'r');
-                if ($handle !== false) {
-                    $rowCount = 0;
-                    while (($data = fgetcsv($handle, 0, "\t")) !== false) {
-                        if (++$rowCount > self::MAX_IMPORT_ROWS) {
-                            fclose($handle);
-                            throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
-                        }
-                        if (count($data) > self::MAX_COLUMNS_PER_ROW) {
-                            $data = array_slice($data, 0, self::MAX_COLUMNS_PER_ROW);
-                        }
-                        $rows[] = array_map('trim', $data);
-                    }
-                    fclose($handle);
-                }
-            }
+            throw new \InvalidArgumentException('Format file Excel warisan (.xls) tidak didukung. Silakan simpan ulang berkas sebagai .xlsx atau .csv.');
+        } else {
+            throw new \InvalidArgumentException('Format file tidak didukung. Format yang didukung adalah .xlsx atau .csv.');
         }
 
         return $rows;

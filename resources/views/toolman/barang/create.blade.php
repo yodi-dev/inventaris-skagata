@@ -1440,7 +1440,7 @@
                                     <div
                                         class="relative border-2 border-dashed border-gray-300 hover:border-emerald-500 rounded-xl p-5 text-center transition-colors bg-gray-50/50 hover:bg-emerald-50/20">
                                         <input type="file" name="file" id="excel_file" required
-                                            accept=".xlsx,.xls,.csv,.txt" @change="handleImportFileSelect($event)"
+                                            accept=".xlsx,.csv" @change="handleImportFileSelect($event)"
                                             class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
                                         <div class="space-y-1.5">
                                             <div
@@ -1456,7 +1456,7 @@
                                                 <span class="font-semibold text-emerald-600 hover:underline">Klik untuk
                                                     telusuri</span> atau seret file ke sini
                                             </div>
-                                            <p class="text-[10px] text-gray-400">Format yang didukung: .xlsx, .xls, .csv
+                                            <p class="text-[10px] text-gray-400">Format yang didukung: .xlsx atau .csv
                                                 (Maksimal 10MB)</p>
                                         </div>
                                     </div>
