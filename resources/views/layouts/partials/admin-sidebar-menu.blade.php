@@ -73,7 +73,7 @@
         <!-- ================= MENU ADMIN BENGKEL (TOOLMAN) ================= -->
         @php
             $sbUser = auth()->user();
-            $sbBengkelId = $sbUser?->bengkel_id ?? \App\Models\Bengkel::first()?->id;
+            $sbBengkelId = $sbUser?->bengkel_id;
 
             // Hitung badge notifikasi real-time untuk Toolman
             $badgePinjamPending = 0;

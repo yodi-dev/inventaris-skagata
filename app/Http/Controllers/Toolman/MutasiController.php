@@ -16,8 +16,11 @@ class MutasiController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         // 1. Query Data Mutasi Terfilter
         $query = $this->buildMovementQuery($request, $bengkelId);
@@ -52,8 +55,11 @@ class MutasiController extends Controller
     public function exportExcel(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $query = $this->buildMovementQuery($request, $bengkelId);
         $movements = $query->get();
@@ -93,8 +99,11 @@ class MutasiController extends Controller
     public function print(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $query = $this->buildMovementQuery($request, $bengkelId);
         $movements = $query->get();
@@ -178,7 +187,7 @@ class MutasiController extends Controller
      */
     protected function buildMovementQuery(Request $request, $bengkelId)
     {
-        $query = StockMovement::with(['barang.lokasiPenyimpanan', 'user'])
+        $query = StockMovement::with(['barang.lokasiPenyimpanan', 'barang.detailPengadaans', 'user'])
             ->whereHas('barang', function ($q) use ($bengkelId) {
                 $q->where('bengkel_id', $bengkelId);
             })
@@ -191,10 +200,10 @@ class MutasiController extends Controller
                     $bq->where('nama', 'like', "%{$search}%")
                         ->orWhere('kode_barang', 'like', "%{$search}%");
                 })
-                ->orWhere('keterangan', 'like', "%{$search}%")
-                ->orWhereHas('user', function ($uq) use ($search) {
-                    $uq->where('name', 'like', "%{$search}%");
-                });
+                    ->orWhere('keterangan', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($uq) use ($search) {
+                        $uq->where('name', 'like', "%{$search}%");
+                    });
             });
         }
 

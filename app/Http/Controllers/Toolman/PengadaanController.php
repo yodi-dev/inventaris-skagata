@@ -10,6 +10,8 @@ use App\Models\Pengadaan;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class PengadaanController extends Controller
 {
@@ -19,8 +21,11 @@ class PengadaanController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $filterStatus = $request->query('status', '');
         $search = trim($request->query('search', ''));
@@ -66,8 +71,11 @@ class PengadaanController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         // Rekomendasi barang yang menipis atau rusak untuk fitur generate otomatis
         $limitItems = Barang::where('bengkel_id', $bengkelId)
@@ -86,7 +94,10 @@ class PengadaanController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $request->validate([
             'judul' => 'required|string|max:255',
@@ -98,7 +109,12 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
-            'items.*.barang_id' => 'nullable|exists:barangs,id',
+            'items.*.barang_id' => [
+                'nullable',
+                Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
+                    return $query->where('bengkel_id', $bengkelId);
+                }),
+            ],
         ], [
             'items.required' => 'Usulan pengadaan harus mencantumkan minimal 1 item barang.',
             'items.min' => 'Usulan pengadaan harus mencantumkan minimal 1 item barang.',
@@ -152,8 +168,11 @@ class PengadaanController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $pengadaan = Pengadaan::with(['bengkel', 'dibuatOleh', 'direviewOleh', 'detailPengadaans.barang'])
             ->where('bengkel_id', $bengkelId)
@@ -168,8 +187,11 @@ class PengadaanController extends Controller
     public function edit($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $pengadaan = Pengadaan::with(['detailPengadaans.barang'])
             ->where('bengkel_id', $bengkelId)
@@ -189,7 +211,10 @@ class PengadaanController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -208,7 +233,12 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
-            'items.*.barang_id' => 'nullable|exists:barangs,id',
+            'items.*.barang_id' => [
+                'nullable',
+                Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
+                    return $query->where('bengkel_id', $bengkelId);
+                }),
+            ],
         ]);
 
         $isSubmit = $request->input('action') === 'submit';
@@ -259,7 +289,10 @@ class PengadaanController extends Controller
     public function submit($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -286,7 +319,10 @@ class PengadaanController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -307,21 +343,58 @@ class PengadaanController extends Controller
     public function receive(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
-
-        $pengadaan = Pengadaan::with('detailPengadaans')->where('bengkel_id', $bengkelId)->findOrFail($id);
-
-        if ($pengadaan->status !== 'approved') {
-            return redirect()->back()->with('error', "Penerimaan fisik barang hanya dapat dilakukan untuk usulan RAB yang telah disetujui (Approved).");
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
         }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
-        DB::transaction(function () use ($pengadaan, $user, $bengkelId, $bengkel) {
-            foreach ($pengadaan->detailPengadaans as $detail) {
-                if ($detail->barang_id) {
-                    // Barang sudah ada di master -> Tambah stoknya
-                    $barang = Barang::where('bengkel_id', $bengkelId)->lockForUpdate()->find($detail->barang_id);
-                    if ($barang) {
+        try {
+            $formattedRabCode = DB::transaction(function () use ($id, $bengkelId, $bengkel, $user) {
+                // 1. Kunci dan ambil record Pengadaan (Lock Order #1)
+                $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                // 2. Validasi status di DALAM transaksi yang terkunci
+                if ($pengadaan->status !== 'approved') {
+                    throw new \DomainException("Penerimaan fisik barang hanya dapat dilakukan untuk usulan RAB yang telah disetujui (status saat ini: {$pengadaan->status}).");
+                }
+
+                $details = $pengadaan->detailPengadaans()->lockForUpdate()->get();
+                if ($details->isEmpty()) {
+                    throw new \DomainException("Usulan RAB #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) . " tidak memiliki rincian barang.");
+                }
+
+                // 3. Kunci seluruh barang existing yang direferensikan dalam urutan id menaik (Lock Order #2: ORDER BY id ASC)
+                $existingBarangIds = $details->pluck('barang_id')->filter()->unique()->sort()->values()->all();
+                $existingBarangs = Barang::whereIn('id', $existingBarangIds)
+                    ->lockForUpdate()
+                    ->orderBy('id', 'asc')
+                    ->get()
+                    ->keyBy('id');
+
+                // 4. Validasi kepemilikan bengkel dan integritas seluruh barang existing
+                foreach ($details as $detail) {
+                    if ($detail->barang_id) {
+                        $barang = $existingBarangs->get($detail->barang_id);
+                        if (!$barang || (int) $barang->bengkel_id !== (int) $bengkelId) {
+                            throw new \DomainException("Barang '{$detail->nama_barang}' (ID #{$detail->barang_id}) tidak ditemukan atau bukan milik bengkel ini.");
+                        }
+                    }
+                    if ($detail->jumlah <= 0) {
+                        throw new \DomainException("Kuantitas barang '{$detail->nama_barang}' harus lebih dari 0.");
+                    }
+                }
+
+                $rabCode = '#RAB-' . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT);
+
+                // 5. Terapkan penambahan stok / pembuatan master barang dan StockMovement
+                foreach ($details as $detail) {
+                    if ($detail->barang_id) {
+                        // Barang sudah ada di master -> Tambah stoknya
+                        $barang = $existingBarangs->get($detail->barang_id);
                         $barang->increment('stok_total', $detail->jumlah);
                         $barang->increment('stok_tersedia', $detail->jumlah);
 
@@ -330,59 +403,68 @@ class PengadaanController extends Controller
                             'user_id' => $user->id,
                             'jenis' => 'stok_masuk',
                             'jumlah' => $detail->jumlah,
-                            'keterangan' => "Penerimaan fisik barang pengadaan #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) . " ({$pengadaan->judul})",
+                            'keterangan' => "Penerimaan fisik barang pengadaan {$rabCode} ({$pengadaan->judul})",
+                            'referensi_tipe' => 'pengadaan',
+                            'referensi_id' => $pengadaan->id,
+                            'created_at' => now(),
+                        ]);
+                    } else {
+                        // Barang baru belum ada di master -> Buat master barang baru
+                        $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', $bengkel->kode ?? 'BGL');
+                        $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
+
+                        // Pastikan kode unik
+                        while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists()) {
+                            $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
+                        }
+
+                        $newBarang = Barang::create([
+                            'bengkel_id' => $bengkelId,
+                            'kode_barang' => $kodeBarangBaru,
+                            'nama' => $detail->nama_barang,
+                            'jenis_barang' => 'inventaris',
+                            'satuan' => $detail->satuan,
+                            'harga' => $detail->harga_satuan ?? 0,
+                            'stok_total' => $detail->jumlah,
+                            'stok_tersedia' => $detail->jumlah,
+                            'stok_dipinjam' => 0,
+                            'stok_rusak' => 0,
+                            'minimum_stok' => 2,
+                            'deskripsi' => $detail->spesifikasi,
+                        ]);
+
+                        $detail->update(['barang_id' => $newBarang->id]);
+
+                        StockMovement::create([
+                            'barang_id' => $newBarang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'stok_masuk',
+                            'jumlah' => $detail->jumlah,
+                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode}",
                             'referensi_tipe' => 'pengadaan',
                             'referensi_id' => $pengadaan->id,
                             'created_at' => now(),
                         ]);
                     }
-                } else {
-                    // Barang baru belum ada di master -> Buat master barang baru
-                    $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', $bengkel->kode ?? 'BGL');
-                    $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
-
-                    // Pastikan kode unik
-                    while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarangBaru)->exists()) {
-                        $kodeBarangBaru = 'BRG-' . strtoupper($bengkelCode) . '-' . date('ymd') . rand(100, 999);
-                    }
-
-                    $newBarang = Barang::create([
-                        'bengkel_id' => $bengkelId,
-                        'kode_barang' => $kodeBarangBaru,
-                        'nama' => $detail->nama_barang,
-                        'jenis_barang' => 'inventaris',
-                        'satuan' => $detail->satuan,
-                        'harga' => $detail->harga_satuan ?? 0,
-                        'stok_total' => $detail->jumlah,
-                        'stok_tersedia' => $detail->jumlah,
-                        'stok_dipinjam' => 0,
-                        'stok_rusak' => 0,
-                        'minimum_stok' => 2,
-                        'deskripsi' => $detail->spesifikasi,
-                    ]);
-
-                    $detail->update(['barang_id' => $newBarang->id]);
-
-                    StockMovement::create([
-                        'barang_id' => $newBarang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'stok_masuk',
-                        'jumlah' => $detail->jumlah,
-                        'keterangan' => "Penerimaan fisik barang baru pengadaan #RAB-" . str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT),
-                        'referensi_tipe' => 'pengadaan',
-                        'referensi_id' => $pengadaan->id,
-                        'created_at' => now(),
-                    ]);
                 }
-            }
 
-            // Tandai pengadaan selesai (barang fisik telah diterima)
-            $pengadaan->update([
-                'status' => 'selesai',
-            ]);
-        });
+                // 6. Tandai pengadaan selesai
+                $pengadaan->update([
+                    'status' => 'selesai',
+                ]);
 
-        return redirect()->route('toolman.pengadaan.show', $pengadaan->id)
-            ->with('success', "Konfirmasi penerimaan barang fisik berhasil! Seluruh kuota stok telah ditambahkan ke inventaris bengkel dan dicatat pada riwayat mutasi stok.");
+                return $rabCode;
+            });
+
+            return redirect()->route('toolman.pengadaan.show', $id)
+                ->with('success', "Konfirmasi penerimaan barang fisik {$formattedRabCode} berhasil! Seluruh kuota stok telah ditambahkan ke inventaris bengkel dan dicatat pada riwayat mutasi stok.");
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error("Gagal memproses penerimaan barang RAB #{$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal memproses penerimaan barang fisik: Terjadi kesalahan sistem atau konflik transaksi.");
+        }
     }
 }

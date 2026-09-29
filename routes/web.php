@@ -24,6 +24,19 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Redirect dashboard sesuai role pengguna
+Route::get('/dashboard', function () {
+    $user = auth()->user();
+    if ($user?->role === 'waka') {
+        return redirect()->route('superadmin.dashboard');
+    }
+    if ($user?->role === 'toolman') {
+        return redirect()->route('toolman.dashboard');
+    }
+    return redirect()->route('peminjam.dashboard');
+})->middleware(['auth'])->name('dashboard');
+
+
 // ==========================================
 // 1. ROUTE AUTHENTICATION (LARAVEL BREEZE)
 // ==========================================

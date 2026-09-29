@@ -9,14 +9,18 @@ use App\Models\Peminjaman;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PeminjamanController extends Controller
 {
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $tab = $request->input('tab', 'pending'); // 'pending' | 'riwayat'
 
@@ -52,8 +56,11 @@ class PeminjamanController extends Controller
     public function show($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang', 'diprosesOleh'])
             ->where('bengkel_id', $bengkelId)
@@ -65,42 +72,53 @@ class PeminjamanController extends Controller
     public function approve($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-
-        $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang'])
-            ->where('bengkel_id', $bengkelId)
-            ->findOrFail($id);
-
-        // Validasi status
-        if (!in_array($peminjaman->status, ['pending', 'menunggu_acc'])) {
-            return redirect()->back()->with('error', "Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status menunggu persetujuan (status saat ini: {$peminjaman->status}).");
-        }
-
-        if ($peminjaman->detailPeminjamans->isEmpty()) {
-            return redirect()->back()->with('error', "Tiket peminjaman #{$peminjaman->id} tidak memiliki rincian barang.");
-        }
-
-        // Validasi ketersediaan stok
-        foreach ($peminjaman->detailPeminjamans as $detail) {
-            $barang = $detail->barang;
-            if (!$barang) {
-                return redirect()->back()->with('error', "Data barang #{$detail->barang_id} tidak ditemukan.");
-            }
-            if ($barang->stok_tersedia < $detail->jumlah) {
-                return redirect()->back()->with('error', "Stok barang '{$barang->nama}' tidak mencukupi! (Tersedia: {$barang->stok_tersedia} {$barang->satuan}, Diminta: {$detail->jumlah} {$barang->satuan}).");
-            }
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
         }
 
         try {
-            DB::transaction(function () use ($peminjaman, $user) {
-                $hasInventaris = false;
+            $trxCode = DB::transaction(function () use ($id, $bengkelId, $user) {
+                // 1. Kunci dan ambil tiket peminjaman terlebih dahulu (Lock Order #1)
+                $peminjaman = Peminjaman::with('user')
+                    ->where('bengkel_id', $bengkelId)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-                foreach ($peminjaman->detailPeminjamans as $detail) {
-                    $barang = Barang::where('id', $detail->barang_id)->lockForUpdate()->first();
+                // 2. Validasi status di DALAM transaksi terkunci
+                if (!in_array($peminjaman->status, ['pending', 'menunggu_acc'])) {
+                    throw new \DomainException("Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status menunggu persetujuan (status saat ini: {$peminjaman->status}).");
+                }
 
-                    if ($barang->stok_tersedia < $detail->jumlah) {
-                        throw new \Exception("Stok barang '{$barang->nama}' tidak mencukupi saat proses approval! (Tersedia: {$barang->stok_tersedia}, Diminta: {$detail->jumlah}).");
+                $details = $peminjaman->detailPeminjamans;
+                if ($details->isEmpty()) {
+                    throw new \DomainException("Tiket peminjaman #{$peminjaman->id} tidak memiliki rincian barang.");
+                }
+
+                // 3. Kunci seluruh barang yang terlibat dengan Lock Order konsisten (ORDER BY id ASC)
+                $barangIds = $details->pluck('barang_id')->unique()->sort()->values()->all();
+                $barangs = Barang::whereIn('id', $barangIds)
+                    ->lockForUpdate()
+                    ->orderBy('id', 'asc')
+                    ->get()
+                    ->keyBy('id');
+
+                // 4. Validasi ketersediaan stok untuk semua item sebelum mengubah data apa pun
+                foreach ($details as $detail) {
+                    $barang = $barangs->get($detail->barang_id);
+                    if (!$barang) {
+                        throw new \DomainException("Data barang #{$detail->barang_id} tidak ditemukan.");
                     }
+                    if ($barang->stok_tersedia < $detail->jumlah) {
+                        throw new \DomainException("Stok barang '{$barang->nama}' tidak mencukupi saat proses approval! (Tersedia: {$barang->stok_tersedia} {$barang->satuan}, Diminta: {$detail->jumlah} {$barang->satuan}).");
+                    }
+                }
+
+                // 5. Potong stok dan catat StockMovement
+                $hasInventaris = false;
+                foreach ($details as $detail) {
+                    $barang = $barangs->get($detail->barang_id);
 
                     if ($barang->jenis_barang === 'inventaris') {
                         $hasInventaris = true;
@@ -137,29 +155,36 @@ class PeminjamanController extends Controller
                     }
                 }
 
-                // Tentukan status akhir tiket
-                // Sesuai PRD 3.7: Jika BHP-only langsung 'selesai', jika ada inventaris maka 'active'
+                // 6. Update status akhir tiket peminjaman
                 $finalStatus = $hasInventaris ? 'active' : 'selesai';
-
                 $peminjaman->update([
                     'status'        => $finalStatus,
                     'diproses_oleh' => $user->id,
                     'diproses_pada' => now(),
                 ]);
+
+                return '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
             });
 
-            $trxCode = '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
             return redirect()->route('toolman.peminjaman.index', ['tab' => 'riwayat'])
                 ->with('success', "Tiket {$trxCode} berhasil disetujui dan diserahkan kepada peminjam.");
-        } catch (\Exception $e) {
-            return redirect()->back()->with('error', "Gagal memproses persetujuan: " . $e->getMessage());
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error("Gagal memproses persetujuan tiket #{$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal memproses persetujuan: Terjadi kesalahan sistem atau konflik transaksi.");
         }
     }
 
     public function reject(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $request->validate([
             'alasan_penolakan' => 'required|string|min:3|max:500',
@@ -169,21 +194,37 @@ class PeminjamanController extends Controller
             'alasan_penolakan.max'      => 'Alasan penolakan maksimal 500 karakter.',
         ]);
 
-        $peminjaman = Peminjaman::where('bengkel_id', $bengkelId)->findOrFail($id);
+        try {
+            $trxCode = DB::transaction(function () use ($id, $bengkelId, $request, $user) {
+                // Kunci dan ambil tiket peminjaman
+                $peminjaman = Peminjaman::where('bengkel_id', $bengkelId)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
 
-        if (!in_array($peminjaman->status, ['pending', 'menunggu_acc'])) {
-            return redirect()->back()->with('error', "Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status menunggu persetujuan (status saat ini: {$peminjaman->status}).");
+                if (!in_array($peminjaman->status, ['pending', 'menunggu_acc'])) {
+                    throw new \DomainException("Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status menunggu persetujuan (status saat ini: {$peminjaman->status}).");
+                }
+
+                $peminjaman->update([
+                    'status'           => 'ditolak',
+                    'alasan_penolakan' => $request->input('alasan_penolakan'),
+                    'diproses_oleh'    => $user->id,
+                    'diproses_pada'    => now(),
+                ]);
+
+                return '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
+            });
+
+            return redirect()->route('toolman.peminjaman.index', ['tab' => 'riwayat'])
+                ->with('success', "Pengajuan peminjaman {$trxCode} berhasil ditolak.");
+        } catch (\DomainException $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error("Gagal menolak tiket peminjaman #{$id}: " . $e->getMessage());
+            return redirect()->back()->with('error', "Gagal memproses penolakan: Terjadi kesalahan sistem atau konflik transaksi.");
         }
-
-        $peminjaman->update([
-            'status'           => 'ditolak',
-            'alasan_penolakan' => $request->input('alasan_penolakan'),
-            'diproses_oleh'    => $user->id,
-            'diproses_pada'    => now(),
-        ]);
-
-        $trxCode = '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
-        return redirect()->route('toolman.peminjaman.index', ['tab' => 'riwayat'])
-            ->with('success', "Pengajuan peminjaman {$trxCode} berhasil ditolak.");
     }
 }

@@ -36,12 +36,12 @@ class ProfileController extends Controller
         $stats = [];
         if ($role === 'superadmin') {
             $bengkelCount = Bengkel::count();
-            $rabVerified = Pengadaan::whereIn('status', ['approved', 'rejected', 'revisi'])->count();
-            $approvedRabs = Pengadaan::where('status', 'approved')->with('detailPengadaans')->get();
+            $rabVerified = Pengadaan::whereIn('status', ['approved', 'rejected', 'revisi', 'selesai'])->count();
+            $approvedRabs = Pengadaan::whereIn('status', ['approved', 'selesai'])->with('detailPengadaans')->get();
             $totalAcc = 0;
             foreach ($approvedRabs as $rab) {
                 foreach ($rab->detailPengadaans as $detail) {
-                    $totalAcc += ($detail->jumlah ?? 0) * ($detail->harga_estimasi ?? 0);
+                    $totalAcc += ($detail->jumlah ?? 0) * ($detail->harga_satuan ?? 0);
                 }
             }
             $formattedAcc = $totalAcc >= 1000000
@@ -51,7 +51,7 @@ class ProfileController extends Controller
             $stats = [
                 ['label' => 'Bengkel Binaan', 'value' => $bengkelCount . ' Jurusan'],
                 ['label' => 'RAB Diverifikasi', 'value' => $rabVerified . ' Usulan'],
-                ['label' => 'Anggaran ACC', 'value' => $formattedAcc],
+                ['label' => 'Total Disetujui (ACC)', 'value' => $formattedAcc],
                 ['label' => 'Wewenang', 'value' => 'Penuh (Waka)'],
             ];
         } elseif ($role === 'toolman') {
@@ -113,13 +113,33 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
+        // Cegah penghapusan akun jika masih memiliki riwayat transaksi atau audit di sistem
+        $hasHistoricalLoans = $user->peminjamans()->exists();
+        $hasStockMovements = $user->stockMovements()->exists();
+        $hasPengadaans = $user->pengadaans()->exists();
+        $hasProcessedLoans = \App\Models\Peminjaman::where('diproses_oleh', $user->id)->exists();
+        $hasReviewedPengadaans = \App\Models\Pengadaan::where('direview_oleh', $user->id)->exists();
 
-        $user->delete();
+        if ($hasHistoricalLoans || $hasStockMovements || $hasPengadaans || $hasProcessedLoans || $hasReviewedPengadaans) {
+            return back()->withErrors([
+                'password' => 'Akun tidak dapat dihapus karena masih memiliki riwayat transaksi peminjaman, mutasi stok, atau pengadaan di sistem.',
+            ], 'userDeletion')->with('error', 'Akun tidak dapat dihapus karena masih memiliki riwayat transaksi peminjaman, mutasi stok, atau pengadaan di sistem.');
+        }
 
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        try {
+            Auth::logout();
 
-        return Redirect::to('/');
+            $user->delete();
+
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return Redirect::to('/');
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal menghapus akun user ID {$user->id}: " . $e->getMessage());
+            return back()->withErrors([
+                'password' => 'Terjadi kesalahan saat menghapus akun karena data masih terikat dengan catatan sistem.',
+            ], 'userDeletion')->with('error', 'Terjadi kesalahan saat menghapus akun karena data masih terikat dengan catatan sistem.');
+        }
     }
 }

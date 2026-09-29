@@ -61,6 +61,11 @@
                 'badge' => 'bg-emerald-50 text-emerald-800 border-emerald-200',
                 'dot'   => 'bg-emerald-500',
             ],
+            'selesai' => [
+                'label' => 'Selesai (Barang Diterima)',
+                'badge' => 'bg-blue-50 text-blue-800 border-blue-200',
+                'dot'   => 'bg-blue-500',
+            ],
             'rejected' => [
                 'label' => 'Ditolak (Rejected)',
                 'badge' => 'bg-red-50 text-red-800 border-red-200',
@@ -488,11 +493,18 @@
                 </div>
             </div>
         @else
-            <!-- Banner Jika Pengajuan Sudah Selesai Diproses (Approved / Rejected) -->
-            <div class="p-6 rounded-2xl border {{ $pengadaan->status === 'approved' ? 'bg-emerald-50 border-emerald-200 text-emerald-900' : 'bg-red-50 border-red-200 text-red-900' }} shadow-xs">
+            <!-- Banner Jika Pengajuan Sudah Selesai Diproses (Approved / Selesai / Rejected) -->
+            @php
+                $bannerStyle = match ($pengadaan->status) {
+                    'approved' => ['bg' => 'bg-emerald-50 border-emerald-200 text-emerald-900', 'icon_bg' => 'bg-emerald-100 text-emerald-700'],
+                    'selesai'  => ['bg' => 'bg-blue-50 border-blue-200 text-blue-900', 'icon_bg' => 'bg-blue-100 text-blue-700'],
+                    default    => ['bg' => 'bg-red-50 border-red-200 text-red-900', 'icon_bg' => 'bg-red-100 text-red-700'],
+                };
+            @endphp
+            <div class="p-6 rounded-2xl border {{ $bannerStyle['bg'] }} shadow-xs">
                 <div class="flex items-start gap-4">
-                    <div class="w-11 h-11 rounded-xl {{ $pengadaan->status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700' }} flex items-center justify-center shrink-0">
-                        @if ($pengadaan->status === 'approved')
+                    <div class="w-11 h-11 rounded-xl {{ $bannerStyle['icon_bg'] }} flex items-center justify-center shrink-0">
+                        @if ($pengadaan->status === 'approved' || $pengadaan->status === 'selesai')
                             <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
                             </svg>
@@ -507,7 +519,11 @@
                             Pengajuan RAB Ini Telah Selesai Diproses ({{ ucfirst($pengadaan->status) }})
                         </h4>
                         <p class="mt-1 text-xs opacity-90 leading-relaxed">
-                            Keputusan telah dicatat oleh <strong>{{ $pengadaan->direviewOleh->name ?? 'Waka Sarpras' }}</strong> pada {{ $pengadaan->direview_pada ? $pengadaan->direview_pada->translatedFormat('d F Y, H:i') : '-' }} WIB.
+                            @if ($pengadaan->status === 'selesai')
+                                Pengadaan telah selesai dan seluruh barang telah diterima fisik ke inventaris bengkel.
+                            @else
+                                Keputusan telah dicatat oleh <strong>{{ $pengadaan->direviewOleh->name ?? 'Waka Sarpras' }}</strong> pada {{ $pengadaan->direview_pada ? $pengadaan->direview_pada->translatedFormat('d F Y, H:i') : '-' }} WIB.
+                            @endif
                         </p>
                         @if ($pengadaan->catatan_review)
                             <div class="mt-3 p-3 bg-white/70 rounded-xl border border-current/20 text-xs font-medium">

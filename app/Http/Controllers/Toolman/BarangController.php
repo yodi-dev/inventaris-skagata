@@ -21,8 +21,11 @@ class BarangController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         SumberDanaController::ensureSchemaReady();
 
@@ -65,8 +68,11 @@ class BarangController extends Controller
     public function create()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
 
         SumberDanaController::ensureSchemaReady();
@@ -81,7 +87,10 @@ class BarangController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         SumberDanaController::ensureSchemaReady();
 
@@ -184,8 +193,11 @@ class BarangController extends Controller
     public function edit($id = null)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         SumberDanaController::ensureSchemaReady();
 
@@ -216,7 +228,10 @@ class BarangController extends Controller
     public function update(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         SumberDanaController::ensureSchemaReady();
 
@@ -253,7 +268,9 @@ class BarangController extends Controller
         ]);
 
         return DB::transaction(function () use ($request, $barang, $user) {
-            $oldStokTotal = $barang->stok_total;
+            $oldStokTotal = (int) $barang->stok_total;
+            $oldStokTersedia = (int) $barang->stok_tersedia;
+            $oldStokRusak = (int) $barang->stok_rusak;
 
             if ($barang->jenis_barang === 'inventaris') {
                 $stokBaik = (int) $request->input('stok_baik', $barang->stok_tersedia);
@@ -288,16 +305,125 @@ class BarangController extends Controller
                 'deskripsi' => $request->input('spesifikasi'),
             ]);
 
-            // Jika ada perubahan pada total stok, catat penyesuaian
-            if ($oldStokTotal !== $stokTotal) {
-                $selisih = $stokTotal - $oldStokTotal;
-                StockMovement::create([
-                    'barang_id' => $barang->id,
-                    'user_id' => $user->id,
-                    'jenis' => 'penyesuaian',
-                    'jumlah' => abs($selisih),
-                    'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($selisih > 0 ? "+{$selisih}" : "{$selisih}") . ')',
-                ]);
+            // Periksa perubahan stok per kompartemen (tersedia vs rusak)
+            $diffTersedia = $stokTersedia - $oldStokTersedia;
+            $diffRusak = $stokRusak - $oldStokRusak;
+
+            if ($barang->jenis_barang === 'inventaris') {
+                // Evaluasi apakah terjadi transfer antar kondisi (berlawanan tanda)
+                if ($diffTersedia > 0 && $diffRusak < 0) {
+                    // Kasus Perbaikan: sebagian/seluruh stok rusak dialihkan ke tersedia
+                    $repaired = min($diffTersedia, abs($diffRusak));
+                    $extraTersedia = $diffTersedia - $repaired;
+                    $discardedRusak = abs($diffRusak) - $repaired;
+
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'perbaikan',
+                        'jumlah' => $repaired,
+                        'referensi_tipe' => 'alih_kondisi_baik',
+                        'keterangan' => "Perbaikan alat: Pengalihan kondisi dari rusak ke baik (+{$repaired} baik, -{$repaired} rusak)",
+                    ]);
+
+                    if ($extraTersedia > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $extraTersedia,
+                            'referensi_tipe' => 'penyesuaian_tambah',
+                            'keterangan' => "Penyesuaian stok master oleh Toolman (+{$extraTersedia})",
+                        ]);
+                    }
+
+                    if ($discardedRusak > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $discardedRusak,
+                            'referensi_tipe' => 'penyesuaian_rusak_kurang',
+                            'keterangan' => "Penghapusan/afkir barang rusak oleh Toolman (-{$discardedRusak} rusak)",
+                        ]);
+                    }
+                } elseif ($diffTersedia < 0 && $diffRusak > 0) {
+                    // Kasus Kerusakan: sebagian/seluruh pengurangan tersedia dialihkan menjadi rusak
+                    $transferredDamaged = min(abs($diffTersedia), $diffRusak);
+                    $lostAvailable = abs($diffTersedia) - $transferredDamaged;
+                    $extraDamaged = $diffRusak - $transferredDamaged;
+
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'penyesuaian',
+                        'jumlah' => $transferredDamaged,
+                        'referensi_tipe' => 'alih_kondisi_rusak',
+                        'keterangan' => "Pengalihan kondisi stok: Baik ke Rusak (-{$transferredDamaged} baik, +{$transferredDamaged} rusak)",
+                    ]);
+
+                    if ($lostAvailable > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $lostAvailable,
+                            'referensi_tipe' => 'penyesuaian_kurang',
+                            'keterangan' => "Penyesuaian stok master oleh Toolman (-{$lostAvailable})",
+                        ]);
+                    }
+
+                    if ($extraDamaged > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => $extraDamaged,
+                            'referensi_tipe' => 'penyesuaian_rusak_tambah',
+                            'keterangan' => "Penyesuaian fisik barang rusak oleh Toolman (+{$extraDamaged} rusak)",
+                        ]);
+                    }
+                } else {
+                    // Tanda sama atau salah satu bernilai 0 (tidak ada alih kondisi langsung)
+                    if ($diffTersedia !== 0) {
+                        $isNegTersedia = $diffTersedia < 0;
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => abs($diffTersedia),
+                            'referensi_tipe' => $isNegTersedia ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
+                            'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($diffTersedia > 0 ? "+{$diffTersedia}" : "{$diffTersedia}") . ')',
+                        ]);
+                    }
+
+                    if ($diffRusak !== 0) {
+                        $isNegRusak = $diffRusak < 0;
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'penyesuaian',
+                            'jumlah' => abs($diffRusak),
+                            'referensi_tipe' => $isNegRusak ? 'penyesuaian_rusak_kurang' : 'penyesuaian_rusak_tambah',
+                            'keterangan' => $isNegRusak
+                                ? 'Penghapusan/afkir barang rusak oleh Toolman (-' . abs($diffRusak) . ' rusak)'
+                                : "Penyesuaian fisik barang rusak oleh Toolman (+{$diffRusak} rusak)",
+                        ]);
+                    }
+                }
+            } else {
+                // Tipe BHP/Bahan (hanya stok tersedia)
+                if ($diffTersedia !== 0) {
+                    $isNegTersedia = $diffTersedia < 0;
+                    StockMovement::create([
+                        'barang_id' => $barang->id,
+                        'user_id' => $user->id,
+                        'jenis' => 'penyesuaian',
+                        'jumlah' => abs($diffTersedia),
+                        'referensi_tipe' => $isNegTersedia ? 'penyesuaian_kurang' : 'penyesuaian_tambah',
+                        'keterangan' => 'Penyesuaian stok master oleh Toolman (' . ($diffTersedia > 0 ? "+{$diffTersedia}" : "{$diffTersedia}") . ')',
+                    ]);
+                }
             }
 
             return redirect()->route('toolman.barang.index')
@@ -308,7 +434,10 @@ class BarangController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $barang = Barang::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -327,13 +456,31 @@ class BarangController extends Controller
             return back()->with('error', "Barang {$barang->nama} tidak dapat dihapus karena masih terhubung dengan antrean/transaksi peminjaman yang belum selesai!");
         }
 
+        // Pengecekan integritas data: cegah penghapusan barang yang memiliki rekam jejak historis
+        if ($barang->detailPeminjamans()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena memiliki riwayat transaksi peminjaman di sistem!");
+        }
+
+        if ($barang->stockMovements()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena memiliki riwayat mutasi kartu stok!");
+        }
+
+        if ($barang->detailPengadaans()->exists()) {
+            return back()->with('error', "Barang {$barang->nama} ({$barang->kode_barang}) tidak dapat dihapus karena terhubung dengan riwayat usulan pengadaan (RAB)!");
+        }
+
         $nama = $barang->nama;
         $kode = $barang->kode_barang;
 
-        $barang->delete();
+        try {
+            $barang->delete();
 
-        return redirect()->route('toolman.barang.index')
-            ->with('success', "Barang {$nama} ({$kode}) berhasil dihapus dari inventaris bengkel.");
+            return redirect()->route('toolman.barang.index')
+                ->with('success', "Barang {$nama} ({$kode}) berhasil dihapus dari inventaris bengkel.");
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error("Gagal menghapus barang ID {$id}: " . $e->getMessage());
+            return back()->with('error', "Gagal menghapus barang {$nama} ({$kode}) karena data masih terikat dengan catatan sistem lain.");
+        }
     }
 
     /**
@@ -343,23 +490,23 @@ class BarangController extends Controller
     public function printKartu($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Barang::with([
+        $barang = Barang::with([
             'bengkel',
             'lokasiPenyimpanan',
             'sumberDana',
             'stockMovements' => function ($q) {
                 $q->with('user')->orderBy('created_at', 'asc');
             }
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $barang = $query->findOrFail($id);
-        $bengkel = $barang->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $barang->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         // Kalkulasi mutasi kartu barang dan saldo berjalannya
         $movementRows = [];
@@ -391,24 +538,85 @@ class BarangController extends Controller
                     $saldoRusak += $masukRusak;
                     break;
                 case 'barang_hilang':
-                    $keluarBaik = (int) $m->jumlah;
-                    $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    // Pencegahan double deduction: barang hilang saat peminjaman telah
+                    // dicatat keluar pada saat peminjaman ('keluar_baik'). Pada saat pengembalian,
+                    // barang hilang mengurangi stok_total sistemik dan tidak memotong saldo_baik lagi.
+                    $masukBaik = 0;
+                    $masukRusak = 0;
+                    $keluarBaik = 0;
+                    $keluarRusak = 0;
                     break;
                 case 'perbaikan':
-                    $jml = (int) $m->jumlah;
-                    $saldoRusak = max(0, $saldoRusak - $jml);
-                    $saldoBaik += $jml;
+                case 'rusak_ke_baik':
+                    $jml = abs((int) $m->jumlah);
+                    $keluarRusak = $jml;
                     $masukBaik = $jml;
+                    $saldoRusak = max(0, $saldoRusak - $keluarRusak);
+                    $saldoBaik += $masukBaik;
+                    break;
+                case 'kondisi_rusak':
+                case 'baik_ke_rusak':
+                    $jml = abs((int) $m->jumlah);
+                    $keluarBaik = $jml;
+                    $masukRusak = $jml;
+                    $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    $saldoRusak += $masukRusak;
                     break;
                 case 'penyesuaian':
                 default:
                     $jml = (int) $m->jumlah;
-                    if ($jml >= 0) {
-                        $masukBaik = $jml;
-                        $saldoBaik += $jml;
-                    } else {
-                        $keluarBaik = abs($jml);
+                    $rawKet = strtolower($m->keterangan ?? '');
+                    $refTipe = strtolower($m->referensi_tipe ?? '');
+
+                    if (
+                        $refTipe === 'alih_kondisi_rusak'
+                        || str_contains($rawKet, 'baik ke rusak')
+                        || preg_match('/ditemukan dalam kondisi rusak/i', $rawKet)
+                        || str_contains($rawKet, 'kondisi rusak berat saat inventarisasi')
+                    ) {
+                        // Alih kondisi: Tersedia/Baik ke Rusak tanpa mengubah stok total
+                        $qty = abs($jml);
+                        $keluarBaik = $qty;
+                        $masukRusak = $qty;
                         $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                        $saldoRusak += $masukRusak;
+                    } elseif ($refTipe === 'alih_kondisi_baik' || str_contains($rawKet, 'rusak ke baik')) {
+                        // Alih kondisi: Rusak ke Baik/Tersedia (perbaikan) tanpa mengubah stok total
+                        $qty = abs($jml);
+                        $keluarRusak = $qty;
+                        $masukBaik = $qty;
+                        $saldoRusak = max(0, $saldoRusak - $keluarRusak);
+                        $saldoBaik += $masukBaik;
+                    } elseif (
+                        $refTipe === 'penyesuaian_rusak_kurang'
+                        || (str_contains($rawKet, 'rusak') && (str_contains($rawKet, 'afkir') || str_contains($rawKet, 'dihapus') || str_contains($rawKet, 'penghapusan')))
+                    ) {
+                        // Pengurangan stok rusak (misal pembuangan/afkir barang rusak)
+                        $qty = abs($jml);
+                        $keluarRusak = $qty;
+                        $saldoRusak = max(0, $saldoRusak - $keluarRusak);
+                    } elseif ($refTipe === 'penyesuaian_rusak_tambah') {
+                        // Penambahan stok rusak secara langsung
+                        $qty = abs($jml);
+                        $masukRusak = $qty;
+                        $saldoRusak += $masukRusak;
+                    } elseif (
+                        $jml < 0
+                        || $refTipe === 'penyesuaian_kurang'
+                        || preg_match('/(?:^| oleh Toolman )\(-(\d+)\)$/', trim($m->keterangan ?? ''))
+                        || str_contains($rawKet, 'pengurangan')
+                        || str_contains($rawKet, 'penurunan')
+                        || str_contains($rawKet, 'penyusutan')
+                    ) {
+                        // Penyesuaian stok baik berkurang (stok opname minus pada stok tersedia)
+                        $qty = abs($jml);
+                        $keluarBaik = $qty;
+                        $saldoBaik = max(0, $saldoBaik - $keluarBaik);
+                    } else {
+                        // Penyesuaian stok baik bertambah (stok opname plus pada stok tersedia)
+                        $qty = abs($jml);
+                        $masukBaik = $qty;
+                        $saldoBaik += $masukBaik;
                     }
                     break;
             }
@@ -453,8 +661,11 @@ class BarangController extends Controller
     public function downloadTemplate()
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BENGKEL') : 'BENGKEL';
 
         SumberDanaController::ensureSchemaReady();
@@ -806,8 +1017,11 @@ class BarangController extends Controller
         ]);
 
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $bengkelCode = $bengkel ? strtoupper($bengkel->kode ?? 'BGK') : 'BGK';
 
         SumberDanaController::ensureSchemaReady();
@@ -837,7 +1051,9 @@ class BarangController extends Controller
                 $colMap['nama'] = $idx;
             } elseif (str_contains($norm, 'tipe') || str_contains($norm, 'jenis')) {
                 $colMap['tipe'] = $idx;
-            } elseif (str_contains($norm, 'satuan') || str_contains($norm, 'unit')) {
+            } elseif (str_contains($norm, 'harga') || str_contains($norm, 'biaya') || str_contains($norm, 'tarif') || str_contains($norm, 'price')) {
+                $colMap['harga'] = $idx;
+            } elseif ((str_contains($norm, 'satuan') || str_contains($norm, 'unit') || str_contains($norm, 'uom')) && !str_contains($norm, 'harga')) {
                 $colMap['satuan'] = $idx;
             } elseif (str_contains($norm, 'lokasi') || str_contains($norm, 'tempat') || str_contains($norm, 'rak')) {
                 $colMap['lokasi'] = $idx;
@@ -851,8 +1067,6 @@ class BarangController extends Controller
                 $colMap['stok_baik'] = $idx;
             } elseif (str_contains($norm, 'minimum') || str_contains($norm, 'batas') || str_contains($norm, 'min')) {
                 $colMap['batas_minimum'] = $idx;
-            } elseif (str_contains($norm, 'harga') || str_contains($norm, 'biaya') || str_contains($norm, 'tarif') || str_contains($norm, 'price')) {
-                $colMap['harga'] = $idx;
             } elseif (str_contains($norm, 'spesifikasi') || str_contains($norm, 'deskripsi') || str_contains($norm, 'keterangan')) {
                 $colMap['spesifikasi'] = $idx;
             }

@@ -9,14 +9,18 @@ use App\Models\Peminjaman;
 use App\Models\StockMovement;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class PengembalianController extends Controller
 {
     public function index(Request $request)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
         $tab = $request->input('tab', 'aktif'); // 'aktif' | 'riwayat'
 
         $query = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang.lokasiPenyimpanan', 'diprosesOleh'])
@@ -58,8 +62,11 @@ class PengembalianController extends Controller
     public function check($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang.lokasiPenyimpanan'])
             ->where('bengkel_id', $bengkelId)
@@ -76,68 +83,83 @@ class PengembalianController extends Controller
     public function processCheck(Request $request, $id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-
-        $peminjaman = Peminjaman::with(['user', 'bengkel', 'detailPeminjamans.barang'])
-            ->where('bengkel_id', $bengkelId)
-            ->findOrFail($id);
-
-        // Validasi status peminjaman
-        if (!in_array($peminjaman->status, ['active', 'terlambat', 'menunggu_pengecekan'])) {
-            return redirect()->route('toolman.pengembalian.index')
-                ->with('error', "Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status yang dapat dicek fisik (status saat ini: {$peminjaman->status}).");
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
         }
-
-        // Filter detail inventaris saja yang perlu dicek kondisi pengembaliannya
-        $inventarisDetails = $peminjaman->detailPeminjamans->filter(function ($detail) {
-            return $detail->barang && $detail->barang->jenis_barang === 'inventaris';
-        });
-
-        if ($inventarisDetails->isEmpty()) {
-            return redirect()->route('toolman.pengembalian.index')
-                ->with('error', "Tiket peminjaman #{$peminjaman->id} tidak memuat barang inventaris untuk dicek fisik.");
-        }
-
         $items = $request->input('items', []);
 
-        // Validasi kelengkapan dan kecocokan jumlah untuk setiap detail barang inventaris
-        foreach ($inventarisDetails as $detail) {
-            if (!isset($items[$detail->id])) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', "Data inspeksi untuk barang '{$detail->barang->nama}' belum diisi.");
-            }
-
-            $itemData = $items[$detail->id];
-            $baik = isset($itemData['jumlah_baik']) ? (int) $itemData['jumlah_baik'] : 0;
-            $rusak = isset($itemData['jumlah_rusak']) ? (int) $itemData['jumlah_rusak'] : 0;
-            $hilang = isset($itemData['jumlah_hilang']) ? (int) $itemData['jumlah_hilang'] : 0;
-
-            if ($baik < 0 || $rusak < 0 || $hilang < 0) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', "Jumlah kondisi untuk barang '{$detail->barang->nama}' tidak boleh bernilai negatif.");
-            }
-
-            $totalCheck = $baik + $rusak + $hilang;
-            if ($totalCheck !== (int) $detail->jumlah) {
-                return redirect()->back()
-                    ->withInput()
-                    ->with('error', "Total kuantitas pemeriksaan barang '{$detail->barang->nama}' (Baik: {$baik} + Rusak: {$rusak} + Hilang: {$hilang} = {$totalCheck}) tidak sesuai dengan jumlah dipinjam ({$detail->jumlah}).");
-            }
-        }
-
         try {
-            DB::transaction(function () use ($peminjaman, $inventarisDetails, $items, $user) {
+            $trxCode = DB::transaction(function () use ($id, $bengkelId, $items, $user) {
+                // 1. Kunci dan ambil peminjaman di dalam transaksi (Lock Order #1)
+                $peminjaman = Peminjaman::with('user')
+                    ->where('bengkel_id', $bengkelId)
+                    ->where('id', $id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                // 2. Validasi status peminjaman di DALAM transaksi terkunci
+                if (!in_array($peminjaman->status, ['active', 'terlambat', 'menunggu_pengecekan'])) {
+                    throw new \DomainException("Tiket peminjaman #{$peminjaman->id} sudah tidak dalam status yang dapat dicek fisik (status saat ini: {$peminjaman->status}).");
+                }
+
+                // 3. Ambil detail inventaris yang terkunci
+                $inventarisDetails = $peminjaman->detailPeminjamans()
+                    ->whereHas('barang', function ($q) {
+                        $q->where('jenis_barang', 'inventaris');
+                    })
+                    ->lockForUpdate()
+                    ->get();
+
+                if ($inventarisDetails->isEmpty()) {
+                    throw new \DomainException("Tiket peminjaman #{$peminjaman->id} tidak memuat barang inventaris untuk dicek fisik.");
+                }
+
+                // 4. Kunci seluruh barang yang terlibat dengan urutan id menaik (Lock Order #2: ORDER BY id ASC)
+                $barangIds = $inventarisDetails->pluck('barang_id')->unique()->sort()->values()->all();
+                $barangs = Barang::whereIn('id', $barangIds)
+                    ->lockForUpdate()
+                    ->orderBy('id', 'asc')
+                    ->get()
+                    ->keyBy('id');
+
+                // 5. Validasi kelengkapan dan kecocokan jumlah untuk setiap detail barang inventaris
                 foreach ($inventarisDetails as $detail) {
+                    $barang = $barangs->get($detail->barang_id);
+                    if (!$barang) {
+                        throw new \DomainException("Data barang #{$detail->barang_id} tidak ditemukan.");
+                    }
+
+                    if (!isset($items[$detail->id])) {
+                        throw new \DomainException("Data inspeksi untuk barang '{$barang->nama}' belum diisi.");
+                    }
+
+                    $itemData = $items[$detail->id];
+                    $baik = isset($itemData['jumlah_baik']) ? (int) $itemData['jumlah_baik'] : 0;
+                    $rusak = isset($itemData['jumlah_rusak']) ? (int) $itemData['jumlah_rusak'] : 0;
+                    $hilang = isset($itemData['jumlah_hilang']) ? (int) $itemData['jumlah_hilang'] : 0;
+
+                    if ($baik < 0 || $rusak < 0 || $hilang < 0) {
+                        throw new \DomainException("Jumlah kondisi untuk barang '{$barang->nama}' tidak boleh bernilai negatif.");
+                    }
+
+                    $totalCheck = $baik + $rusak + $hilang;
+                    if ($totalCheck !== (int) $detail->jumlah) {
+                        throw new \DomainException("Total kuantitas pemeriksaan barang '{$barang->nama}' (Baik: {$baik} + Rusak: {$rusak} + Hilang: {$hilang} = {$totalCheck}) tidak sesuai dengan jumlah dipinjam ({$detail->jumlah}).");
+                    }
+                }
+
+                $trxCodeFormatted = '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
+                $peminjamName = $peminjaman->user->name ?? 'Peminjam';
+
+                // 6. Update stok, detail kondisi, dan catat StockMovement secara atomik
+                foreach ($inventarisDetails as $detail) {
+                    $barang = $barangs->get($detail->barang_id);
                     $itemData = $items[$detail->id];
                     $baik = (int) $itemData['jumlah_baik'];
                     $rusak = (int) $itemData['jumlah_rusak'];
                     $hilang = (int) $itemData['jumlah_hilang'];
                     $catatan = isset($itemData['catatan']) ? trim($itemData['catatan']) : null;
-
-                    // Kunci record barang untuk update
-                    $barang = Barang::where('id', $detail->barang_id)->lockForUpdate()->first();
 
                     // Update stok barang sesuai PRD 3.6:
                     // 1. Barang kembali baik: kembali ke stok_tersedia
@@ -162,9 +184,6 @@ class PengembalianController extends Controller
                         'jumlah_hilang' => $hilang,
                     ]);
 
-                    $trxCode = '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
-                    $peminjamName = $peminjaman->user->name ?? 'Peminjam';
-
                     // Catat StockMovement:
                     if ($baik > 0) {
                         StockMovement::create([
@@ -174,13 +193,13 @@ class PengembalianController extends Controller
                             'jumlah'         => $baik,
                             'referensi_tipe' => 'peminjamans',
                             'referensi_id'   => $peminjaman->id,
-                            'keterangan'     => "Pengembalian barang kondisi baik {$trxCode} dari {$peminjamName}",
+                            'keterangan'     => "Pengembalian barang kondisi baik {$trxCodeFormatted} dari {$peminjamName}",
                             'created_at'     => now(),
                         ]);
                     }
 
                     if ($rusak > 0) {
-                        $ketRusak = "Pengembalian barang kondisi rusak {$trxCode} dari {$peminjamName}";
+                        $ketRusak = "Pengembalian barang kondisi rusak {$trxCodeFormatted} dari {$peminjamName}";
                         if ($catatan) {
                             $ketRusak .= " (Catatan: {$catatan})";
                         }
@@ -197,7 +216,7 @@ class PengembalianController extends Controller
                     }
 
                     if ($hilang > 0) {
-                        $ketHilang = "Barang hilang pada tiket peminjaman {$trxCode} oleh {$peminjamName}";
+                        $ketHilang = "Barang hilang pada tiket peminjaman {$trxCodeFormatted} oleh {$peminjamName}";
                         if ($catatan) {
                             $ketHilang .= " (Catatan: {$catatan})";
                         }
@@ -214,17 +233,23 @@ class PengembalianController extends Controller
                     }
                 }
 
-                // Selesaikan transaksi peminjaman
+                // 7. Selesaikan transaksi peminjaman
                 $peminjaman->update([
                     'status' => 'selesai',
                 ]);
+
+                return $trxCodeFormatted;
             });
 
-            $trxCode = '#TRX-' . str_pad($peminjaman->id, 4, '0', STR_PAD_LEFT);
             return redirect()->route('toolman.pengembalian.index')
                 ->with('success', "Pengecekan fisik berhasil! Peminjaman {$trxCode} telah selesai diperiksa dan stok bengkel telah diperbarui.");
-        } catch (\Exception $e) {
-            return redirect()->back()->withInput()->with('error', "Gagal memproses pengecekan fisik: " . $e->getMessage());
+        } catch (\DomainException $e) {
+            return redirect()->back()->withInput()->with('error', $e->getMessage());
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            Log::error("Gagal memproses pengecekan fisik tiket #{$id}: " . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', "Gagal memproses pengecekan fisik: Terjadi kesalahan sistem atau konflik transaksi.");
         }
     }
 
@@ -235,21 +260,21 @@ class PengembalianController extends Controller
     public function printPinjam($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Peminjaman::with([
+        $peminjaman = Peminjaman::with([
             'user',
             'bengkel',
             'detailPeminjamans.barang.lokasiPenyimpanan',
             'diprosesOleh'
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $peminjaman = $query->findOrFail($id);
-        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         return view('toolman.pengembalian.print_pinjam', compact('peminjaman', 'bengkel'));
     }
@@ -261,21 +286,21 @@ class PengembalianController extends Controller
     public function printKembali($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
-        $query = Peminjaman::with([
+        $peminjaman = Peminjaman::with([
             'user',
             'bengkel',
             'detailPeminjamans.barang.lokasiPenyimpanan',
             'diprosesOleh'
-        ]);
+        ])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
-        if ($user && $user->bengkel_id) {
-            $query->where('bengkel_id', $user->bengkel_id);
-        }
-
-        $peminjaman = $query->findOrFail($id);
-        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::find($bengkelId));
+        $bengkel = $peminjaman->bengkel ?? ($user->bengkel ?? Bengkel::findOrFail($bengkelId));
 
         return view('toolman.pengembalian.print_kembali', compact('peminjaman', 'bengkel'));
     }

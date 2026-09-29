@@ -16,8 +16,11 @@ class LokasiController extends Controller
     public function index(Request $request)
     {
         $user = $request->user() ?? auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
-        $bengkel = $user->bengkel ?? Bengkel::find($bengkelId);
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
+        $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         $query = LokasiPenyimpanan::where('bengkel_id', $bengkelId)
             ->withCount('barangs');
@@ -60,7 +63,10 @@ class LokasiController extends Controller
     public function store(Request $request)
     {
         $user = $request->user() ?? auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $validated = $request->validate([
             'kode' => [
@@ -105,7 +111,10 @@ class LokasiController extends Controller
     public function update(Request $request, $id)
     {
         $user = $request->user() ?? auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $lokasi = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->findOrFail($id);
 
@@ -142,7 +151,10 @@ class LokasiController extends Controller
     public function destroy($id)
     {
         $user = auth()->user();
-        $bengkelId = $user->bengkel_id ?? Bengkel::first()?->id;
+        $bengkelId = $user->bengkel_id;
+        if (!$bengkelId) {
+            abort(403, 'Akun Toolman Anda belum ditugaskan ke unit bengkel manapun. Silakan hubungi Waka Sarpras.');
+        }
 
         $lokasi = LokasiPenyimpanan::where('bengkel_id', $bengkelId)
             ->withCount('barangs')
@@ -161,4 +173,3 @@ class LokasiController extends Controller
             ->with('success', "Lokasi penyimpanan {$nama} ({$kode}) berhasil dihapus.");
     }
 }
-
