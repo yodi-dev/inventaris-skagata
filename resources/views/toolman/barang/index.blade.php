@@ -44,12 +44,21 @@
         @endif
 
         @if (session('error'))
-            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-center gap-3">
-                <svg class="w-5 h-5 text-red-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 flex items-start gap-3">
+                <svg class="w-5 h-5 text-red-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                         d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <span>{{ session('error') }}</span>
+                <div class="space-y-1">
+                    <span class="whitespace-pre-line font-medium">{{ session('error') }}</span>
+                    @if (session('import_errors') && is_array(session('import_errors')))
+                        <ul class="list-disc list-inside text-xs mt-2 space-y-1 text-red-700">
+                            @foreach (session('import_errors') as $err)
+                                <li>{{ $err }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
             </div>
         @endif
 
@@ -395,23 +404,14 @@
                                 </div>
                             </div>
 
-                            <!-- Options Checkboxes -->
-                            <div class="rounded-xl border border-gray-100 bg-gray-50/70 p-3.5 space-y-2.5">
-                                <label class="flex items-start gap-2.5 cursor-pointer">
-                                    <input type="checkbox" name="auto_create_lokasi" value="1" checked
-                                        class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                    <span class="text-xs text-gray-700 leading-relaxed">
-                                        <b>Otomatis daftarkan Lokasi Penyimpanan baru</b> jika nama lokasi belum ada di
-                                        bengkel ini.
-                                    </span>
-                                </label>
-                                <label class="flex items-start gap-2.5 cursor-pointer">
-                                    <input type="checkbox" name="auto_create_sumber_dana" value="1" checked
-                                        class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                    <span class="text-xs text-gray-700 leading-relaxed">
-                                        <b>Otomatis daftarkan Sumber Dana baru</b> jika belum tercatat di sistem inventaris.
-                                    </span>
-                                </label>
+                            <!-- Master Data Validation Notice -->
+                            <div class="rounded-xl border border-blue-100 bg-blue-50/70 p-3.5 flex items-start gap-2.5">
+                                <svg class="w-5 h-5 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <div class="text-xs text-blue-800 leading-relaxed">
+                                    <b>Validasi Master Data:</b> Lokasi penyimpanan, satuan, dan sumber dana harus mengacu pada master data yang telah terdaftar di sistem untuk menjamin konsistensi inventaris bengkel.
+                                </div>
                             </div>
                         </div>
 

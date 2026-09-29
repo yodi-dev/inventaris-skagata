@@ -1471,20 +1471,12 @@
                                     </div>
                                 </div>
 
-                                <!-- Auto-create Options -->
-                                <div class="space-y-2 pt-1 border-t border-gray-100">
-                                    <label class="flex items-start gap-2.5 cursor-pointer text-xs text-gray-700">
-                                        <input type="checkbox" name="auto_create_lokasi" value="1" checked
-                                            class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>Otomatis buat <strong>Lokasi Penyimpanan</strong> baru jika nama lokasi belum
-                                            terdaftar di bengkel ini.</span>
-                                    </label>
-                                    <label class="flex items-start gap-2.5 cursor-pointer text-xs text-gray-700">
-                                        <input type="checkbox" name="auto_create_sumber_dana" value="1" checked
-                                            class="mt-0.5 rounded border-gray-300 text-emerald-600 focus:ring-emerald-500">
-                                        <span>Otomatis buat <strong>Sumber Dana</strong> baru jika belum ada di master
-                                            sekolah.</span>
-                                    </label>
+                                <!-- Master Data Validation Notice -->
+                                <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-2 text-xs text-blue-800">
+                                    <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                    <span><strong>Validasi Master Data:</strong> Lokasi penyimpanan, satuan, dan sumber dana harus mengacu pada master data yang telah terdaftar di sistem.</span>
                                 </div>
 
                                 <!-- Action Buttons -->

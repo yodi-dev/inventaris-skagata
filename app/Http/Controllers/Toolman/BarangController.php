@@ -861,7 +861,7 @@ class BarangController extends Controller
                     "4. Kolom 'Satuan' disarankan memakai satuan baku di Kolom D.",
                     "5. Kolom 'Lokasi' sebaiknya mengacu pada daftar di Kolom B.",
                     "6. Kolom 'Sumber Dana' sebaiknya mengacu pada daftar di Kolom C.",
-                    "7. Lokasi/Sumber Dana baru akan didaftarkan otomatis jika opsinya dicentang saat import.",
+                    "7. Lokasi, Satuan, dan Sumber Dana harus mengacu pada master data yang telah terdaftar.",
                     "8. Untuk tipe 'bhp', jumlah stok diisi pada 'Stok Baik / Bahan'.",
                     "9. 'Stok Rusak Ringan' dan 'Rusak Berat' khusus untuk barang inventaris.",
                     "10. 'Batas Minimum' menentukan ambang batas peringatan stok menipis.",
@@ -1027,14 +1027,11 @@ class BarangController extends Controller
         SumberDanaController::ensureSchemaReady();
         SatuanController::ensureDefaults();
 
-        $autoCreateLokasi = $request->boolean('auto_create_lokasi', true);
-        $autoCreateSumberDana = $request->boolean('auto_create_sumber_dana', true);
-
         $file = $request->file('file');
         $rows = $this->parseSpreadsheet($file);
 
         if (empty($rows) || count($rows) < 2) {
-            return back()->with('error', 'File yang diunggah kosong atau tidak memiliki baris data barang.');
+            return back()->with('error', 'File yang diunggah kosong atau tidak memiliki baris data barang.')->withInput();
         }
 
         // 1. Petakan header kolom
@@ -1073,230 +1070,251 @@ class BarangController extends Controller
         }
 
         if (!isset($colMap['nama'])) {
-            return back()->with('error', "Kolom 'Nama Barang' tidak ditemukan pada baris header file. Pastikan menggunakan format template yang disediakan.");
+            return back()->with('error', "Kolom 'Nama Barang' tidak ditemukan pada baris header file. Pastikan menggunakan format template yang disediakan.")->withInput();
         }
 
-        // Cache lokasi dan sumber dana untuk efisiensi
-        $lokasiCache = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get()->keyBy(function ($item) {
-            return strtolower(trim($item->nama));
-        });
+        // Cache referensi master data untuk validasi baris
+        $lokasiBengkelList = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
+        $defaultLokasi = $lokasiBengkelList->first();
 
-        $sumberDanaCache = SumberDana::all()->keyBy(function ($item) {
-            return strtolower(trim($item->nama));
-        });
+        $allLokasis = LokasiPenyimpanan::all();
+        $satuanMasterList = Satuan::all();
+        $sumberDanaMasterList = SumberDana::all();
 
-        $importedCount = 0;
-        $errors = [];
+        $existingDbCodes = Barang::where('bengkel_id', $bengkelId)
+            ->pluck('kode_barang')
+            ->map(fn($k) => strtoupper(trim($k)))
+            ->flip()
+            ->all();
 
-        DB::transaction(function () use (
-            $rows,
-            $colMap,
-            $user,
-            $bengkelId,
-            $bengkelCode,
-            $autoCreateLokasi,
-            $autoCreateSumberDana,
-            &$lokasiCache,
-            &$sumberDanaCache,
-            &$importedCount,
-            &$errors
-        ) {
-            // Iterasi baris data (mulai baris index 1)
-            for ($i = 1; $i < count($rows); $i++) {
-                $row = $rows[$i];
+        $seenCodesInFile = [];
+        $validatedRows = [];
+        $rowErrors = [];
 
-                // Abaikan baris yang seluruh isinya kosong
-                $hasContent = false;
-                foreach ($row as $cell) {
-                    if (trim((string) $cell) !== '') {
-                        $hasContent = true;
-                        break;
-                    }
+        // 2. Pre-validasi seluruh baris sebelum transaksi
+        for ($i = 1; $i < count($rows); $i++) {
+            $rowNum = $i + 1; // 1-indexed baris Excel (baris 1 = header)
+            $row = $rows[$i];
+
+            // Abaikan baris yang seluruh kolomnya kosong
+            $hasContent = false;
+            foreach ($row as $cell) {
+                if (trim((string) $cell) !== '') {
+                    $hasContent = true;
+                    break;
                 }
-                if (!$hasContent) continue;
-
-                $nama = trim((string) ($row[$colMap['nama']] ?? ''));
-                if (empty($nama)) {
-                    continue; // Skip baris tanpa nama barang
-                }
-
-                // Tentukan tipe/jenis barang
-                $rawTipe = strtolower(trim((string) ($row[$colMap['tipe']] ?? '')));
-                $jenisBarang = (str_contains($rawTipe, 'bhp') || str_contains($rawTipe, 'bahan')) ? 'bhp' : 'inventaris';
-
-                // Tentukan satuan
-                $satuan = trim((string) ($row[$colMap['satuan']] ?? ''));
-                if (empty($satuan)) {
-                    $satuan = ($jenisBarang === 'bhp') ? 'Pcs' : 'Unit';
-                } else {
-                    $satuan = ucfirst(strtolower($satuan));
-                }
-
-                // Daftarkan satuan ke master satuan jika belum ada
-                try {
-                    Satuan::firstOrCreate(
-                        ['nama' => $satuan],
-                        [
-                            'singkatan' => strtolower(substr($satuan, 0, 10)),
-                            'deskripsi' => 'Didaftarkan otomatis melalui Import Excel',
-                        ]
-                    );
-                } catch (\Throwable $e) {
-                    // Abaikan race condition atau duplicate
-                }
-
-                // Tentukan kode barang
-                $rawKode = strtoupper(trim((string) ($row[$colMap['kode']] ?? '')));
-                if (!empty($rawKode)) {
-                    $exists = Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $rawKode)->exists();
-                    if ($exists) {
-                        $kodeBarang = $rawKode . '-' . rand(100, 999);
-                    } else {
-                        $kodeBarang = $rawKode;
-                    }
-                } else {
-                    $prefix = ($jenisBarang === 'bhp') ? 'BHP' : 'INV';
-                    do {
-                        $kodeBarang = "{$prefix}-{$bengkelCode}-" . rand(1000, 9999);
-                    } while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarang)->exists());
-                }
-
-                // Tentukan lokasi penyimpanan
-                $lokasiText = trim((string) ($row[$colMap['lokasi']] ?? ''));
-                $lokasiKey = strtolower($lokasiText);
-                $lokasi = null;
-
-                if (!empty($lokasiText)) {
-                    if ($lokasiCache->has($lokasiKey)) {
-                        $lokasi = $lokasiCache->get($lokasiKey);
-                    } else {
-                        // Cari berdasarkan kode
-                        $lokasi = LokasiPenyimpanan::where('bengkel_id', $bengkelId)
-                            ->where('kode', strtoupper($lokasiText))
-                            ->first();
-
-                        if (!$lokasi && $autoCreateLokasi) {
-                            $lokasi = LokasiPenyimpanan::create([
-                                'bengkel_id' => $bengkelId,
-                                'kode' => 'LOK-' . strtoupper(Str::random(4)),
-                                'nama' => $lokasiText,
-                                'deskripsi' => 'Dibuat otomatis dari Import Excel',
-                            ]);
-                            $lokasiCache->put($lokasiKey, $lokasi);
-                        }
-                    }
-                }
-
-                if (!$lokasi) {
-                    $lokasi = $lokasiCache->first() ?? LokasiPenyimpanan::where('bengkel_id', $bengkelId)->first();
-                    if (!$lokasi) {
-                        $lokasi = LokasiPenyimpanan::create([
-                            'bengkel_id' => $bengkelId,
-                            'kode' => 'LOK-UTAMA',
-                            'nama' => 'Gudang Utama',
-                            'deskripsi' => 'Lokasi penyimpanan default bengkel',
-                        ]);
-                        $lokasiCache->put(strtolower($lokasi->nama), $lokasi);
-                    }
-                }
-
-                // Tentukan sumber dana
-                $sumberDanaText = trim((string) ($row[$colMap['sumber_dana']] ?? ''));
-                $sumberDanaKey = strtolower($sumberDanaText);
-                $sumberDanaId = null;
-
-                if (!empty($sumberDanaText)) {
-                    if ($sumberDanaCache->has($sumberDanaKey)) {
-                        $sumberDanaId = $sumberDanaCache->get($sumberDanaKey)->id;
-                    } else {
-                        $sd = SumberDana::where('kode', strtoupper($sumberDanaText))->first();
-                        if (!$sd && $autoCreateSumberDana) {
-                            $sd = SumberDana::create([
-                                'kode' => 'SD-' . strtoupper(Str::random(4)),
-                                'nama' => $sumberDanaText,
-                                'deskripsi' => 'Dibuat otomatis dari Import Excel',
-                            ]);
-                            $sumberDanaCache->put($sumberDanaKey, $sd);
-                        }
-                        $sumberDanaId = $sd?->id;
-                    }
-                }
-
-                // Tentukan stok
-                if ($jenisBarang === 'inventaris') {
-                    $stokBaik = max(0, (int) ($row[$colMap['stok_baik']] ?? 1));
-                    $stokRusakRingan = isset($colMap['stok_rusak_ringan']) ? max(0, (int) ($row[$colMap['stok_rusak_ringan']] ?? 0)) : 0;
-                    $stokRusakBerat = isset($colMap['stok_rusak_berat']) ? max(0, (int) ($row[$colMap['stok_rusak_berat']] ?? 0)) : 0;
-                    $stokRusak = $stokRusakRingan + $stokRusakBerat;
-                    $stokTersedia = $stokBaik;
-                    $stokDipinjam = 0;
-                    $stokTotal = $stokTersedia + $stokRusak;
-                    $minimumStok = isset($colMap['batas_minimum']) ? max(0, (int) ($row[$colMap['batas_minimum']] ?? 1)) : 1;
-                } else {
-                    $stokBahan = max(0, (int) ($row[$colMap['stok_baik']] ?? 1));
-                    $stokTersedia = $stokBahan;
-                    $stokDipinjam = 0;
-                    $stokRusak = 0;
-                    $stokTotal = $stokBahan;
-                    $minimumStok = isset($colMap['batas_minimum']) ? max(0, (int) ($row[$colMap['batas_minimum']] ?? 0)) : 0;
-                }
-
-                $deskripsi = isset($colMap['spesifikasi']) ? trim((string) ($row[$colMap['spesifikasi']] ?? '')) : null;
-
-                // Tentukan harga satuan
-                $harga = 0;
-                if (isset($colMap['harga'])) {
-                    $rawHarga = (string) ($row[$colMap['harga']] ?? '0');
-                    $cleaned = trim($rawHarga);
-                    if ($cleaned !== '') {
-                        $cleaned = preg_replace('/[^\d.,]/', '', $cleaned);
-                        if (str_contains($cleaned, ',') && str_contains($cleaned, '.')) {
-                            $cleaned = str_replace('.', '', $cleaned);
-                            $cleaned = str_replace(',', '.', $cleaned);
-                        } elseif (str_contains($cleaned, ',')) {
-                            $cleaned = str_replace(',', '.', $cleaned);
-                        } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $cleaned)) {
-                            $cleaned = str_replace('.', '', $cleaned);
-                        }
-                        $harga = max(0, (float) $cleaned);
-                    }
-                }
-
-                // Buat record barang baru
-                $barang = Barang::create([
-                    'bengkel_id' => $bengkelId,
-                    'lokasi_penyimpanan_id' => $lokasi->id,
-                    'sumber_dana_id' => $sumberDanaId,
-                    'kode_barang' => $kodeBarang,
-                    'nama' => $nama,
-                    'jenis_barang' => $jenisBarang,
-                    'satuan' => $satuan,
-                    'harga' => $harga,
-                    'stok_total' => $stokTotal,
-                    'stok_tersedia' => $stokTersedia,
-                    'stok_dipinjam' => $stokDipinjam,
-                    'stok_rusak' => $stokRusak,
-                    'minimum_stok' => $minimumStok,
-                    'deskripsi' => $deskripsi,
-                ]);
-
-                // Catat mutasi stok awal jika memiliki stok
-                if ($stokTotal > 0) {
-                    StockMovement::create([
-                        'barang_id' => $barang->id,
-                        'user_id' => $user->id,
-                        'jenis' => 'stok_masuk',
-                        'jumlah' => $stokTotal,
-                        'keterangan' => 'Pendaftaran stok awal melalui Import Excel oleh Toolman',
-                    ]);
-                }
-
-                $importedCount++;
             }
-        });
+            if (!$hasContent) continue;
 
-        if ($importedCount === 0) {
-            return back()->with('error', 'Tidak ada data barang yang valid untuk diimpor. Pastikan kolom diisi dengan benar.');
+            $nama = isset($colMap['nama']) ? trim((string) ($row[$colMap['nama']] ?? '')) : '';
+            if (empty($nama)) {
+                $rowErrors[] = "Baris {$rowNum}: Kolom 'Nama Barang' wajib diisi.";
+                continue;
+            }
+
+            // Tipe / jenis barang
+            $rawTipe = isset($colMap['tipe']) ? strtolower(trim((string) ($row[$colMap['tipe']] ?? ''))) : '';
+            $jenisBarang = (str_contains($rawTipe, 'bhp') || str_contains($rawTipe, 'bahan')) ? 'bhp' : 'inventaris';
+
+            // Kode barang
+            $rawKode = isset($colMap['kode']) ? strtoupper(trim((string) ($row[$colMap['kode']] ?? ''))) : '';
+            if (!empty($rawKode)) {
+                if (strlen($rawKode) > 50) {
+                    $rowErrors[] = "Baris {$rowNum}: Kode barang '{$rawKode}' melebihi batas maksimal 50 karakter.";
+                } elseif (isset($seenCodesInFile[$rawKode])) {
+                    $rowErrors[] = "Baris {$rowNum}: Kode barang '{$rawKode}' duplikat di dalam file impor (sama dengan baris {$seenCodesInFile[$rawKode]}).";
+                } elseif (isset($existingDbCodes[$rawKode])) {
+                    $rowErrors[] = "Baris {$rowNum}: Kode barang '{$rawKode}' sudah terdaftar di bengkel ini.";
+                } else {
+                    $seenCodesInFile[$rawKode] = $rowNum;
+                }
+            }
+
+            // Validasi Satuan terhadap master satuan yang ada
+            $satuanRaw = isset($colMap['satuan']) ? trim((string) ($row[$colMap['satuan']] ?? '')) : '';
+            $finalSatuan = null;
+            if (empty($satuanRaw)) {
+                $defaultUnitName = ($jenisBarang === 'bhp') ? 'Pcs' : 'Unit';
+                $matchedDefault = $satuanMasterList->first(function ($s) use ($defaultUnitName) {
+                    return strcasecmp($s->nama, $defaultUnitName) === 0;
+                });
+                $finalSatuan = $matchedDefault?->nama ?? $defaultUnitName;
+            } else {
+                $matchedSatuan = $satuanMasterList->first(function ($s) use ($satuanRaw) {
+                    return strcasecmp($s->nama, $satuanRaw) === 0
+                        || (!empty($s->singkatan) && strcasecmp($s->singkatan, $satuanRaw) === 0);
+                });
+
+                if (!$matchedSatuan) {
+                    $rowErrors[] = "Baris {$rowNum}: Satuan '{$satuanRaw}' tidak terdaftar dalam master data satuan.";
+                } else {
+                    $finalSatuan = $matchedSatuan->nama;
+                }
+            }
+
+            // Validasi Lokasi Penyimpanan (wajib dalam lingkup bengkel Toolman)
+            $lokasiRaw = isset($colMap['lokasi']) ? trim((string) ($row[$colMap['lokasi']] ?? '')) : '';
+            $finalLokasiId = null;
+            if (!empty($lokasiRaw)) {
+                $matchedLokasi = $lokasiBengkelList->first(function ($l) use ($lokasiRaw) {
+                    return strcasecmp($l->nama, $lokasiRaw) === 0
+                        || strcasecmp($l->kode, $lokasiRaw) === 0;
+                });
+
+                if ($matchedLokasi) {
+                    $finalLokasiId = $matchedLokasi->id;
+                } else {
+                    // Cek apakah lokasi ini milik bengkel lain
+                    $foreignLoc = $allLokasis->first(function ($l) use ($bengkelId, $lokasiRaw) {
+                        return $l->bengkel_id != $bengkelId
+                            && (strcasecmp($l->nama, $lokasiRaw) === 0 || strcasecmp($l->kode, $lokasiRaw) === 0);
+                    });
+
+                    if ($foreignLoc) {
+                        $rowErrors[] = "Baris {$rowNum}: Lokasi '{$lokasiRaw}' milik bengkel lain dan tidak dapat digunakan.";
+                    } else {
+                        $rowErrors[] = "Baris {$rowNum}: Lokasi '{$lokasiRaw}' tidak ditemukan pada bengkel ini.";
+                    }
+                }
+            } else {
+                if ($defaultLokasi) {
+                    $finalLokasiId = $defaultLokasi->id;
+                } else {
+                    $rowErrors[] = "Baris {$rowNum}: Lokasi penyimpanan wajib diisi karena bengkel belum memiliki lokasi penyimpanan terdaftar.";
+                }
+            }
+
+            // Validasi Sumber Dana terhadap master data
+            $sumberDanaRaw = isset($colMap['sumber_dana']) ? trim((string) ($row[$colMap['sumber_dana']] ?? '')) : '';
+            $finalSumberDanaId = null;
+            if (!empty($sumberDanaRaw)) {
+                $matchedSd = $sumberDanaMasterList->first(function ($sd) use ($sumberDanaRaw) {
+                    return strcasecmp($sd->nama, $sumberDanaRaw) === 0
+                        || (!empty($sd->kode) && strcasecmp($sd->kode, $sumberDanaRaw) === 0);
+                });
+
+                if ($matchedSd) {
+                    $finalSumberDanaId = $matchedSd->id;
+                } else {
+                    $rowErrors[] = "Baris {$rowNum}: Sumber dana '{$sumberDanaRaw}' tidak terdaftar dalam master data sumber dana.";
+                }
+            }
+
+            // Validasi Stok & Harga
+            if ($jenisBarang === 'inventaris') {
+                $stokBaik = isset($colMap['stok_baik']) ? max(0, (int) ($row[$colMap['stok_baik']] ?? 1)) : 1;
+                $stokRusakRingan = isset($colMap['stok_rusak_ringan']) ? max(0, (int) ($row[$colMap['stok_rusak_ringan']] ?? 0)) : 0;
+                $stokRusakBerat = isset($colMap['stok_rusak_berat']) ? max(0, (int) ($row[$colMap['stok_rusak_berat']] ?? 0)) : 0;
+                $stokRusak = $stokRusakRingan + $stokRusakBerat;
+                $stokTersedia = $stokBaik;
+                $stokTotal = $stokTersedia + $stokRusak;
+                $minimumStok = isset($colMap['batas_minimum']) ? max(0, (int) ($row[$colMap['batas_minimum']] ?? 1)) : 1;
+            } else {
+                $stokBahan = isset($colMap['stok_baik']) ? max(0, (int) ($row[$colMap['stok_baik']] ?? 1)) : 1;
+                $stokTersedia = $stokBahan;
+                $stokRusak = 0;
+                $stokTotal = $stokBahan;
+                $minimumStok = isset($colMap['batas_minimum']) ? max(0, (int) ($row[$colMap['batas_minimum']] ?? 0)) : 0;
+            }
+
+            $deskripsi = isset($colMap['spesifikasi']) ? trim((string) ($row[$colMap['spesifikasi']] ?? '')) : null;
+
+            $harga = 0;
+            if (isset($colMap['harga'])) {
+                $rawHarga = (string) ($row[$colMap['harga']] ?? '0');
+                $cleaned = trim($rawHarga);
+                if ($cleaned !== '') {
+                    $cleaned = preg_replace('/[^\d.,]/', '', $cleaned);
+                    if (str_contains($cleaned, ',') && str_contains($cleaned, '.')) {
+                        $cleaned = str_replace('.', '', $cleaned);
+                        $cleaned = str_replace(',', '.', $cleaned);
+                    } elseif (str_contains($cleaned, ',')) {
+                        $cleaned = str_replace(',', '.', $cleaned);
+                    } elseif (preg_match('/^\d{1,3}(\.\d{3})+$/', $cleaned)) {
+                        $cleaned = str_replace('.', '', $cleaned);
+                    }
+                    $harga = max(0, (float) $cleaned);
+                }
+            }
+
+            $validatedRows[] = [
+                'row_num' => $rowNum,
+                'kode_barang' => $rawKode,
+                'nama' => $nama,
+                'jenis_barang' => $jenisBarang,
+                'satuan' => $finalSatuan,
+                'lokasi_penyimpanan_id' => $finalLokasiId,
+                'sumber_dana_id' => $finalSumberDanaId,
+                'harga' => $harga,
+                'stok_total' => $stokTotal,
+                'stok_tersedia' => $stokTersedia,
+                'stok_dipinjam' => 0,
+                'stok_rusak' => $stokRusak,
+                'minimum_stok' => $minimumStok,
+                'deskripsi' => $deskripsi,
+            ];
+        }
+
+        // Jika terdapat kesalahan validasi pada baris manapun, batalkan impor seluruhnya
+        if (!empty($rowErrors)) {
+            $errorSummary = "Import dibatalkan. Ditemukan " . count($rowErrors) . " kesalahan pada baris data:\n" . implode("\n", $rowErrors);
+            return back()->with('error', $errorSummary)
+                ->with('import_errors', $rowErrors)
+                ->withInput();
+        }
+
+        if (empty($validatedRows)) {
+            return back()->with('error', 'Tidak ada data barang yang valid untuk diimpor. Pastikan file berisi baris data barang.')->withInput();
+        }
+
+        // 3. Eksekusi penyimpanan atomik dalam database transaction
+        $importedCount = 0;
+        try {
+            DB::transaction(function () use ($validatedRows, $bengkelId, $bengkelCode, $user, &$importedCount) {
+                $autoGenCounter = 1;
+
+                foreach ($validatedRows as $item) {
+                    $kodeBarang = $item['kode_barang'];
+                    if (empty($kodeBarang)) {
+                        $prefix = ($item['jenis_barang'] === 'bhp') ? 'BHP' : 'INV';
+                        do {
+                            $kodeBarang = "{$prefix}-{$bengkelCode}-" . str_pad((string) $autoGenCounter++, 4, '0', STR_PAD_LEFT);
+                        } while (Barang::where('bengkel_id', $bengkelId)->where('kode_barang', $kodeBarang)->exists());
+                    }
+
+                    $barang = Barang::create([
+                        'bengkel_id' => $bengkelId,
+                        'lokasi_penyimpanan_id' => $item['lokasi_penyimpanan_id'],
+                        'sumber_dana_id' => $item['sumber_dana_id'],
+                        'kode_barang' => $kodeBarang,
+                        'nama' => $item['nama'],
+                        'jenis_barang' => $item['jenis_barang'],
+                        'satuan' => $item['satuan'],
+                        'harga' => $item['harga'],
+                        'stok_total' => $item['stok_total'],
+                        'stok_tersedia' => $item['stok_tersedia'],
+                        'stok_dipinjam' => 0,
+                        'stok_rusak' => $item['stok_rusak'],
+                        'minimum_stok' => $item['minimum_stok'],
+                        'deskripsi' => $item['deskripsi'],
+                    ]);
+
+                    if ($item['stok_total'] > 0) {
+                        StockMovement::create([
+                            'barang_id' => $barang->id,
+                            'user_id' => $user->id,
+                            'jenis' => 'stok_masuk',
+                            'jumlah' => $item['stok_total'],
+                            'keterangan' => 'Pendaftaran stok awal melalui Import Excel oleh Toolman',
+                        ]);
+                    }
+
+                    $importedCount++;
+                }
+            });
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Terjadi kesalahan sistem saat memproses transaksi import: ' . $e->getMessage())
+                ->withInput();
         }
 
         return redirect()->route('toolman.barang.index')
