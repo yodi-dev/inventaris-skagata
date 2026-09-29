@@ -1313,7 +1313,16 @@ class BarangController extends Controller
                 }
             });
         } catch (\Throwable $e) {
-            return back()->with('error', 'Terjadi kesalahan sistem saat memproses transaksi import: ' . $e->getMessage())
+            $errorMsg = $e->getMessage();
+            if ($e instanceof \Illuminate\Database\QueryException && (
+                ($e->errorInfo[1] ?? null) == 1062
+                || ($e->errorInfo[1] ?? null) == 19
+                || str_contains($errorMsg, 'Duplicate entry')
+                || str_contains($errorMsg, 'UNIQUE constraint failed')
+            )) {
+                $errorMsg = 'Terjadi tabrakan kode barang yang sama dengan proses lain di bengkel ini. Silakan periksa kembali kode barang dan ulangi import.';
+            }
+            return back()->with('error', 'Terjadi kesalahan saat memproses transaksi import: ' . $errorMsg)
                 ->withInput();
         }
 

@@ -439,4 +439,58 @@ class RemediationBatch7Test extends TestCase
         $this->assertDatabaseMissing('barangs', ['kode_barang' => 'ROW-01']);
         $this->assertDatabaseMissing('barangs', ['kode_barang' => 'ROW-03']);
     }
+
+    public function test_import_returns_actionable_error_when_database_duplicate_collision_occurs(): void
+    {
+        $bengkel = $this->createBengkel('TAV2', 'Teknik Audio Video Dua');
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+        $lokasi = LokasiPenyimpanan::create([
+            'bengkel_id' => $bengkel->id,
+            'kode' => 'LOK-TAV2-1',
+            'nama' => 'Lab Audio',
+        ]);
+
+        $headers = ['Kode Barang (Opsional)', 'Nama Barang', 'Tipe (inventaris/bhp)', 'Satuan', 'Lokasi Penyimpanan'];
+        $rows = [
+            ['TAV-RACE-01', 'Speaker Monitor 1', 'inventaris', 'Unit', $lokasi->nama],
+            ['TAV-RACE-02', 'Speaker Monitor 2', 'inventaris', 'Unit', $lokasi->nama],
+        ];
+
+        $file = $this->createCsvFile('import_race.csv', $headers, $rows);
+
+        // Simulasikan race condition: tepat sebelum TAV-RACE-01 disimpan, ada proses lain yang menyisipkannya ke DB
+        Barang::creating(function ($barang) use ($bengkel, $lokasi) {
+            static $alreadyInjected = false;
+            if (!$alreadyInjected && $barang->kode_barang === 'TAV-RACE-01') {
+                $alreadyInjected = true;
+                Barang::withoutEvents(function () use ($bengkel, $lokasi) {
+                    Barang::create([
+                        'bengkel_id' => $bengkel->id,
+                        'lokasi_penyimpanan_id' => $lokasi->id,
+                        'kode_barang' => 'TAV-RACE-01',
+                        'nama' => 'Speaker Monitor Menyela',
+                        'jenis_barang' => 'inventaris',
+                        'satuan' => 'Unit',
+                        'stok_total' => 1,
+                        'stok_tersedia' => 1,
+                        'stok_dipinjam' => 0,
+                        'stok_rusak' => 0,
+                        'minimum_stok' => 1,
+                    ]);
+                });
+            }
+        });
+
+        $response = $this->actingAs($toolman)->post(route('toolman.barang.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect();
+        $response->assertSessionHas('error');
+        $errorMessage = session('error');
+        $this->assertStringContainsString('tabrakan kode barang yang sama dengan proses lain', $errorMessage);
+
+        // Pastikan TAV-RACE-02 tidak tersimpan (transaksi di-rollback penuh)
+        $this->assertDatabaseMissing('barangs', ['kode_barang' => 'TAV-RACE-02']);
+    }
 }
