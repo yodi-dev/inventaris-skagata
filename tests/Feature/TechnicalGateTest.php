@@ -220,78 +220,118 @@ class TechnicalGateTest extends TestCase
     }
 
     /**
-     * 4. Permintaan reset password oleh pengguna dengan status 'suspend' ditolak dan tidak mengirim notifikasi.
+     * 4. Permintaan forgot-password mengembalikan respon publik yang konsisten (tidak membocorkan status atau eksistensi akun),
+     *    sambil tetap menjamin token dan notifikasi HANYA dikirimkan untuk akun yang aktif dan memenuhi syarat.
      */
-    public function test_forgot_password_blocks_suspended_user_without_sending_notification(): void
+    public function test_forgot_password_returns_consistent_response_across_all_account_states_and_protects_ineligible_users(): void
     {
         Notification::fake();
+
+        $activeUser = $this->createUser([
+            'email' => 'siswa.aktif@example.com',
+            'status' => 'aktif',
+        ]);
 
         $suspendedUser = $this->createUser([
-            'email' => 'siswa.nakal@example.com',
-            'role' => 'peminjam',
+            'email' => 'siswa.suspend@example.com',
             'status' => 'suspend',
         ]);
-
-        $response = $this->post('/forgot-password', [
-            'email' => $suspendedUser->email,
-        ]);
-
-        $response->assertStatus(302);
-        $response->assertSessionHasErrors(['email']);
-        $error = session('errors')->first('email');
-        $this->assertStringContainsString('sedang ditangguhkan', $error);
-
-        Notification::assertNothingSent();
-    }
-
-    /**
-     * 5. Permintaan reset password oleh pengguna dengan status 'menunggu_acc' ditolak dan tidak mengirim notifikasi.
-     */
-    public function test_forgot_password_blocks_pending_user_without_sending_notification(): void
-    {
-        Notification::fake();
 
         $pendingUser = $this->createUser([
             'email' => 'pendaftar.baru@example.com',
-            'role' => 'peminjam',
             'status' => 'menunggu_acc',
         ]);
 
-        $response = $this->post('/forgot-password', [
-            'email' => $pendingUser->email,
-        ]);
+        $nonexistentEmail = 'tidak.terdaftar@example.com';
 
-        $response->assertStatus(302);
-        $response->assertSessionHasErrors(['email']);
-        $error = session('errors')->first('email');
-        $this->assertStringContainsString('menunggu persetujuan', $error);
+        // 1. Akun Aktif: Berhasil kirim notifikasi, terbuat token di DB, respon publik konsisten
+        $resActive = $this->post('/forgot-password', ['email' => $activeUser->email]);
+        $resActive->assertStatus(302);
+        $resActive->assertSessionHasNoErrors();
+        $resActive->assertSessionHas('status', __(Password::RESET_LINK_SENT));
+        Notification::assertSentTo($activeUser, ResetPassword::class);
+        $this->assertDatabaseHas('password_reset_tokens', ['email' => $activeUser->email]);
 
-        Notification::assertNothingSent();
+        // 2. Akun Suspend: Respon publik identik 100%, TIDAK kirim notifikasi, TIDAK buat token
+        $resSuspend = $this->post('/forgot-password', ['email' => $suspendedUser->email]);
+        $resSuspend->assertStatus(302);
+        $resSuspend->assertSessionHasNoErrors();
+        $resSuspend->assertSessionHas('status', __(Password::RESET_LINK_SENT));
+        Notification::assertNotSentTo($suspendedUser, ResetPassword::class);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $suspendedUser->email]);
+
+        // 3. Akun Menunggu ACC: Respon publik identik 100%, TIDAK kirim notifikasi, TIDAK buat token
+        $resPending = $this->post('/forgot-password', ['email' => $pendingUser->email]);
+        $resPending->assertStatus(302);
+        $resPending->assertSessionHasNoErrors();
+        $resPending->assertSessionHas('status', __(Password::RESET_LINK_SENT));
+        Notification::assertNotSentTo($pendingUser, ResetPassword::class);
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $pendingUser->email]);
+
+        // 4. Akun Nonexistent: Respon publik identik 100%, TIDAK kirim notifikasi, TIDAK buat token
+        $resNonexistent = $this->post('/forgot-password', ['email' => $nonexistentEmail]);
+        $resNonexistent->assertStatus(302);
+        $resNonexistent->assertSessionHasNoErrors();
+        $resNonexistent->assertSessionHas('status', __(Password::RESET_LINK_SENT));
+        $this->assertDatabaseMissing('password_reset_tokens', ['email' => $nonexistentEmail]);
     }
 
     /**
-     * 6. Form reset password (POST /reset-password) menolak penggantian sandi jika akun berstatus suspend.
+     * 5. Form reset-password menolak penggantian sandi untuk akun suspend/pending dengan respon error standar,
+     *    tanpa membocorkan status akun atau merusak validasi token.
      */
-    public function test_reset_password_blocks_suspended_user(): void
+    public function test_reset_password_returns_consistent_error_and_does_not_mutate_ineligible_accounts(): void
     {
         $suspendedUser = $this->createUser([
-            'email' => 'siswa.suspend@example.com',
-            'role' => 'peminjam',
+            'email' => 'siswa.suspend.reset@example.com',
+            'password' => bcrypt('old-password-123'),
             'status' => 'suspend',
         ]);
 
-        $token = Password::createToken($suspendedUser);
-
-        $response = $this->post('/reset-password', [
-            'token' => $token,
-            'email' => $suspendedUser->email,
-            'password' => 'new-password123',
-            'password_confirmation' => 'new-password123',
+        $pendingUser = $this->createUser([
+            'email' => 'siswa.pending.reset@example.com',
+            'password' => bcrypt('old-password-123'),
+            'status' => 'menunggu_acc',
         ]);
 
-        $response->assertStatus(302);
-        $response->assertSessionHasErrors(['email']);
-        $this->assertStringContainsString('sedang ditangguhkan', session('errors')->first('email'));
+        $oldSuspendedPasswordHash = $suspendedUser->password;
+        $oldPendingPasswordHash = $pendingUser->password;
+
+        // Coba reset akun suspend dengan token dummy
+        $resSuspend = $this->post('/reset-password', [
+            'token' => 'dummy-token',
+            'email' => $suspendedUser->email,
+            'password' => 'new-password-456',
+            'password_confirmation' => 'new-password-456',
+        ]);
+
+        $resSuspend->assertStatus(302);
+        $resSuspend->assertSessionHasErrors(['email' => __(Password::INVALID_TOKEN)]);
+        $suspendedUser->refresh();
+        $this->assertEquals($oldSuspendedPasswordHash, $suspendedUser->password, 'Password akun suspended tidak boleh berubah.');
+
+        // Coba reset akun pending dengan token dummy
+        $resPending = $this->post('/reset-password', [
+            'token' => 'dummy-token',
+            'email' => $pendingUser->email,
+            'password' => 'new-password-456',
+            'password_confirmation' => 'new-password-456',
+        ]);
+
+        $resPending->assertStatus(302);
+        $resPending->assertSessionHasErrors(['email' => __(Password::INVALID_TOKEN)]);
+        $pendingUser->refresh();
+        $this->assertEquals($oldPendingPasswordHash, $pendingUser->password, 'Password akun pending tidak boleh berubah.');
+
+        // Coba reset akun tidak terdaftar
+        $resNonexistent = $this->post('/reset-password', [
+            'token' => 'dummy-token',
+            'email' => 'tidak.ada@example.com',
+            'password' => 'new-password-456',
+            'password_confirmation' => 'new-password-456',
+        ]);
+        $resNonexistent->assertStatus(302);
+        $resNonexistent->assertSessionHasErrors(['email' => __(Password::INVALID_TOKEN)]);
     }
 
     /**

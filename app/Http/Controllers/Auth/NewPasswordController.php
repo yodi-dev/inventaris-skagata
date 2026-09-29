@@ -37,20 +37,15 @@ class NewPasswordController extends Controller
         ]);
 
         $user = User::where('email', $request->email)->first();
-        if ($user) {
-            if ($user->status === 'suspend') {
-                return back()->withInput($request->only('email'))
-                    ->withErrors(['email' => 'Akun Anda sedang ditangguhkan. Silakan hubungi Toolman.']);
-            }
-            if ($user->status === 'menunggu_acc') {
-                return back()->withInput($request->only('email'))
-                    ->withErrors(['email' => 'Akun Anda masih menunggu persetujuan dari Toolman.']);
-            }
+
+        // Jika user tidak ditemukan atau akunnya tidak aktif (suspend / menunggu_acc),
+        // tolak reset dengan pesan generik INVALID_TOKEN tanpa membocorkan status atau eksistensi akun.
+        if (! $user || $user->status !== 'aktif') {
+            return back()->withInput($request->only('email'))
+                ->withErrors(['email' => __(Password::INVALID_TOKEN)]);
         }
 
-        // Here we will attempt to reset the user's password. If it is successful we
-        // will update the password on an actual user model and persist it to the
-        // database. Otherwise we will parse the error and return the response.
+        // Token divalidasi oleh PasswordBroker untuk akun aktif yang berhak
         $status = Password::reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
             function (User $user) use ($request) {
@@ -63,12 +58,11 @@ class NewPasswordController extends Controller
             }
         );
 
-        // If the password was successfully reset, we will redirect the user back to
-        // the application's home authenticated view. If there is an error we can
-        // redirect them back to where they came from with their error message.
+        // Jika berhasil direset, arahkan ke login. Jika gagal (misal token salah/expired),
+        // gunakan pesan error standar tanpa membocorkan informasi sensitif.
         return $status == Password::PASSWORD_RESET
-                    ? redirect()->route('login')->with('status', __($status))
-                    : back()->withInput($request->only('email'))
-                        ->withErrors(['email' => __($status)]);
+            ? redirect()->route('login')->with('status', __($status))
+            : back()->withInput($request->only('email'))
+            ->withErrors(['email' => __(Password::INVALID_TOKEN)]);
     }
 }
