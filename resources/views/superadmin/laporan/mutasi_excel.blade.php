@@ -68,7 +68,7 @@
             <td colspan="2" class="meta-label">Kategori Mutasi</td>
             <td colspan="5" class="meta-val">{{ $filters['jenis'] }}</td>
             <td colspan="2" class="meta-label">Kata Kunci Pencarian</td>
-            <td colspan="5" class="meta-val">{{ !empty($filters['search']) ? '"' . $filters['search'] . '"' : 'Semua Data' }}</td>
+            <td colspan="5" class="meta-val" style="mso-number-format:'\@';">{{ !empty($filters['search']) ? '"' . \App\Support\SpreadsheetSanitizer::escape($filters['search']) . '"' : 'Semua Data' }}</td>
         </tr>
         <tr><td colspan="14">&nbsp;</td></tr>
 
@@ -147,18 +147,18 @@
             <tr class="{{ $idx % 2 == 1 ? 'row-alt' : '' }}">
                 <td class="td-cell td-center">{{ $idx + 1 }}</td>
                 <td class="td-cell td-center">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
-                <td class="td-cell td-center font-mono">{{ $m->barang->kode_barang ?? '-' }}</td>
-                <td class="td-cell"><strong>{{ $m->barang->nama ?? 'Aset Dihapus' }}</strong></td>
-                <td class="td-cell td-center">{{ $sumberDana }}</td>
-                <td class="td-cell">{{ $m->barang->bengkel->nama ?? '-' }}</td>
-                <td class="td-cell">{{ $lokasi }}</td>
+                <td class="td-cell td-center font-mono" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->kode_barang ?? '-') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';"><strong>{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->nama ?? 'Aset Dihapus') }}</strong></td>
+                <td class="td-cell td-center" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($sumberDana) }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->bengkel->nama ?? '-') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($lokasi) }}</td>
                 <td class="td-cell td-center">{{ $tipe['label'] }}</td>
                 <td class="td-cell td-right">{{ $harga > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') : '-' }}</td>
                 <td class="td-cell td-right {{ $tipe['class'] }}">{{ $qtyDisplay }}</td>
-                <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                <td class="td-cell td-center" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->satuan ?? 'unit') }}</td>
                 <td class="td-cell td-right font-semibold">{{ number_format($stokSekarang, 0, ',', '.') }} {{ $m->barang->satuan ?? 'unit' }}</td>
-                <td class="td-cell">{{ $m->user->name ?? 'Sistem' }}</td>
-                <td class="td-cell">{{ $m->keterangan ?? '-' }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->user->name ?? 'Sistem') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->keterangan ?? '-') }}</td>
             </tr>
         @empty
             <tr>

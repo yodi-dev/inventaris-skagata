@@ -201,7 +201,7 @@
             <td colspan="2" class="meta-label">Filter Tipe Aset</td>
             <td colspan="5" class="meta-val">{{ $filters['tipe'] }}</td>
             <td colspan="2" class="meta-label">Kata Kunci Pencarian</td>
-            <td colspan="7" class="meta-val">{{ $filters['search'] }}</td>
+            <td colspan="7" class="meta-val" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($filters['search']) }}</td>
         </tr>
         <tr>
             <td colspan="16">&nbsp;</td>
@@ -329,29 +329,29 @@
             @endphp
             <tr class="{{ $isAlt ? 'row-alt' : '' }}">
                 <td class="td-cell td-center">{{ $no++ }}</td>
-                <td class="td-cell td-center font-bold" style="font-weight: bold; color: #2563eb;">
+                <td class="td-cell td-center font-bold" style="font-weight: bold; color: #2563eb; mso-number-format:'\@';">
                     #LOG-{{ str_pad($m->id, 5, '0', STR_PAD_LEFT) }}</td>
                 <td class="td-cell td-center">{{ $m->created_at->format('d/m/Y') }}</td>
                 <td class="td-cell td-center">{{ $m->created_at->format('H:i') }} WIB</td>
-                <td class="td-cell td-center" style="font-family: monospace; font-weight: bold;">
-                    {{ $m->barang->kode_barang ?? '-' }}</td>
-                <td class="td-cell font-bold" style="font-weight: 600;">{{ $m->barang->nama ?? 'Barang Terhapus' }}
+                <td class="td-cell td-center" style="font-family: monospace; font-weight: bold; mso-number-format:'\@';">
+                    {{ \App\Support\SpreadsheetSanitizer::escape($m->barang->kode_barang ?? '-') }}</td>
+                <td class="td-cell font-bold" style="font-weight: 600; mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->nama ?? 'Barang Terhapus') }}
                 </td>
                 <td class="td-cell td-center">
                     {{ $m->barang && $m->barang->jenis_barang === 'bhp' ? 'BHP' : 'Inventaris' }}</td>
-                <td class="td-cell">{{ $m->barang?->lokasiPenyimpanan?->nama ?? 'Bengkel' }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang?->lokasiPenyimpanan?->nama ?? 'Bengkel') }}</td>
                 <td class="td-cell td-center {{ $jenisClass }}">{{ $jenisLabel }}</td>
                 <td class="td-cell td-right"
                     style="font-weight: bold; color: {{ $sign === '+' ? '#15803d' : ($sign === '-' ? '#b91c1c' : '#334155') }};">
                     {{ $sign }}{{ $m->jumlah }}
                 </td>
-                <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                <td class="td-cell td-center" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->satuan ?? 'unit') }}</td>
                 <td class="td-cell td-right">
                     {{ $hargaItem > 0 ? 'Rp ' . number_format($hargaItem, 0, ',', '.') : '-' }}</td>
                 <td class="td-cell td-center" style="font-size: 9pt;">{{ $stokText }}</td>
-                <td class="td-cell">{{ $m->user->name ?? 'Sistem Otomatis' }}</td>
-                <td class="td-cell td-center" style="font-size: 9pt;">{{ $refText }}</td>
-                <td class="td-cell" style="font-size: 9pt; color: #475569;">{{ $m->keterangan ?? '-' }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->user->name ?? 'Sistem Otomatis') }}</td>
+                <td class="td-cell td-center" style="font-size: 9pt; mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($refText) }}</td>
+                <td class="td-cell" style="font-size: 9pt; color: #475569; mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->keterangan ?? '-') }}</td>
             </tr>
         @empty
             <tr>

@@ -120,17 +120,17 @@
             <tr class="{{ $idx % 2 == 1 ? 'row-alt' : '' }}">
                 <td class="td-cell td-center">{{ $idx + 1 }}</td>
                 <td class="td-cell td-center">{{ $m->created_at ? $m->created_at->format('d/m/Y H:i') : '-' }}</td>
-                <td class="td-cell td-center font-mono">{{ $m->barang->kode_barang ?? '-' }}</td>
-                <td class="td-cell"><strong>{{ $m->barang->nama ?? 'Barang Dihapus' }}</strong></td>
-                <td class="td-cell td-center">{{ $sumberDana }}</td>
-                <td class="td-cell">{{ $m->barang->bengkel->nama ?? '-' }}</td>
-                <td class="td-cell">{{ $lokasi }}</td>
+                <td class="td-cell td-center font-mono" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->kode_barang ?? '-') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';"><strong>{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->nama ?? 'Barang Dihapus') }}</strong></td>
+                <td class="td-cell td-center" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($sumberDana) }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->bengkel->nama ?? '-') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($lokasi) }}</td>
                 <td class="td-cell td-right">{{ $harga > 0 ? 'Rp ' . number_format($harga, 0, ',', '.') : '-' }}</td>
                 <td class="td-cell td-right qty-badge">-{{ abs($m->jumlah) }}</td>
-                <td class="td-cell td-center">{{ $m->barang->satuan ?? 'unit' }}</td>
+                <td class="td-cell td-center" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->barang->satuan ?? 'unit') }}</td>
                 <td class="td-cell td-right font-semibold">{{ number_format($stokSekarang, 0, ',', '.') }} {{ $m->barang->satuan ?? 'unit' }}</td>
-                <td class="td-cell">{{ $m->user->name ?? 'Sistem' }}</td>
-                <td class="td-cell">{{ $m->keterangan ?? 'Penggunaan bahan praktik' }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->user->name ?? 'Sistem') }}</td>
+                <td class="td-cell" style="mso-number-format:'\@';">{{ \App\Support\SpreadsheetSanitizer::escape($m->keterangan ?? 'Penggunaan bahan praktik') }}</td>
             </tr>
         @empty
             <tr>

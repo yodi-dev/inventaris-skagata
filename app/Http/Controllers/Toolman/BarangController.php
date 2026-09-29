@@ -18,6 +18,16 @@ use Illuminate\Validation\Rule;
 
 class BarangController extends Controller
 {
+    /**
+     * Batasan keamanan dan memori untuk parsing file spreadsheet (Batch 08).
+     */
+    public const MAX_ZIP_ENTRIES = 100;
+    public const MAX_XML_ENTRY_SIZE = 10485760; // 10 MB per entry
+    public const MAX_TOTAL_UNCOMPRESSED_SIZE = 26214400; // 25 MB total
+    public const MAX_IMPORT_ROWS = 2000;
+    public const MAX_COLUMNS_PER_ROW = 50;
+    public const MAX_SHARED_STRINGS = 15000;
+
     public function index(Request $request)
     {
         $user = auth()->user();
@@ -1009,7 +1019,7 @@ class BarangController extends Controller
     public function import(Request $request)
     {
         $request->validate([
-            'file' => 'required|file|max:10240|mimes:xlsx,xls,csv,txt',
+            'file' => 'required|file|max:10240|mimes:xlsx,xls,csv,txt,zip',
         ], [
             'file.required' => 'Silakan pilih file Excel atau CSV yang akan diunggah.',
             'file.mimes' => 'Format file yang didukung adalah .xlsx, .xls, atau .csv.',
@@ -1028,7 +1038,13 @@ class BarangController extends Controller
         SatuanController::ensureDefaults();
 
         $file = $request->file('file');
-        $rows = $this->parseSpreadsheet($file);
+        try {
+            $rows = $this->parseSpreadsheet($file);
+        } catch (\InvalidArgumentException $e) {
+            return back()->with('error', $e->getMessage())->withInput();
+        } catch (\Throwable $e) {
+            return back()->with('error', 'Gagal memproses file spreadsheet: ' . $e->getMessage())->withInput();
+        }
 
         if (empty($rows) || count($rows) < 2) {
             return back()->with('error', 'File yang diunggah kosong atau tidak memiliki baris data barang.')->withInput();
@@ -1331,7 +1347,9 @@ class BarangController extends Controller
     }
 
     /**
-     * Parsing file spreadsheet (.xlsx, .xls, .csv, .txt) ke dalam array baris data.
+     * Parsing file spreadsheet (.xlsx, .xls, .csv, .txt) ke dalam array baris data dengan batasan keamanan.
+     *
+     * @throws \InvalidArgumentException jika format file rusak, tidak valid, atau melebihi batasan aman.
      */
     private function parseSpreadsheet($file): array
     {
@@ -1341,12 +1359,16 @@ class BarangController extends Controller
 
         if (in_array($extension, ['csv', 'txt'])) {
             $handle = fopen($path, 'r');
-            if ($handle !== false) {
-                // Deteksi delimiter dari baris pertama
-                $firstLine = fgets($handle);
-                rewind($handle);
+            if ($handle === false) {
+                throw new \InvalidArgumentException('Gagal membuka file CSV/TXT untuk dibaca.');
+            }
 
-                $delimiter = ',';
+            // Deteksi delimiter dari baris pertama
+            $firstLine = fgets($handle);
+            rewind($handle);
+
+            $delimiter = ',';
+            if ($firstLine !== false) {
                 $commaCount = substr_count($firstLine, ',');
                 $semiCount = substr_count($firstLine, ';');
                 $tabCount = substr_count($firstLine, "\t");
@@ -1356,101 +1378,187 @@ class BarangController extends Controller
                 } elseif ($tabCount > $commaCount && $tabCount > $semiCount) {
                     $delimiter = "\t";
                 }
-
-                $isFirst = true;
-                while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
-                    if ($isFirst && !empty($data[0])) {
-                        $data[0] = preg_replace('/^\xEF\xBB\xBF/', '', $data[0]);
-                        $isFirst = false;
-                    }
-                    $rows[] = array_map('trim', $data);
-                }
-                fclose($handle);
             }
-        } elseif ($extension === 'xlsx') {
-            if (class_exists(\ZipArchive::class)) {
-                $zip = new \ZipArchive();
-                if ($zip->open($path) === true) {
-                    // 1. Baca sharedStrings.xml jika ada
-                    $sharedStrings = [];
-                    $ssIndex = $zip->locateName('xl/sharedStrings.xml');
-                    if ($ssIndex !== false) {
-                        $ssXml = simplexml_load_string($zip->getFromIndex($ssIndex));
-                        if ($ssXml && isset($ssXml->si)) {
-                            foreach ($ssXml->si as $si) {
-                                if (isset($si->t)) {
-                                    $sharedStrings[] = (string) $si->t;
-                                } elseif (isset($si->r)) {
-                                    $str = '';
-                                    foreach ($si->r as $r) {
-                                        $str .= (string) $r->t;
-                                    }
-                                    $sharedStrings[] = $str;
-                                } else {
-                                    $sharedStrings[] = '';
-                                }
-                            }
-                        }
-                    }
 
-                    // 2. Cari sheet1.xml atau sheet pertama
-                    $sheetIndex = $zip->locateName('xl/worksheets/sheet1.xml');
-                    if ($sheetIndex === false) {
-                        for ($i = 0; $i < $zip->numFiles; $i++) {
-                            $name = $zip->getNameIndex($i);
-                            if (str_starts_with($name, 'xl/worksheets/sheet') && str_ends_with($name, '.xml')) {
-                                $sheetIndex = $i;
+            $isFirst = true;
+            $rowCount = 0;
+            while (($data = fgetcsv($handle, 0, $delimiter)) !== false) {
+                if (++$rowCount > self::MAX_IMPORT_ROWS) {
+                    fclose($handle);
+                    throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
+                }
+                if ($isFirst && !empty($data[0])) {
+                    $data[0] = preg_replace('/^\xEF\xBB\xBF/', '', $data[0]);
+                    $isFirst = false;
+                }
+                if (count($data) > self::MAX_COLUMNS_PER_ROW) {
+                    $data = array_slice($data, 0, self::MAX_COLUMNS_PER_ROW);
+                }
+                $rows[] = array_map('trim', $data);
+            }
+            fclose($handle);
+        } elseif ($extension === 'xlsx') {
+            if (!class_exists(\ZipArchive::class)) {
+                throw new \RuntimeException('Ekstensi PHP ZipArchive tidak aktif pada server.');
+            }
+
+            $zip = new \ZipArchive();
+            $openResult = $zip->open($path);
+            if ($openResult !== true) {
+                $zipErrorMsg = match ($openResult) {
+                    \ZipArchive::ER_NOZIP => 'File yang diunggah bukan arsip spreadsheet Excel (.xlsx) yang valid.',
+                    \ZipArchive::ER_INCONS => 'Struktur file arsip Excel tidak konsisten atau rusak.',
+                    \ZipArchive::ER_CRC => 'Integritas arsip Excel gagal (CRC checksum error).',
+                    default => 'Gagal membuka file Excel (.xlsx). Pastikan file tidak rusak.',
+                };
+                throw new \InvalidArgumentException($zipErrorMsg);
+            }
+
+            // 1. Batasi jumlah entri di dalam arsip zip (mencegah zip bomb)
+            if ($zip->numFiles > self::MAX_ZIP_ENTRIES) {
+                $zip->close();
+                throw new \InvalidArgumentException("Arsip Excel memiliki terlalu banyak entri ({$zip->numFiles} entri). Batas maksimal adalah " . self::MAX_ZIP_ENTRIES . " entri.");
+            }
+
+            // 2. Batasi total uncompressed size dari seluruh entri arsip
+            $totalUncompressedSize = 0;
+            for ($i = 0; $i < $zip->numFiles; $i++) {
+                $stat = $zip->statIndex($i);
+                if ($stat) {
+                    $totalUncompressedSize += ($stat['size'] ?? 0);
+                }
+            }
+            if ($totalUncompressedSize > self::MAX_TOTAL_UNCOMPRESSED_SIZE) {
+                $zip->close();
+                $maxMb = round(self::MAX_TOTAL_UNCOMPRESSED_SIZE / (1024 * 1024));
+                throw new \InvalidArgumentException("Ukuran data dekompresi file Excel melebihi batas aman (maksimal {$maxMb}MB).");
+            }
+
+            // 3. Baca sharedStrings.xml jika ada
+            $sharedStrings = [];
+            $ssIndex = $zip->locateName('xl/sharedStrings.xml');
+            if ($ssIndex !== false) {
+                $ssStat = $zip->statIndex($ssIndex);
+                if ($ssStat && ($ssStat['size'] ?? 0) > self::MAX_XML_ENTRY_SIZE) {
+                    $zip->close();
+                    throw new \InvalidArgumentException('Ukuran data shared-string Excel melebihi batas maksimal aman (10MB).');
+                }
+                $ssContent = $zip->getFromIndex($ssIndex);
+                if ($ssContent !== false) {
+                    $ssXml = $this->loadXmlSafely($ssContent);
+                    if ($ssXml && isset($ssXml->si)) {
+                        $countSs = 0;
+                        foreach ($ssXml->si as $si) {
+                            if (++$countSs > self::MAX_SHARED_STRINGS) {
                                 break;
                             }
-                        }
-                    }
-
-                    if ($sheetIndex !== false) {
-                        $sheetXml = simplexml_load_string($zip->getFromIndex($sheetIndex));
-                        if ($sheetXml && isset($sheetXml->sheetData->row)) {
-                            foreach ($sheetXml->sheetData->row as $row) {
-                                $rowData = [];
-                                foreach ($row->c as $c) {
-                                    $coord = (string) $c['r'];
-                                    $colIdx = $this->coordinateToColIndex($coord);
-                                    $type = (string) $c['t'];
-                                    $val = '';
-
-                                    if ($type === 's') {
-                                        $sIdx = (int) $c->v;
-                                        $val = $sharedStrings[$sIdx] ?? '';
-                                    } elseif ($type === 'inlineStr') {
-                                        $val = (string) ($c->is->t ?? '');
-                                    } else {
-                                        $val = (string) ($c->v ?? '');
-                                    }
-
-                                    $rowData[$colIdx] = trim($val);
+                            if (isset($si->t)) {
+                                $sharedStrings[] = (string) $si->t;
+                            } elseif (isset($si->r)) {
+                                $str = '';
+                                foreach ($si->r as $r) {
+                                    $str .= (string) $r->t;
                                 }
-
-                                if (!empty($rowData)) {
-                                    $maxCol = max(array_keys($rowData));
-                                    $fullRow = [];
-                                    for ($c = 0; $c <= $maxCol; $c++) {
-                                        $fullRow[] = $rowData[$c] ?? '';
-                                    }
-                                    $rows[] = $fullRow;
-                                }
+                                $sharedStrings[] = $str;
+                            } else {
+                                $sharedStrings[] = '';
                             }
                         }
                     }
-                    $zip->close();
+                }
+            }
+
+            // 4. Cari worksheet pertama
+            $sheetIndex = $zip->locateName('xl/worksheets/sheet1.xml');
+            if ($sheetIndex === false) {
+                for ($i = 0; $i < $zip->numFiles; $i++) {
+                    $name = $zip->getNameIndex($i);
+                    if (str_starts_with($name, 'xl/worksheets/sheet') && str_ends_with($name, '.xml')) {
+                        $sheetIndex = $i;
+                        break;
+                    }
+                }
+            }
+
+            if ($sheetIndex === false) {
+                $zip->close();
+                throw new \InvalidArgumentException('Tidak ditemukan lembar kerja (worksheet) yang valid di dalam file Excel.');
+            }
+
+            $sheetStat = $zip->statIndex($sheetIndex);
+            if ($sheetStat && ($sheetStat['size'] ?? 0) > self::MAX_XML_ENTRY_SIZE) {
+                $zip->close();
+                throw new \InvalidArgumentException('Ukuran lembar kerja Excel melebihi batas maksimal aman (10MB).');
+            }
+
+            $sheetContent = $zip->getFromIndex($sheetIndex);
+            $zip->close();
+
+            if ($sheetContent === false) {
+                throw new \InvalidArgumentException('Gagal membaca data lembar kerja dari file Excel.');
+            }
+
+            $sheetXml = $this->loadXmlSafely($sheetContent);
+            if (!$sheetXml || !isset($sheetXml->sheetData->row)) {
+                throw new \InvalidArgumentException('Lembar kerja Excel tidak berisi data baris tabel yang valid.');
+            }
+
+            $rowCount = 0;
+            foreach ($sheetXml->sheetData->row as $row) {
+                if (++$rowCount > self::MAX_IMPORT_ROWS) {
+                    throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
+                }
+                $rowData = [];
+                foreach ($row->c as $c) {
+                    $coord = (string) $c['r'];
+                    $colIdx = $this->coordinateToColIndex($coord);
+                    if ($colIdx >= self::MAX_COLUMNS_PER_ROW) {
+                        continue; // proteksi dari koordinat sel ekstrem seperti XFD
+                    }
+                    $type = (string) $c['t'];
+                    $val = '';
+
+                    if ($type === 's') {
+                        $sIdx = (int) $c->v;
+                        $val = $sharedStrings[$sIdx] ?? '';
+                    } elseif ($type === 'inlineStr') {
+                        $val = (string) ($c->is->t ?? '');
+                    } else {
+                        $val = (string) ($c->v ?? '');
+                    }
+
+                    $rowData[$colIdx] = trim($val);
+                }
+
+                if (!empty($rowData)) {
+                    $maxCol = min(max(array_keys($rowData)), self::MAX_COLUMNS_PER_ROW - 1);
+                    $fullRow = [];
+                    for ($c = 0; $c <= $maxCol; $c++) {
+                        $fullRow[] = $rowData[$c] ?? '';
+                    }
+                    $rows[] = $fullRow;
                 }
             }
         } elseif ($extension === 'xls') {
             $content = file_get_contents($path);
+            if (strlen($content) > self::MAX_TOTAL_UNCOMPRESSED_SIZE) {
+                throw new \InvalidArgumentException('Ukuran file XLS melebihi batas maksimal yang diizinkan (25MB).');
+            }
             if (stripos($content, '<table') !== false) {
                 if (preg_match_all('/<tr[^>]*>(.*?)<\/tr>/is', $content, $trMatches)) {
+                    $rowCount = 0;
                     foreach ($trMatches[1] as $tr) {
+                        if (++$rowCount > self::MAX_IMPORT_ROWS) {
+                            throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
+                        }
                         if (preg_match_all('/<t[dh][^>]*>(.*?)<\/t[dh]>/is', $tr, $tdMatches)) {
+                            $cells = $tdMatches[1];
+                            if (count($cells) > self::MAX_COLUMNS_PER_ROW) {
+                                $cells = array_slice($cells, 0, self::MAX_COLUMNS_PER_ROW);
+                            }
                             $row = array_map(function ($val) {
                                 return trim(html_entity_decode(strip_tags($val)));
-                            }, $tdMatches[1]);
+                            }, $cells);
                             $rows[] = $row;
                         }
                     }
@@ -1458,7 +1566,15 @@ class BarangController extends Controller
             } else {
                 $handle = fopen($path, 'r');
                 if ($handle !== false) {
+                    $rowCount = 0;
                     while (($data = fgetcsv($handle, 0, "\t")) !== false) {
+                        if (++$rowCount > self::MAX_IMPORT_ROWS) {
+                            fclose($handle);
+                            throw new \InvalidArgumentException('File spreadsheet melebihi batas maksimal ' . self::MAX_IMPORT_ROWS . ' baris data.');
+                        }
+                        if (count($data) > self::MAX_COLUMNS_PER_ROW) {
+                            $data = array_slice($data, 0, self::MAX_COLUMNS_PER_ROW);
+                        }
                         $rows[] = array_map('trim', $data);
                     }
                     fclose($handle);
@@ -1467,6 +1583,37 @@ class BarangController extends Controller
         }
 
         return $rows;
+    }
+
+    /**
+     * Memuat string XML secara aman tanpa mengambil entitas eksternal (mencegah XXE)
+     * dan menangkap galat sintaksis dengan pesan yang jelas.
+     */
+    private function loadXmlSafely(string $xmlContent): \SimpleXMLElement
+    {
+        $prevEntityLoader = null;
+        if (\PHP_VERSION_ID < 80000 && function_exists('libxml_disable_entity_loader')) {
+            $prevEntityLoader = libxml_disable_entity_loader(true);
+        }
+        $prevInternalErrors = libxml_use_internal_errors(true);
+        libxml_clear_errors();
+
+        // Gunakan LIBXML_NONET untuk mencegah external network access
+        $xml = simplexml_load_string($xmlContent, 'SimpleXMLElement', LIBXML_NONET);
+
+        $errors = libxml_get_errors();
+        libxml_clear_errors();
+        libxml_use_internal_errors($prevInternalErrors);
+        if ($prevEntityLoader !== null && function_exists('libxml_disable_entity_loader')) {
+            libxml_disable_entity_loader($prevEntityLoader);
+        }
+
+        if ($xml === false) {
+            $detail = !empty($errors) ? trim($errors[0]->message) : 'Struktur XML tidak valid';
+            throw new \InvalidArgumentException("Format XML pada file spreadsheet rusak atau tidak dapat dibaca: {$detail}");
+        }
+
+        return $xml;
     }
 
     /**
