@@ -193,8 +193,7 @@
                     <div
                         class="w-11 h-11 rounded-xl bg-blue-50 text-blue-700 border border-blue-200 flex items-center justify-center font-bold shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M5 13l4 4L19 7">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7">
                             </path>
                         </svg>
                     </div>
@@ -219,9 +218,12 @@
                         </svg>
                     </div>
                     <div class="min-w-0 flex-1">
-                        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider">Pagu Disetujui</div>
+                        <div class="text-[11px] font-semibold text-gray-400 uppercase tracking-wider"
+                            title="Nominal usulan RAB berstatus disetujui (ACC) yang menunggu penerimaan fisik barang">
+                            Pagu Menunggu Penerimaan
+                        </div>
                         <div class="text-sm font-bold text-indigo-800 truncate"
-                            title="Rp {{ number_format($totalAnggaranDisetujui, 0, ',', '.') }}">
+                            title="Rp {{ number_format($totalAnggaranDisetujui, 0, ',', '.') }} (Disetujui belum diterima fisik)">
                             Rp {{ number_format($totalAnggaranDisetujui, 0, ',', '.') }}
                         </div>
                     </div>

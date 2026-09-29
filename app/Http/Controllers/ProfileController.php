@@ -51,7 +51,7 @@ class ProfileController extends Controller
             $stats = [
                 ['label' => 'Bengkel Binaan', 'value' => $bengkelCount . ' Jurusan'],
                 ['label' => 'RAB Diverifikasi', 'value' => $rabVerified . ' Usulan'],
-                ['label' => 'Anggaran ACC', 'value' => $formattedAcc],
+                ['label' => 'Total Disetujui (ACC)', 'value' => $formattedAcc],
                 ['label' => 'Wewenang', 'value' => 'Penuh (Waka)'],
             ];
         } elseif ($role === 'toolman') {

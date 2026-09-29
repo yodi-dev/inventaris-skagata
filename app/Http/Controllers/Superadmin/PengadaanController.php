@@ -32,10 +32,11 @@ class PengadaanController extends Controller
         $totalRejected = (clone $baseQuery)->where('status', 'rejected')->count();
         $totalSelesai = (clone $baseQuery)->where('status', 'selesai')->count();
 
-        // Total anggaran disetujui (akumulasi nominal detail pengadaan berstatus approved)
-        $totalAnggaranDisetujui = DetailPengadaan::whereHas('pengadaan', function ($q) {
+        // Total anggaran disetujui menunggu penerimaan (akumulasi nominal detail pengadaan berstatus approved)
+        $totalAnggaranMenungguPenerimaan = DetailPengadaan::whereHas('pengadaan', function ($q) {
             $q->where('status', 'approved');
         })->selectRaw('SUM(jumlah * harga_satuan) as total')->value('total') ?? 0;
+        $totalAnggaranDisetujui = $totalAnggaranMenungguPenerimaan;
 
         // Query with filters
         $query = Pengadaan::with(['bengkel', 'dibuatOleh', 'direviewOleh', 'detailPengadaans.barang'])
@@ -55,14 +56,14 @@ class PengadaanController extends Controller
                     ->orWhere('catatan', 'like', "%{$search}%")
                     ->orWhereHas('bengkel', function ($bq) use ($search) {
                         $bq->where('nama', 'like', "%{$search}%")
-                           ->orWhere('kode', 'like', "%{$search}%");
+                            ->orWhere('kode', 'like', "%{$search}%");
                     })
                     ->orWhereHas('dibuatOleh', function ($uq) use ($search) {
                         $uq->where('name', 'like', "%{$search}%");
                     })
                     ->orWhereHas('detailPengadaans', function ($dq) use ($search) {
                         $dq->where('nama_barang', 'like', "%{$search}%")
-                           ->orWhere('spesifikasi', 'like', "%{$search}%");
+                            ->orWhere('spesifikasi', 'like', "%{$search}%");
                     });
             });
         }
@@ -92,6 +93,7 @@ class PengadaanController extends Controller
             'totalApproved',
             'totalRejected',
             'totalSelesai',
+            'totalAnggaranMenungguPenerimaan',
             'totalAnggaranDisetujui'
         ));
     }
@@ -174,33 +176,44 @@ class PengadaanController extends Controller
         // Catatan review wajib diisi jika status revisi atau rejected sesuai PRD
         if (in_array($request->action, ['revisi', 'rejected']) && empty(trim($request->catatan_review ?? ''))) {
             return back()->with('error', 'Catatan/alasan review wajib diisi apabila meminta revisi atau menolak pengajuan.')
-                         ->withInput();
-        }
-
-        $pengadaan = Pengadaan::whereIn('status', ['pending', 'revisi', 'approved', 'rejected', 'selesai'])
-            ->findOrFail($id);
-
-        if ($pengadaan->status === 'selesai') {
-            return back()->with('error', 'Pengajuan RAB yang telah selesai (barang telah diterima) tidak dapat diubah status persetujuannya.')
-                         ->withInput();
+                ->withInput();
         }
 
         $user = $request->user() ?? Auth::user();
         $userId = $user ? $user->id : null;
 
-        $pengadaan->update([
-            'status'         => $request->action,
-            'catatan_review' => $request->catatan_review,
-            'direview_oleh'  => $userId,
-            'direview_pada'  => now(),
-        ]);
+        return DB::transaction(function () use ($request, $id, $userId) {
+            // Kunci record pengadaan dalam transaksi untuk mencegah race condition dengan aksi receive toolman
+            $pengadaan = Pengadaan::where('id', $id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        $label = match ($request->action) {
-            'approved' => 'disetujui',
-            'revisi'   => 'dikembalikan untuk revisi',
-            'rejected' => 'ditolak',
-        };
+            // Status selesai (barang sudah diterima fisik) adalah final dan tidak boleh diubah lagi
+            if ($pengadaan->status === 'selesai') {
+                return back()->with('error', 'Pengajuan RAB yang telah selesai (barang telah diterima) tidak dapat diubah status persetujuannya.')
+                    ->withInput();
+            }
 
-        return back()->with('success', "Pengajuan RAB \"{$pengadaan->judul}\" berhasil {$label}.");
+            // Validasi transisi status yang sah untuk Waka review
+            if (!in_array($pengadaan->status, ['pending', 'revisi', 'approved'])) {
+                return back()->with('error', "Pengajuan RAB dengan status '{$pengadaan->status}' tidak dapat diubah status persetujuannya.")
+                    ->withInput();
+            }
+
+            $pengadaan->update([
+                'status'         => $request->action,
+                'catatan_review' => $request->catatan_review,
+                'direview_oleh'  => $userId,
+                'direview_pada'  => now(),
+            ]);
+
+            $label = match ($request->action) {
+                'approved' => 'disetujui',
+                'revisi'   => 'dikembalikan untuk revisi',
+                'rejected' => 'ditolak',
+            };
+
+            return back()->with('success', "Pengajuan RAB \"{$pengadaan->judul}\" berhasil {$label}.");
+        });
     }
 }
