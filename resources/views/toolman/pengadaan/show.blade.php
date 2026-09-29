@@ -164,21 +164,103 @@
                         Perbaiki Revisi Sekarang
                     </a>
                 @elseif ($pengadaan->status === 'approved')
-                    <form action="{{ route('toolman.pengadaan.receive', $pengadaan->id) }}" method="POST" class="inline"
-                        data-confirm="true"
-                        data-title="Konfirmasi Penerimaan Fisik Barang"
-                        data-message="Konfirmasi penerimaan barang fisik: Seluruh kuota barang pada usulan <b>#RAB-{{ str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) }}</b> akan otomatis ditambahkan ke stok inventaris bengkel dan dicatat pada riwayat mutasi stok masuk. Lanjutkan?"
-                        data-type="success"
-                        data-confirm-text="Ya, Terima & Tambah Stok">
-                        @csrf
-                        <button type="submit"
-                            class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
-                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Konfirmasi Terima Fisik Barang
-                        </button>
-                    </form>
+                    @php
+                        $unclassifiedItems = $pengadaan->detailPengadaans->filter(fn($d) => empty($d->barang_id) && empty($d->jenis_barang));
+                    @endphp
+
+                    @if ($unclassifiedItems->isNotEmpty())
+                        <div x-data="{ openConfirmModal: false }">
+                            <button type="button" @click="openConfirmModal = true"
+                                class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Konfirmasi Terima Fisik Barang
+                            </button>
+
+                            <!-- Modal Konfirmasi Klasifikasi Barang Baru Usulan Lama -->
+                            <div x-show="openConfirmModal" x-cloak class="fixed inset-0 z-50 overflow-y-auto"
+                                aria-labelledby="modal-confirm-title" role="dialog" aria-modal="true">
+                                <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+                                    <div x-show="openConfirmModal" x-transition:enter="ease-out duration-300"
+                                        x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                                        class="fixed inset-0 transition-opacity bg-gray-500/75"
+                                        @click="openConfirmModal = false"></div>
+                                    <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                    <div x-show="openConfirmModal" x-transition:enter="ease-out duration-300"
+                                        x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                                        x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                                        class="inline-block px-6 pt-5 pb-6 overflow-hidden text-left align-bottom transition-all transform bg-white rounded-2xl shadow-xl sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                                        <div class="flex items-center justify-between pb-3 border-b border-gray-100">
+                                            <h3 class="text-base font-bold text-gray-900" id="modal-confirm-title">
+                                                Konfirmasi Tipe Barang Fisik
+                                            </h3>
+                                            <button type="button" @click="openConfirmModal = false" class="text-gray-400 hover:text-gray-500">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                                </svg>
+                                            </button>
+                                        </div>
+                                        <p class="mt-2 text-xs text-gray-600">
+                                            Usulan ini memiliki item barang baru dari data lama yang belum memiliki klasifikasi tipe barang. Harap tentukan tipe barang (Inventaris / BHP) dan batas minimum stok sebelum kuota stok dimasukkan ke inventaris:
+                                        </p>
+                                        <form action="{{ route('toolman.pengadaan.receive', $pengadaan->id) }}" method="POST" class="mt-4 space-y-3">
+                                            @csrf
+                                            @foreach ($unclassifiedItems as $uItem)
+                                                <div class="p-3 bg-slate-50 border border-gray-200 rounded-xl space-y-2">
+                                                    <div class="font-bold text-xs text-gray-900">{{ $uItem->nama_barang }}</div>
+                                                    @if ($uItem->spesifikasi)
+                                                        <div class="text-[11px] text-gray-500">{{ $uItem->spesifikasi }}</div>
+                                                    @endif
+                                                    <div class="grid grid-cols-2 gap-2 pt-1">
+                                                        <div>
+                                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Tipe Barang <span class="text-red-500">*</span></label>
+                                                            <select name="items_classification[{{ $uItem->id }}][jenis_barang]" required
+                                                                class="block w-full border-gray-300 rounded-lg text-xs py-1.5 px-2 bg-white focus:ring-primary-500 focus:border-primary-500">
+                                                                <option value="inventaris">Alat Inventaris</option>
+                                                                <option value="bhp">BHP (Bahan Habis Pakai)</option>
+                                                            </select>
+                                                        </div>
+                                                        <div>
+                                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase mb-1">Batas Min. Stok</label>
+                                                            <input type="number" min="0" name="items_classification[{{ $uItem->id }}][minimum_stok]" placeholder="0"
+                                                                class="block w-full border-gray-300 rounded-lg text-xs py-1.5 px-2 bg-white focus:ring-primary-500 focus:border-primary-500">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                            <div class="flex items-center justify-end gap-2 pt-3 border-t border-gray-100">
+                                                <button type="button" @click="openConfirmModal = false"
+                                                    class="px-4 py-2 text-xs font-semibold text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">
+                                                    Batal
+                                                </button>
+                                                <button type="submit"
+                                                    class="px-4 py-2 text-xs font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm">
+                                                    Konfirmasi & Terima Stok
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <form action="{{ route('toolman.pengadaan.receive', $pengadaan->id) }}" method="POST" class="inline"
+                            data-confirm="true"
+                            data-title="Konfirmasi Penerimaan Fisik Barang"
+                            data-message="Konfirmasi penerimaan barang fisik: Seluruh kuota barang pada usulan <b>#RAB-{{ str_pad($pengadaan->id, 4, '0', STR_PAD_LEFT) }}</b> akan otomatis ditambahkan ke stok inventaris bengkel dan dicatat pada riwayat mutasi stok masuk. Lanjutkan?"
+                            data-type="success"
+                            data-confirm-text="Ya, Terima & Tambah Stok">
+                            @csrf
+                            <button type="submit"
+                                class="inline-flex items-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Konfirmasi Terima Fisik Barang
+                            </button>
+                        </form>
+                    @endif
                 @endif
             </div>
         </div>
@@ -454,6 +536,28 @@
                                             Kode Barang: {{ $detail->barang->kode_barang }}
                                         </span>
                                     @endif
+
+                                    <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                                        @if ($detail->effective_jenis_barang === 'bhp')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                BHP (Bahan Habis Pakai)
+                                            </span>
+                                        @elseif ($detail->effective_jenis_barang === 'inventaris')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                                Alat Inventaris
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-orange-100 text-orange-800 border border-orange-200">
+                                                Tipe Belum Ditentukan
+                                            </span>
+                                        @endif
+
+                                        @if ($detail->effective_minimum_stok !== null)
+                                            <span class="text-[10px] text-gray-500 font-mono">
+                                                Min. Stok: {{ $detail->effective_minimum_stok }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-center whitespace-nowrap">
                                     <span class="font-bold text-gray-900 text-sm">{{ $detail->jumlah }}</span>

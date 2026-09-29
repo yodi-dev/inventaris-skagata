@@ -210,9 +210,9 @@ class RemediationBatch9Test extends TestCase
 
     /**
      * 4. Penerimaan fisik RAB membuat barang baru inventaris:
-     *    - jenis_barang = inventaris
+     *    - jenis_barang eksplisit = inventaris (meskipun nama mengandung kata "Kabel")
      *    - prefix INV-
-     *    - minimum_stok = 1
+     *    - minimum_stok sesuai input eksplisit pengguna (misal 3)
      *    - lokasi_penyimpanan_id = null, sumber_dana_id = null
      *    - StockMovement audit trail tercatat dengan benar.
      */
@@ -225,7 +225,7 @@ class RemediationBatch9Test extends TestCase
         $pengadaan = Pengadaan::create([
             'bengkel_id' => $bengkel->id,
             'dibuat_oleh' => $toolman->id,
-            'judul' => 'Pengadaan Alat Praktik Osiloskop Digital',
+            'judul' => 'Pengadaan Alat Praktik Pengujian Kabel Audio',
             'status' => 'approved',
             'diajukan_pada' => now()->subDays(2),
             'direview_oleh' => $waka->id,
@@ -235,8 +235,10 @@ class RemediationBatch9Test extends TestCase
         $detail = DetailPengadaan::create([
             'pengadaan_id' => $pengadaan->id,
             'barang_id' => null, // Usulan barang baru
-            'nama_barang' => 'Digital Storage Oscilloscope 100MHz',
-            'spesifikasi' => '2 Channel, 1GSa/s, Layar TFT Color 7 Inch',
+            'nama_barang' => 'Kabel Tester Digital Analyzer TAV-01',
+            'jenis_barang' => 'inventaris', // Eksplisit inventaris meskipun nama mengandung kata 'Kabel'
+            'minimum_stok' => 3,            // Eksplisit dari pengguna
+            'spesifikasi' => '2 Channel, LCD Color Display',
             'jumlah' => 2,
             'satuan' => 'Unit',
             'harga_satuan' => 4500000,
@@ -258,10 +260,10 @@ class RemediationBatch9Test extends TestCase
         $newBarang = Barang::findOrFail($detail->barang_id);
         $this->assertEquals('TAV', $bengkel->kode);
         $this->assertEquals($bengkel->id, $newBarang->bengkel_id);
-        $this->assertEquals('Digital Storage Oscilloscope 100MHz', $newBarang->nama);
+        $this->assertEquals('Kabel Tester Digital Analyzer TAV-01', $newBarang->nama);
         $this->assertEquals('inventaris', $newBarang->jenis_barang);
         $this->assertStringStartsWith('INV-TAV-', $newBarang->kode_barang);
-        $this->assertEquals(1, $newBarang->minimum_stok);
+        $this->assertEquals(3, $newBarang->minimum_stok);
         $this->assertEquals(2, $newBarang->stok_total);
         $this->assertEquals(2, $newBarang->stok_tersedia);
         $this->assertEquals(0, $newBarang->stok_dipinjam);
@@ -284,9 +286,9 @@ class RemediationBatch9Test extends TestCase
 
     /**
      * 5. Penerimaan fisik RAB membuat barang baru BHP:
-     *    - jenis_barang = bhp
+     *    - jenis_barang eksplisit = bhp (meskipun nama mengandung kata 'Perangkat' dan satuan 'Set')
      *    - prefix BHP-
-     *    - minimum_stok = 0
+     *    - minimum_stok = default schema 0 (jika diinput 0/null)
      *    - lokasi_penyimpanan_id = null, sumber_dana_id = null
      */
     public function test_rab_receipt_creates_new_bhp_with_correct_classification_prefix_and_minimum_stock(): void
@@ -298,7 +300,7 @@ class RemediationBatch9Test extends TestCase
         $pengadaan = Pengadaan::create([
             'bengkel_id' => $bengkel->id,
             'dibuat_oleh' => $toolman->id,
-            'judul' => 'Pengadaan Bahan Praktik Jaringan Komputer',
+            'judul' => 'Pengadaan Bahan Pembersih Konektor Fiber Optik',
             'status' => 'approved',
             'diajukan_pada' => now()->subDays(2),
             'direview_oleh' => $waka->id,
@@ -308,11 +310,13 @@ class RemediationBatch9Test extends TestCase
         $detail = DetailPengadaan::create([
             'pengadaan_id' => $pengadaan->id,
             'barang_id' => null, // Barang baru
-            'nama_barang' => 'Kabel UTP Cat6 Spectra',
-            'spesifikasi' => 'Panjang 305 meter tembaga murni',
+            'nama_barang' => 'Perangkat Pembersih Ujung Fiber Optik',
+            'jenis_barang' => 'bhp', // Eksplisit BHP
+            'minimum_stok' => 0,     // Nilai eksplisit
+            'spesifikasi' => 'Alkohol isopropil dan tisu pembersih optik sekali pakai',
             'jumlah' => 5,
-            'satuan' => 'Roll',
-            'harga_satuan' => 1250000,
+            'satuan' => 'Set',
+            'harga_satuan' => 125000,
         ]);
 
         $response = $this->actingAs($toolman)->post(route('toolman.pengadaan.receive', $pengadaan->id));
@@ -325,7 +329,7 @@ class RemediationBatch9Test extends TestCase
 
         $this->assertEquals('TKJ', $bengkel->kode);
         $this->assertEquals($bengkel->id, $newBhp->bengkel_id);
-        $this->assertEquals('Kabel UTP Cat6 Spectra', $newBhp->nama);
+        $this->assertEquals('Perangkat Pembersih Ujung Fiber Optik', $newBhp->nama);
         $this->assertEquals('bhp', $newBhp->jenis_barang);
         $this->assertStringStartsWith('BHP-TKJ-', $newBhp->kode_barang);
         $this->assertEquals(0, $newBhp->minimum_stok);
@@ -487,11 +491,13 @@ class RemediationBatch9Test extends TestCase
             'direview_pada' => now(),
         ]);
 
-        // Item 1: Usulan baru valid
+        // Item 1: Usulan baru valid dengan jenis_barang eksplisit
         $detail1 = DetailPengadaan::create([
             'pengadaan_id' => $pengadaan->id,
             'barang_id' => null,
             'nama_barang' => 'Item Baru Yang Seharusnya Batal',
+            'jenis_barang' => 'inventaris',
+            'minimum_stok' => 1,
             'jumlah' => 3,
             'satuan' => 'Unit',
             'harga_satuan' => 100000,
@@ -527,5 +533,193 @@ class RemediationBatch9Test extends TestCase
 
         // Pastikan TIDAK ADA StockMovement yang terbuat
         $this->assertEquals(0, StockMovement::where('referensi_tipe', 'pengadaan')->where('referensi_id', $pengadaan->id)->count());
+    }
+
+    /**
+     * 9. Penerimaan usulan barang baru legacy (tanpa jenis_barang) ditolak jika tanpa konfirmasi eksplisit,
+     *    dan rollback dilakukan tanpa merusak integritas stok.
+     */
+    public function test_rab_receipt_blocks_legacy_unclassified_item_without_confirmation(): void
+    {
+        $bengkel = $this->createBengkel('TKJ', 'Teknik Komputer Jaringan');
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+        $waka = $this->createUser(['role' => 'waka_sarpras']);
+
+        $pengadaan = Pengadaan::create([
+            'bengkel_id' => $bengkel->id,
+            'dibuat_oleh' => $toolman->id,
+            'judul' => 'RAB Warisan Tanpa Klasifikasi Jenis Barang',
+            'status' => 'approved',
+            'diajukan_pada' => now()->subDays(3),
+            'direview_oleh' => $waka->id,
+            'direview_pada' => now()->subDay(),
+        ]);
+
+        $detailLegacy = DetailPengadaan::create([
+            'pengadaan_id' => $pengadaan->id,
+            'barang_id' => null,
+            'nama_barang' => 'Perangkat Tester Jaringan Tanpa Label',
+            'jenis_barang' => null, // Legacy record belum terisi jenis_barang
+            'minimum_stok' => null,
+            'jumlah' => 2,
+            'satuan' => 'Unit',
+            'harga_satuan' => 500000,
+        ]);
+
+        // Toolman memanggil penerimaan tanpa payload konfirmasi items_classification
+        $response = $this->actingAs($toolman)->post(route('toolman.pengadaan.receive', $pengadaan->id));
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('error');
+        $error = session('error');
+        $this->assertStringContainsString('klasifikasi tipe barang', strtolower($error));
+        $this->assertStringContainsString('Perangkat Tester Jaringan Tanpa Label', $error);
+
+        // Pastikan status pengadaan tetap approved
+        $pengadaan->refresh();
+        $this->assertEquals('approved', $pengadaan->status);
+
+        // Pastikan tidak ada barang baru yang terbuat
+        $this->assertDatabaseMissing('barangs', [
+            'nama' => 'Perangkat Tester Jaringan Tanpa Label',
+        ]);
+        $this->assertEquals(0, StockMovement::count());
+    }
+
+    /**
+     * 10. Penerimaan usulan barang baru legacy berhasil jika Toolman memberikan klasifikasi eksplisit saat penerimaan.
+     */
+    public function test_rab_receipt_succeeds_for_legacy_unclassified_item_when_confirmed_at_receipt(): void
+    {
+        $bengkel = $this->createBengkel('TAV', 'Teknik Audio Video');
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+        $waka = $this->createUser(['role' => 'waka_sarpras']);
+
+        $pengadaan = Pengadaan::create([
+            'bengkel_id' => $bengkel->id,
+            'dibuat_oleh' => $toolman->id,
+            'judul' => 'RAB Warisan Yang Dikonfirmasi Saat Terima Fisik',
+            'status' => 'approved',
+            'diajukan_pada' => now()->subDays(3),
+            'direview_oleh' => $waka->id,
+            'direview_pada' => now()->subDay(),
+        ]);
+
+        $detailLegacy = DetailPengadaan::create([
+            'pengadaan_id' => $pengadaan->id,
+            'barang_id' => null,
+            'nama_barang' => 'Kabel Audio Multi-Core Mogami 50M',
+            'jenis_barang' => null, // Belum ada jenis_barang di database
+            'minimum_stok' => null,
+            'jumlah' => 1,
+            'satuan' => 'Roll',
+            'harga_satuan' => 2500000,
+        ]);
+
+        // Toolman menerima sambil menyertakan items_classification
+        $response = $this->actingAs($toolman)->post(route('toolman.pengadaan.receive', $pengadaan->id), [
+            'items_classification' => [
+                $detailLegacy->id => [
+                    'jenis_barang' => 'inventaris', // Toolman memilih bahwa kabel multi-core ini adalah inventaris
+                    'minimum_stok' => 2,
+                ],
+            ],
+        ]);
+
+        $response->assertStatus(302);
+        $response->assertSessionHas('success');
+
+        $pengadaan->refresh();
+        $this->assertEquals('selesai', $pengadaan->status);
+
+        $detailLegacy->refresh();
+        $this->assertEquals('inventaris', $detailLegacy->jenis_barang);
+        $this->assertEquals(2, $detailLegacy->minimum_stok);
+        $this->assertNotNull($detailLegacy->barang_id);
+
+        $newBarang = Barang::findOrFail($detailLegacy->barang_id);
+        $this->assertEquals('inventaris', $newBarang->jenis_barang);
+        $this->assertStringStartsWith('INV-TAV-', $newBarang->kode_barang);
+        $this->assertEquals(2, $newBarang->minimum_stok);
+        $this->assertEquals(1, $newBarang->stok_total);
+    }
+
+    /**
+     * 11. Validasi form usulan RAB mengharuskan jenis_barang untuk item baru saat diajukan (action=submit).
+     */
+    public function test_rab_store_and_update_validation_rules_for_jenis_barang(): void
+    {
+        $bengkel = $this->createBengkel('TKJ', 'Teknik Komputer Jaringan');
+        $toolman = $this->createUser(['role' => 'toolman', 'bengkel_id' => $bengkel->id]);
+
+        // 1. Submit RAB baru dengan item baru tanpa jenis_barang -> Gagal validasi
+        $responseSubmitNoType = $this->actingAs($toolman)->post(route('toolman.pengadaan.store'), [
+            'judul' => 'Pengadaan Tanpa Jenis Barang',
+            'action' => 'submit',
+            'items' => [
+                [
+                    'barang_id' => null,
+                    'nama' => 'Router Board RB750Gr3',
+                    'spesifikasi' => '5 Port Gigabit',
+                    'jumlah' => 2,
+                    'satuan' => 'Unit',
+                    'harga_satuan' => 850000,
+                    'jenis_barang' => '', // Kosong
+                    'minimum_stok' => 1,
+                ],
+            ],
+        ]);
+
+        $responseSubmitNoType->assertStatus(302);
+        $responseSubmitNoType->assertSessionHasErrors(['items.0.jenis_barang']);
+
+        // 2. Draft RAB baru dengan item baru tanpa jenis_barang -> Berhasil disimpan sebagai draft
+        $responseDraft = $this->actingAs($toolman)->post(route('toolman.pengadaan.store'), [
+            'judul' => 'Draft Pengadaan Awal',
+            'action' => 'draft',
+            'items' => [
+                [
+                    'barang_id' => null,
+                    'nama' => 'Router Board RB750Gr3',
+                    'spesifikasi' => '5 Port Gigabit',
+                    'jumlah' => 2,
+                    'satuan' => 'Unit',
+                    'harga_satuan' => 850000,
+                    'jenis_barang' => null,
+                    'minimum_stok' => null,
+                ],
+            ],
+        ]);
+
+        $responseDraft->assertStatus(302);
+        $responseDraft->assertSessionHas('success');
+        $pengadaan = Pengadaan::where('judul', 'Draft Pengadaan Awal')->first();
+        $this->assertNotNull($pengadaan);
+        $this->assertEquals('draft', $pengadaan->status);
+
+        // 3. Update RAB dari draft menjadi submit dengan mengisi jenis_barang -> Berhasil
+        $responseUpdate = $this->actingAs($toolman)->put(route('toolman.pengadaan.update', $pengadaan->id), [
+            'judul' => 'Draft Pengadaan Siap Ajukan',
+            'action' => 'submit',
+            'items' => [
+                [
+                    'barang_id' => null,
+                    'nama' => 'Router Board RB750Gr3',
+                    'spesifikasi' => '5 Port Gigabit',
+                    'jumlah' => 2,
+                    'satuan' => 'Unit',
+                    'harga_satuan' => 850000,
+                    'jenis_barang' => 'inventaris',
+                    'minimum_stok' => 1,
+                ],
+            ],
+        ]);
+
+        $responseUpdate->assertStatus(302);
+        $responseUpdate->assertSessionHas('success');
+        $pengadaan->refresh();
+        $this->assertEquals('pending', $pengadaan->status);
+        $detail = $pengadaan->detailPengadaans->first();
+        $this->assertEquals('inventaris', $detail->jenis_barang);
     }
 }

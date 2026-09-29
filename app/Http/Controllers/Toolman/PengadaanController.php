@@ -109,6 +109,8 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
+            'items.*.jenis_barang' => 'nullable|in:inventaris,bhp',
+            'items.*.minimum_stok' => 'nullable|integer|min:0',
             'items.*.barang_id' => [
                 'nullable',
                 Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
@@ -123,6 +125,16 @@ class PengadaanController extends Controller
         ]);
 
         $isSubmit = $request->input('action') === 'submit';
+
+        // Validasi tipe barang wajib dipilih saat usulan diajukan (submit) untuk setiap item baru
+        if ($isSubmit) {
+            foreach ($request->items as $idx => $it) {
+                if (empty($it['barang_id']) && (empty($it['jenis_barang']) || !in_array($it['jenis_barang'], ['inventaris', 'bhp'], true))) {
+                    return back()->withErrors(["items.{$idx}.jenis_barang" => "Tipe barang (Inventaris atau BHP) wajib dipilih untuk usulan barang baru '{$it['nama']}'."])->withInput();
+                }
+            }
+        }
+
         $status = $isSubmit ? 'pending' : 'draft';
         $diajukanPada = $isSubmit ? now() : null;
 
@@ -141,14 +153,21 @@ class PengadaanController extends Controller
                     continue;
                 }
 
+                $barangId = !empty($item['barang_id']) ? $item['barang_id'] : null;
+                $linkedBarang = $barangId ? Barang::find($barangId) : null;
+                $jenisBarang = $linkedBarang ? $linkedBarang->jenis_barang : ($item['jenis_barang'] ?? null);
+                $minStok = $linkedBarang ? $linkedBarang->minimum_stok : (isset($item['minimum_stok']) && $item['minimum_stok'] !== '' ? (int) $item['minimum_stok'] : null);
+
                 DetailPengadaan::create([
                     'pengadaan_id' => $rab->id,
-                    'barang_id' => !empty($item['barang_id']) ? $item['barang_id'] : null,
+                    'barang_id' => $barangId,
                     'nama_barang' => trim($item['nama']),
                     'spesifikasi' => !empty($item['spesifikasi']) ? trim($item['spesifikasi']) : null,
                     'jumlah' => (int) $item['jumlah'],
                     'satuan' => trim($item['satuan'] ?? 'unit'),
                     'harga_satuan' => (float) ($item['harga_satuan'] ?? 0),
+                    'jenis_barang' => $jenisBarang,
+                    'minimum_stok' => $minStok,
                 ]);
             }
 
@@ -233,6 +252,8 @@ class PengadaanController extends Controller
             'items.*.jumlah' => 'required|integer|min:1',
             'items.*.satuan' => 'required|string|max:50',
             'items.*.harga_satuan' => 'required|numeric|min:0',
+            'items.*.jenis_barang' => 'nullable|in:inventaris,bhp',
+            'items.*.minimum_stok' => 'nullable|integer|min:0',
             'items.*.barang_id' => [
                 'nullable',
                 Rule::exists('barangs', 'id')->where(function ($query) use ($bengkelId) {
@@ -242,6 +263,15 @@ class PengadaanController extends Controller
         ]);
 
         $isSubmit = $request->input('action') === 'submit';
+
+        // Validasi tipe barang wajib dipilih saat usulan diajukan (submit) untuk setiap item baru
+        if ($isSubmit) {
+            foreach ($request->items as $idx => $it) {
+                if (empty($it['barang_id']) && (empty($it['jenis_barang']) || !in_array($it['jenis_barang'], ['inventaris', 'bhp'], true))) {
+                    return back()->withErrors(["items.{$idx}.jenis_barang" => "Tipe barang (Inventaris atau BHP) wajib dipilih untuk usulan barang baru '{$it['nama']}'."])->withInput();
+                }
+            }
+        }
 
         DB::transaction(function () use ($pengadaan, $request, $isSubmit) {
             $updateData = [
@@ -264,14 +294,21 @@ class PengadaanController extends Controller
                     continue;
                 }
 
+                $barangId = !empty($item['barang_id']) ? $item['barang_id'] : null;
+                $linkedBarang = $barangId ? Barang::find($barangId) : null;
+                $jenisBarang = $linkedBarang ? $linkedBarang->jenis_barang : ($item['jenis_barang'] ?? null);
+                $minStok = $linkedBarang ? $linkedBarang->minimum_stok : (isset($item['minimum_stok']) && $item['minimum_stok'] !== '' ? (int) $item['minimum_stok'] : null);
+
                 DetailPengadaan::create([
                     'pengadaan_id' => $pengadaan->id,
-                    'barang_id' => !empty($item['barang_id']) ? $item['barang_id'] : null,
+                    'barang_id' => $barangId,
                     'nama_barang' => trim($item['nama']),
                     'spesifikasi' => !empty($item['spesifikasi']) ? trim($item['spesifikasi']) : null,
                     'jumlah' => (int) $item['jumlah'],
                     'satuan' => trim($item['satuan'] ?? 'unit'),
                     'harga_satuan' => (float) ($item['harga_satuan'] ?? 0),
+                    'jenis_barang' => $jenisBarang,
+                    'minimum_stok' => $minStok,
                 ]);
             }
         });
@@ -350,7 +387,7 @@ class PengadaanController extends Controller
         $bengkel = $user->bengkel ?? Bengkel::findOrFail($bengkelId);
 
         try {
-            $formattedRabCode = DB::transaction(function () use ($id, $bengkelId, $bengkel, $user) {
+            $formattedRabCode = DB::transaction(function () use ($id, $bengkelId, $bengkel, $user, $request) {
                 // 1. Kunci dan ambil record Pengadaan (Lock Order #1)
                 $pengadaan = Pengadaan::where('bengkel_id', $bengkelId)
                     ->where('id', $id)
@@ -409,17 +446,38 @@ class PengadaanController extends Controller
                             'created_at' => now(),
                         ]);
                     } else {
-                        // Barang baru belum ada di master -> Buat master barang baru
-                        $jenisBarang = $this->inferJenisBarang(
-                            $detail->nama_barang,
-                            $detail->spesifikasi,
-                            $detail->satuan,
-                            $pengadaan->judul,
-                            $pengadaan->catatan
-                        );
+                        // Barang baru belum ada di master -> Tentukan jenis_barang & minimum_stok
+                        $confirmedType = $detail->jenis_barang;
+                        $confirmedMinStok = $detail->minimum_stok;
 
-                        $prefix = ($jenisBarang === 'bhp') ? 'BHP' : 'INV';
-                        $minimumStok = ($jenisBarang === 'bhp') ? 0 : 1;
+                        // Periksa apakah ada input konfirmasi saat penerimaan (misalnya untuk RAB lama yang jenis_barang-nya belum ada)
+                        $reqType = $request->input("items_classification.{$detail->id}.jenis_barang")
+                            ?? $request->input("items.{$detail->id}.jenis_barang");
+                        $reqMinStok = $request->input("items_classification.{$detail->id}.minimum_stok")
+                            ?? $request->input("items.{$detail->id}.minimum_stok");
+
+                        if (!empty($reqType) && in_array($reqType, ['inventaris', 'bhp'], true)) {
+                            $confirmedType = $reqType;
+                            if ($reqMinStok !== null && $reqMinStok !== '') {
+                                $confirmedMinStok = (int) $reqMinStok;
+                            }
+                        }
+
+                        // JIKA JENIS BARANG BELUM DITETAPKAN: Wajib konfirmasi dari pengguna yang berwenang, tidak boleh menebak!
+                        if (empty($confirmedType) || !in_array($confirmedType, ['inventaris', 'bhp'], true)) {
+                            throw new \DomainException("Item '{$detail->nama_barang}' merupakan barang baru yang belum memiliki klasifikasi tipe barang (Inventaris atau BHP). Silakan konfirmasi jenis barang terlebih dahulu sebelum memproses penerimaan fisik.");
+                        }
+
+                        // Update rincian usulan jika dikonfirmasi saat penerimaan
+                        if ($detail->jenis_barang !== $confirmedType || ($confirmedMinStok !== null && $detail->minimum_stok !== $confirmedMinStok)) {
+                            $detail->update([
+                                'jenis_barang' => $confirmedType,
+                                'minimum_stok' => $confirmedMinStok ?? $detail->minimum_stok,
+                            ]);
+                        }
+
+                        $prefix = ($confirmedType === 'bhp') ? 'BHP' : 'INV';
+                        $finalMinimumStok = $confirmedMinStok ?? 0;
 
                         $bengkelCode = preg_replace('/[^A-Za-z0-9]/', '', strtoupper($bengkel->kode ?? 'BGL'));
                         $datePrefix = date('ymd');
@@ -435,14 +493,14 @@ class PengadaanController extends Controller
                             'sumber_dana_id' => null,
                             'kode_barang' => $kodeBarangBaru,
                             'nama' => $detail->nama_barang,
-                            'jenis_barang' => $jenisBarang,
+                            'jenis_barang' => $confirmedType,
                             'satuan' => $detail->satuan,
                             'harga' => $detail->harga_satuan ?? 0,
                             'stok_total' => $detail->jumlah,
                             'stok_tersedia' => $detail->jumlah,
                             'stok_dipinjam' => 0,
                             'stok_rusak' => 0,
-                            'minimum_stok' => $minimumStok,
+                            'minimum_stok' => $finalMinimumStok,
                             'deskripsi' => $detail->spesifikasi,
                         ]);
 
@@ -479,43 +537,5 @@ class PengadaanController extends Controller
             Log::error("Gagal memproses penerimaan barang RAB #{$id}: " . $e->getMessage());
             return redirect()->back()->with('error', "Gagal memproses penerimaan barang fisik: Terjadi kesalahan sistem atau konflik transaksi.");
         }
-    }
-
-    /**
-     * Inferensi klasifikasi jenis barang (bhp vs inventaris) berdasarkan teks usulan dan satuan.
-     */
-    private function inferJenisBarang(string $namaBarang, ?string $spesifikasi = '', ?string $satuan = '', ?string $judulPengadaan = '', ?string $catatan = ''): string
-    {
-        $combinedText = strtolower("{$namaBarang} {$spesifikasi} {$judulPengadaan} {$catatan}");
-        $satuanNorm = strtolower(trim((string) $satuan));
-
-        // Kata kunci penentu Bahan Habis Pakai (BHP) / Bahan Praktik / Konsumsi
-        $bhpKeywords = [
-            'bhp', 'habis pakai', 'bahan praktik', 'bahan praktek', 'atk', 'kabel', 'timah',
-            'pasta', 'resistor', 'konektor', 'rj45', 'rj-45', 'baut', 'mur', 'sekrup',
-            'kertas', 'tinta', 'toner', 'lem', 'cat', 'thinner', 'sabun', 'cairan',
-            'oli', 'minyak', 'bensin', 'solar', 'gas', 'amplas', 'kain', 'lakban',
-            'isolasi', 'pita', 'flux', 'mata bor', 'kawat', 'solder wick', 'batere',
-            'baterai', 'sekring', 'fuse', 'pcb polos', 'ferric chloride'
-        ];
-
-        foreach ($bhpKeywords as $kw) {
-            if (str_contains($combinedText, $kw)) {
-                return 'bhp';
-            }
-        }
-
-        // Satuan khas bahan habis pakai / konsumtif
-        $bhpUnits = [
-            'roll', 'rol', 'meter', 'm', 'cm', 'liter', 'ml', 'botol', 'kaleng',
-            'pack', 'pak', 'rim', 'lembar', 'kg', 'gram', 'gr', 'batang', 'dus',
-            'tube', 'galon', 'pasang'
-        ];
-
-        if (in_array($satuanNorm, $bhpUnits, true)) {
-            return 'bhp';
-        }
-
-        return 'inventaris';
     }
 }
