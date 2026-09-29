@@ -510,6 +510,9 @@
                                 @if ($item->barang)
                                     <br><span style="color: #059669; font-size: 7pt; font-family: monospace;">[Katalog: {{ $item->barang->kode_barang }}]</span>
                                 @endif
+                                @if ($item->effective_jenis_barang)
+                                    <br><span style="color: #1e40af; font-size: 7pt; font-weight: bold;">[Tipe: {{ $item->effective_jenis_barang === 'bhp' ? 'BHP (Bahan Habis Pakai)' : 'Alat Inventaris' }}]</span>
+                                @endif
                             </td>
                             <td class="text-center">{{ $item->jumlah }}</td>
                             <td class="text-center">{{ $item->satuan }}</td>

@@ -36,6 +36,18 @@ class NewPasswordController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
+        $user = User::where('email', $request->email)->first();
+        if ($user) {
+            if ($user->status === 'suspend') {
+                return back()->withInput($request->only('email'))
+                    ->withErrors(['email' => 'Akun Anda sedang ditangguhkan. Silakan hubungi Toolman.']);
+            }
+            if ($user->status === 'menunggu_acc') {
+                return back()->withInput($request->only('email'))
+                    ->withErrors(['email' => 'Akun Anda masih menunggu persetujuan dari Toolman.']);
+            }
+        }
+
         // Here we will attempt to reset the user's password. If it is successful we
         // will update the password on an actual user model and persist it to the
         // database. Otherwise we will parse the error and return the response.

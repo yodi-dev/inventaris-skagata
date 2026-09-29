@@ -447,32 +447,40 @@ class PengadaanController extends Controller
                         ]);
                     } else {
                         // Barang baru belum ada di master -> Tentukan jenis_barang & minimum_stok
-                        $confirmedType = $detail->jenis_barang;
-                        $confirmedMinStok = $detail->minimum_stok;
-
-                        // Periksa apakah ada input konfirmasi saat penerimaan (misalnya untuk RAB lama yang jenis_barang-nya belum ada)
                         $reqType = $request->input("items_classification.{$detail->id}.jenis_barang")
                             ?? $request->input("items.{$detail->id}.jenis_barang");
                         $reqMinStok = $request->input("items_classification.{$detail->id}.minimum_stok")
                             ?? $request->input("items.{$detail->id}.minimum_stok");
 
-                        if (!empty($reqType) && in_array($reqType, ['inventaris', 'bhp'], true)) {
-                            $confirmedType = $reqType;
-                            if ($reqMinStok !== null && $reqMinStok !== '') {
-                                $confirmedMinStok = (int) $reqMinStok;
+                        $isLegacyClassificationConfirmed = false;
+                        if (!empty($detail->jenis_barang)) {
+                            // KASUS A: Klasifikasi sudah tercatat pada RAB yang disetujui Waka Sarpras (Authoritative)
+                            // Percobaan mengubah nilai yang sudah disetujui Waka ditolak tegas demi integritas data
+                            if (!empty($reqType) && $reqType !== $detail->jenis_barang) {
+                                $tipeResmi = $detail->jenis_barang === 'inventaris' ? 'Alat Inventaris' : 'BHP';
+                                throw new \DomainException("Klasifikasi barang '{$detail->nama_barang}' telah disetujui sebagai {$tipeResmi} pada RAB dan tidak dapat diubah saat penerimaan fisik.");
                             }
-                        }
 
-                        // JIKA JENIS BARANG BELUM DITETAPKAN: Wajib konfirmasi dari pengguna yang berwenang, tidak boleh menebak!
-                        if (empty($confirmedType) || !in_array($confirmedType, ['inventaris', 'bhp'], true)) {
-                            throw new \DomainException("Item '{$detail->nama_barang}' merupakan barang baru yang belum memiliki klasifikasi tipe barang (Inventaris atau BHP). Silakan konfirmasi jenis barang terlebih dahulu sebelum memproses penerimaan fisik.");
-                        }
+                            if ($reqMinStok !== null && $reqMinStok !== '' && $detail->minimum_stok !== null && (int)$reqMinStok !== (int)$detail->minimum_stok) {
+                                throw new \DomainException("Batas minimum stok barang '{$detail->nama_barang}' telah ditetapkan ({$detail->minimum_stok}) pada persetujuan RAB dan tidak dapat diubah saat penerimaan fisik.");
+                            }
 
-                        // Update rincian usulan jika dikonfirmasi saat penerimaan
-                        if ($detail->jenis_barang !== $confirmedType || ($confirmedMinStok !== null && $detail->minimum_stok !== $confirmedMinStok)) {
+                            $confirmedType = $detail->jenis_barang;
+                            $confirmedMinStok = $detail->minimum_stok ?? 0;
+                        } else {
+                            // KASUS B: Usulan warisan (legacy) tanpa jenis_barang
+                            if (empty($reqType) || !in_array($reqType, ['inventaris', 'bhp'], true)) {
+                                throw new \DomainException("Item '{$detail->nama_barang}' merupakan barang baru yang belum memiliki klasifikasi tipe barang (Inventaris atau BHP). Silakan konfirmasi jenis barang terlebih dahulu sebelum memproses penerimaan fisik.");
+                            }
+
+                            $confirmedType = $reqType;
+                            $confirmedMinStok = ($reqMinStok !== null && $reqMinStok !== '') ? max(0, (int) $reqMinStok) : 0;
+                            $isLegacyClassificationConfirmed = true;
+
+                            // Simpan klasifikasi eksplisit ke rincian usulan agar tercatat permanen di riwayat historis RAB
                             $detail->update([
                                 'jenis_barang' => $confirmedType,
-                                'minimum_stok' => $confirmedMinStok ?? $detail->minimum_stok,
+                                'minimum_stok' => $confirmedMinStok,
                             ]);
                         }
 
@@ -511,7 +519,7 @@ class PengadaanController extends Controller
                             'user_id' => $user->id,
                             'jenis' => 'stok_masuk',
                             'jumlah' => $detail->jumlah,
-                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode} ({$pengadaan->judul})",
+                            'keterangan' => "Penerimaan fisik barang baru pengadaan {$rabCode} ({$pengadaan->judul})" . ($isLegacyClassificationConfirmed ? " [Klasifikasi awal dikonfirmasi oleh {$user->name}]" : ""),
                             'referensi_tipe' => 'pengadaan',
                             'referensi_id' => $pengadaan->id,
                             'created_at' => now(),
