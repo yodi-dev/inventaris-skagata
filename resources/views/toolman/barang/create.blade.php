@@ -844,7 +844,8 @@
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
                 <div class="border-b border-gray-100 pb-3">
                     <h4 class="text-base font-semibold text-gray-900">Spesifikasi Teknis & Estimasi Harga</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">Lengkapi spesifikasi untuk acuan peminjam dan referensi pengadaan.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Lengkapi spesifikasi untuk acuan peminjam dan referensi
+                        pengadaan.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -856,7 +857,8 @@
                         <textarea id="spesifikasi" name="spesifikasi" rows="4"
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
                             placeholder="Tuliskan merk, tipe chipset, nomor model, panjang/kapasitas, atau panduan penggunaan..."></textarea>
-                        <p class="text-[11px] text-gray-400 mt-1">Deskripsi ini akan dibaca oleh siswa saat melihat katalog peminjaman.</p>
+                        <p class="text-[11px] text-gray-400 mt-1">Deskripsi ini akan dibaca oleh siswa saat melihat katalog
+                            peminjaman.</p>
                     </div>
 
                     <!-- Estimasi Harga Satuan (Untuk RAB) -->
@@ -873,7 +875,8 @@
                                 class="block w-full pl-10 text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
                                 placeholder="Contoh: 1850000">
                         </div>
-                        <p class="text-[11px] text-gray-400 mt-1">Digunakan sebagai perkiraan otomatis saat men-generate draf RAB Pengadaan ke Waka Sarpras.</p>
+                        <p class="text-[11px] text-gray-400 mt-1">Digunakan sebagai perkiraan otomatis saat men-generate
+                            draf RAB Pengadaan ke Waka Sarpras.</p>
                     </div>
                 </div>
             </div>
@@ -1394,11 +1397,15 @@
                                 </div>
 
                                 <!-- Master Data Validation Notice -->
-                                <div class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-2 text-xs text-blue-800">
-                                    <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                <div
+                                    class="p-3 bg-blue-50/70 border border-blue-100 rounded-xl flex items-start gap-2 text-xs text-blue-800">
+                                    <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                                     </svg>
-                                    <span><strong>Validasi Master Data:</strong> Lokasi penyimpanan, satuan, dan sumber dana harus mengacu pada master data yang telah terdaftar di sistem.</span>
+                                    <span><strong>Validasi Master Data:</strong> Lokasi penyimpanan, satuan, dan sumber dana
+                                        harus mengacu pada master data yang telah terdaftar di sistem.</span>
                                 </div>
 
                                 <!-- Action Buttons -->

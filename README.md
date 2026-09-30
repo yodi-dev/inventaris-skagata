@@ -19,8 +19,9 @@
 SMK Negeri 3 Yogyakarta (Skagata) memiliki beragam bengkel kejuruan (TKJ, TAV, TITL, TKR, TBSM, DKV, Tata Boga, dll.) dengan sirkulasi peminjaman alat praktik dan konsumsi bahan yang padat setiap hari.
 
 **SIBENKA** dirancang untuk:
+
 1. **Mencegah Kehilangan & Kerusakan Alat:** Mencatat sirkulasi peminjaman alat secara akuntabel dan menyediakan alur cek fisik kondisi barang saat pengembalian.
-2. **Efisiensi Pengelolaan Bahan Habis Pakai (BHP):** Memonitor pemakaian bahan praktik siswa dan mendeteksi stok yang menipis secara *real-time*.
+2. **Efisiensi Pengelolaan Bahan Habis Pakai (BHP):** Memonitor pemakaian bahan praktik siswa dan mendeteksi stok yang menipis secara _real-time_.
 3. **Penyusunan RAB Pengadaan Cepat & Akurat:** Membantu Toolman mengusulkan Rencana Anggaran Biaya (RAB) secara otomatis berbasis stok limit dan alat rusak berat untuk disetujui Waka Sarpras.
 
 ---
@@ -29,48 +30,52 @@ SMK Negeri 3 Yogyakarta (Skagata) memiliki beragam bengkel kejuruan (TKJ, TAV, T
 
 Sistem membagi akses ke dalam 3 tingkatan pengguna:
 
-| Peran (Role) | Target Pengguna | Layout Navigasi | Tanggung Jawab Utama |
-| :--- | :--- | :--- | :--- |
-| **Super Admin** | Waka Sarpras | *Sidebar Navigation* | Monitoring analitik aset seluruh sekolah, verifikasi/persetujuan RAB pengadaan dari bengkel, rekap laporan mutasi & konsumsi bahan, manajemen master bengkel & akun toolman. |
-| **Admin Bengkel** | Toolman Jurusan | *Sidebar Navigation* | Manajemen katalog barang bengkel (CRUD alat & BHP), verifikasi antrean peminjaman siswa/guru, cek fisik pengembalian, pengajuan draf RAB otomatis, manajemen peminjam (approval & suspend). |
-| **Peminjam** | Siswa & Guru | *Top Navbar + Mobile Bottom Navigation* | Eksplorasi katalog alat/bahan (*mobile-first*), keranjang peminjaman multi-barang, formulir pengajuan cerdas, pemantauan status tiket sirkulasi. |
+| Peran (Role)      | Target Pengguna | Layout Navigasi                         | Tanggung Jawab Utama                                                                                                                                                                        |
+| :---------------- | :-------------- | :-------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Super Admin**   | Waka Sarpras    | _Sidebar Navigation_                    | Monitoring analitik aset seluruh sekolah, verifikasi/persetujuan RAB pengadaan dari bengkel, rekap laporan mutasi & konsumsi bahan, manajemen master bengkel & akun toolman.                |
+| **Admin Bengkel** | Toolman Jurusan | _Sidebar Navigation_                    | Manajemen katalog barang bengkel (CRUD alat & BHP), verifikasi antrean peminjaman siswa/guru, cek fisik pengembalian, pengajuan draf RAB otomatis, manajemen peminjam (approval & suspend). |
+| **Peminjam**      | Siswa & Guru    | _Top Navbar + Mobile Bottom Navigation_ | Eksplorasi katalog alat/bahan (_mobile-first_), keranjang peminjaman multi-barang, formulir pengajuan cerdas, pemantauan status tiket sirkulasi.                                            |
 
 ---
 
 ## 🚀 3. Fitur Utama Berdasarkan Peran
 
 ### A. Super Admin (Waka Sarpras)
+
 - 📊 **Dashboard Analitik Eksekutif:** Statistik total aset, alat aktif dipinjam, barang rusak, stok kritis, dan grafik perbandingan antar jurusan.
 - 📝 **Verifikasi RAB Pengadaan:** Antarmuka interaktif peninjauan usulan RAB dari tiap bengkel dengan opsi **Setujui (ACC)**, **Catatan Revisi**, atau **Tolak**, dilengkapi rincian spesifikasi teknis barang.
 - 📈 **Laporan & Rekapitulasi:** Rekapitulasi mutasi aset dan laporan konsumsi bahan habis pakai yang siap cetak / ekspor.
 - 🏢 **Master Data Terpusat:** Pengelolaan data jurusan/bengkel dan manajemen akun Toolman penanggung jawab.
 
 ### B. Admin Bengkel (Toolman)
+
 - 📦 **Manajemen Master Barang (Quantity-Based):** Pendataan alat inventaris dan bahan habis pakai dengan informasi spesifikasi, stok total, stok tersedia, dan lokasi rak/lemari.
 - 📋 **Sirkulasi Peminjaman (Antrean ACC):** Tinjau permohonan pinjam alat/bahan dari siswa dan guru secara cepat.
 - 🔍 **Sirkulasi Pengembalian & Cek Fisik:** Form verifikasi pengembalian alat dengan pencatatan kondisi fisik (Baik / Rusak Ringan / Rusak Berat / Hilang).
-- ⚡ **Pengajuan RAB Otomatis:** Tombol pintar *generate* draf RAB dari barang berstatus stok menipis dan alat rusak berat.
-- 🛑 **Manajemen Peminjam:** Persetujuan registrasi akun siswa/guru baru serta penangguhan (*suspend*) akun yang melanggar tata tertib bengkel.
+- ⚡ **Pengajuan RAB Otomatis:** Tombol pintar _generate_ draf RAB dari barang berstatus stok menipis dan alat rusak berat.
+- 🛑 **Manajemen Peminjam:** Persetujuan registrasi akun siswa/guru baru serta penangguhan (_suspend_) akun yang melanggar tata tertib bengkel.
 
 ### C. Peminjam (Siswa & Guru)
-- 📱 **Katalog Interaktif (Mobile-First):** Tampilan responsif dengan pencarian instan, filter chip kategori (*Alat Inventaris* vs *Bahan Habis Pakai*), serta indikator ketersediaan stok.
+
+- 📱 **Katalog Interaktif (Mobile-First):** Tampilan responsif dengan pencarian instan, filter chip kategori (_Alat Inventaris_ vs _Bahan Habis Pakai_), serta indikator ketersediaan stok.
 - 🛒 **Keranjang Peminjaman (Multi-Item):** Siswa dapat memilih beberapa barang sekaligus dalam satu transaksi peminjaman.
 - 🧠 **Sistem Pintar Formulir Pengajuan:**
-  - *Bahan Habis Pakai (BHP):* Input kalender/jadwal pengembalian **otomatis disembunyikan**, karena BHP tidak perlu dikembalikan.
-  - *Alat Inventaris:* Wajib mencantumkan batas pengembalian pada hari yang sama.
-- 🎟️ **Tiket Peminjaman Saya:** Pelacakan status tiket secara *real-time* (*Pending*, *Active / Sedang Dipinjam*, *Selesai*), dan tombol aksi ajukan pengembalian.
+    - _Bahan Habis Pakai (BHP):_ Input kalender/jadwal pengembalian **otomatis disembunyikan**, karena BHP tidak perlu dikembalikan.
+    - _Alat Inventaris:_ Wajib mencantumkan batas pengembalian pada hari yang sama.
+- 🎟️ **Tiket Peminjaman Saya:** Pelacakan status tiket secara _real-time_ (_Pending_, _Active / Sedang Dipinjam_, _Selesai_), dan tombol aksi ajukan pengembalian.
 
 ---
 
 ## ⚖️ 4. Aturan Bisnis Sistem (Business Rules)
 
 > [!IMPORTANT]
+>
 > - **Quantity-Based Inventory:** Barang dicatat berdasarkan kuantitas fisik (misal: 5 Unit Router), bukan nomor seri satuan per unit.
 > - **Aturan Pengembalian Alat:** Alat inventaris **wajib dikembalikan pada hari yang sama** sebelum jam bengkel berakhir (maksimal 15:30 WIB).
 > - **Bahan Habis Pakai (BHP):** Bahan habis pakai (kabel, konektor, timah solder, dll.) **tidak perlu dikembalikan**. Begitu disetujui Toolman, stok otomatis berkurang secara permanen.
-> - **Sanksi Penalti (*Suspend*):** Peminjam yang menghilangkan alat, merusak, atau terlambat mengembalikan akan di-*suspend* oleh Toolman dan tidak dapat membuat pengajuan baru hingga urusan diselesaikan di luar sistem.
+> - **Sanksi Penalti (_Suspend_):** Peminjam yang menghilangkan alat, merusak, atau terlambat mengembalikan akan di-_suspend_ oleh Toolman dan tidak dapat membuat pengajuan baru hingga urusan diselesaikan di luar sistem.
 > - **Alur Stok RAB:** Persetujuan RAB oleh Waka Sarpras tidak otomatis menambah stok aplikasi. Stok fisik ditambahkan secara manual oleh Toolman setelah barang fisik resmi diterima di bengkel.
-> - **Notifikasi:** Notifikasi berjalan secara visual di dalam aplikasi (*In-App Badge & Toasts*), tanpa ketergantungan API pihak ketiga (Email/WhatsApp).
+> - **Notifikasi:** Notifikasi berjalan secara visual di dalam aplikasi (_In-App Badge & Toasts_), tanpa ketergantungan API pihak ketiga (Email/WhatsApp).
 
 ---
 
@@ -122,6 +127,7 @@ inventaris-skagata/
 ## 💻 7. Panduan Instalasi & Menjalankan Aplikasi
 
 ### Prasyarat:
+
 - PHP >= 8.2
 - Composer >= 2.x
 - Node.js >= 18.x & NPM
@@ -130,72 +136,79 @@ inventaris-skagata/
 ### Langkah-langkah:
 
 1. **Clone Repository & Masuk ke Direktori:**
-   ```bash
-   git clone https://github.com/yodi-dev/inventaris-skagata.git
-   cd inventaris-skagata
-   ```
+
+    ```bash
+    git clone https://github.com/yodi-dev/inventaris-skagata.git
+    cd inventaris-skagata
+    ```
 
 2. **Instal Dependensi PHP (Composer):**
-   ```bash
-   composer install
-   ```
+
+    ```bash
+    composer install
+    ```
 
 3. **Salin File Environment & Generate App Key:**
-   ```bash
-   cp .env.example .env
-   php artisan key:generate
-   ```
+
+    ```bash
+    cp .env.example .env
+    php artisan key:generate
+    ```
 
 4. **Instal Dependensi Frontend (NPM):**
-   ```bash
-   npm install
-   ```
+
+    ```bash
+    npm install
+    ```
 
 5. **Migrasi Database & Seeder (Jika database sudah disiapkan):**
-   ```bash
-   php artisan migrate
-   ```
+
+    ```bash
+    php artisan migrate
+    ```
 
 6. **Jalankan Server Pengembang (Development):**
-   - **Jika menggunakan Laravel Herd:**
-     Aplikasi langsung dapat diakses pada browser di:
-     `http://inventaris-skagata.test`
-   - **Atau jalankan secara manual:**
-     ```bash
-     # Terminal 1: Menjalankan Vite asset bundler
-     npm run dev
+    - **Jika menggunakan Laravel Herd:**
+      Aplikasi langsung dapat diakses pada browser di:
+      `http://inventaris-skagata.test`
+    - **Atau jalankan secara manual:**
 
-     # Terminal 2: Menjalankan server Laravel
-     php artisan serve
-     ```
-     Buka [http://127.0.0.1:8000](http://127.0.0.1:8000) pada browser Anda.
+        ```bash
+        # Terminal 1: Menjalankan Vite asset bundler
+        npm run dev
+
+        # Terminal 2: Menjalankan server Laravel
+        php artisan serve
+        ```
+
+        Buka [http://127.0.0.1:8000](http://127.0.0.1:8000) pada browser Anda.
 
 ---
 
 ## 🧭 8. Peta Rute Utama Aplikasi
 
-| Modul | URL Endpoint | Keterangan Halaman |
-| :--- | :--- | :--- |
-| **Login** | `/login` | Pintu masuk autentikasi pengguna |
-| **Super Admin** | `/superadmin/dashboard` | Dashboard analitik Waka Sarpras |
-| **Super Admin** | `/superadmin/pengadaan` | Verifikasi draf RAB Pengadaan |
-| **Super Admin** | `/superadmin/bengkel` | Manajemen master bengkel |
-| **Super Admin** | `/superadmin/toolman` | Manajemen akun Toolman |
-| **Super Admin** | `/superadmin/laporan/mutasi` | Laporan mutasi aset bengkel |
-| **Super Admin** | `/superadmin/laporan/konsumsi` | Laporan konsumsi bahan (BHP) |
-| **Toolman** | `/toolman/dashboard` | Dashboard operasional bengkel jurusan |
-| **Toolman** | `/toolman/barang` | Manajemen master alat & bahan (Katalog, Import, Export) |
-| **Toolman** | `/toolman/lokasi` | Manajemen master lokasi penyimpanan |
-| **Toolman** | `/toolman/satuan` | Manajemen master satuan barang |
-| **Toolman** | `/toolman/sumber-dana` | Manajemen master sumber dana anggaran |
-| **Toolman** | `/toolman/peminjaman` | Antrean persetujuan pinjam siswa/guru |
-| **Toolman** | `/toolman/pengembalian` | Verifikasi pengembalian & cek fisik barang |
-| **Toolman** | `/toolman/pengadaan` | Penyusunan RAB & penerimaan fisik barang |
-| **Toolman** | `/toolman/peminjam` | Manajemen akun peminjam (Approval & Suspend) |
-| **Toolman** | `/toolman/mutasi` | Riwayat kartu stok & kartu barang |
-| **Peminjam** | `/peminjam/dashboard` | Dashboard peminjam & ringkasan peminjaman |
-| **Peminjam** | `/peminjam/katalog` | Katalog barang praktik (*Mobile-First* & Keranjang) |
-| **Peminjam** | `/peminjam/tiket` | Tiket aktif & riwayat peminjaman |
+| Modul           | URL Endpoint                   | Keterangan Halaman                                      |
+| :-------------- | :----------------------------- | :------------------------------------------------------ |
+| **Login**       | `/login`                       | Pintu masuk autentikasi pengguna                        |
+| **Super Admin** | `/superadmin/dashboard`        | Dashboard analitik Waka Sarpras                         |
+| **Super Admin** | `/superadmin/pengadaan`        | Verifikasi draf RAB Pengadaan                           |
+| **Super Admin** | `/superadmin/bengkel`          | Manajemen master bengkel                                |
+| **Super Admin** | `/superadmin/toolman`          | Manajemen akun Toolman                                  |
+| **Super Admin** | `/superadmin/laporan/mutasi`   | Laporan mutasi aset bengkel                             |
+| **Super Admin** | `/superadmin/laporan/konsumsi` | Laporan konsumsi bahan (BHP)                            |
+| **Toolman**     | `/toolman/dashboard`           | Dashboard operasional bengkel jurusan                   |
+| **Toolman**     | `/toolman/barang`              | Manajemen master alat & bahan (Katalog, Import, Export) |
+| **Toolman**     | `/toolman/lokasi`              | Manajemen master lokasi penyimpanan                     |
+| **Toolman**     | `/toolman/satuan`              | Manajemen master satuan barang                          |
+| **Toolman**     | `/toolman/sumber-dana`         | Manajemen master sumber dana anggaran                   |
+| **Toolman**     | `/toolman/peminjaman`          | Antrean persetujuan pinjam siswa/guru                   |
+| **Toolman**     | `/toolman/pengembalian`        | Verifikasi pengembalian & cek fisik barang              |
+| **Toolman**     | `/toolman/pengadaan`           | Penyusunan RAB & penerimaan fisik barang                |
+| **Toolman**     | `/toolman/peminjam`            | Manajemen akun peminjam (Approval & Suspend)            |
+| **Toolman**     | `/toolman/mutasi`              | Riwayat kartu stok & kartu barang                       |
+| **Peminjam**    | `/peminjam/dashboard`          | Dashboard peminjam & ringkasan peminjaman               |
+| **Peminjam**    | `/peminjam/katalog`            | Katalog barang praktik (_Mobile-First_ & Keranjang)     |
+| **Peminjam**    | `/peminjam/tiket`              | Tiket aktif & riwayat peminjaman                        |
 
 ---
 

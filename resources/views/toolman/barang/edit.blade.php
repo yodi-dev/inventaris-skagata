@@ -714,7 +714,8 @@
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
                 <div class="border-b border-gray-100 pb-3">
                     <h4 class="text-base font-semibold text-gray-900">Spesifikasi Teknis & Estimasi Harga</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">Spesifikasi detail untuk acuan peminjam dan generator RAB pengadaan.</p>
+                    <p class="text-xs text-gray-500 mt-0.5">Spesifikasi detail untuk acuan peminjam dan generator RAB
+                        pengadaan.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -724,7 +725,8 @@
                         </label>
                         <textarea id="spesifikasi" name="spesifikasi" rows="4" x-model="spesifikasi"
                             class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"></textarea>
-                        <p class="text-[11px] text-gray-400 mt-1">Siswa dapat membaca spesifikasi ini saat memilih barang di katalog.</p>
+                        <p class="text-[11px] text-gray-400 mt-1">Siswa dapat membaca spesifikasi ini saat memilih barang
+                            di katalog.</p>
                     </div>
 
                     <div>
@@ -739,7 +741,8 @@
                             <input type="number" id="estimasi_harga" name="estimasi_harga" x-model="estimasiHarga"
                                 class="block w-full pl-10 text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm">
                         </div>
-                        <p class="text-[11px] text-gray-400 mt-1">Digunakan untuk mengisi estimasi biaya saat barang diajukan ke RAB pengadaan.</p>
+                        <p class="text-[11px] text-gray-400 mt-1">Digunakan untuk mengisi estimasi biaya saat barang
+                            diajukan ke RAB pengadaan.</p>
                     </div>
                 </div>
             </div>
