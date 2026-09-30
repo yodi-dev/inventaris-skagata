@@ -427,7 +427,8 @@
             <ul style="margin-top: 4px; margin-left: 18px; line-height: 1.5;">
                 <li>Buka <strong>More settings (Setelan lainnya)</strong> pada jendela pratinjau cetak browser.</li>
                 <li><strong>Paper size (Ukuran kertas):</strong> Pilih <strong>Folio / F4</strong> (atau gunakan
-                    <em>Legal</em> jika Folio tidak tersedia di daftar printer Anda).</li>
+                    <em>Legal</em> jika Folio tidak tersedia di daftar printer Anda).
+                </li>
                 <li><strong>Margins (Margin):</strong> Ubah dari <em>Default</em> menjadi <strong>None (Tidak
                         ada)</strong> atau <strong>Minimum</strong> agar area atas-bawah-kiri-kanan tidak tertekan
                     menjadi kotak.</li>

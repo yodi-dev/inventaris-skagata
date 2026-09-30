@@ -19,6 +19,8 @@
                 return [
                     'barang_id' => $item->id,
                     'nama' => $item->nama,
+                    'jenis_barang' => $item->jenis_barang,
+                    'minimum_stok' => $item->minimum_stok,
                     'spesifikasi' => "Penggantian/penambahan untuk {$item->nama} ({$item->kode_barang})",
                     'jumlah' => $rekomendasiQty,
                     'satuan' => $item->satuan ?? 'unit',
@@ -35,6 +37,8 @@
         items: [{
             barang_id: null,
             nama: '',
+            jenis_barang: 'inventaris',
+            minimum_stok: 1,
             spesifikasi: '',
             jumlah: 1,
             satuan: 'unit',
@@ -47,6 +51,8 @@
             this.items.push({
                 barang_id: null,
                 nama: '',
+                jenis_barang: 'inventaris',
+                minimum_stok: 1,
                 spesifikasi: '',
                 jumlah: 1,
                 satuan: 'unit',
@@ -63,6 +69,8 @@
                 this.items = [{
                     barang_id: null,
                     nama: '',
+                    jenis_barang: 'inventaris',
+                    minimum_stok: 1,
                     spesifikasi: '',
                     jumlah: 1,
                     satuan: 'unit',
@@ -236,6 +244,39 @@
                                         <input type="text" :name="'items[' + index + '][spesifikasi]'" x-model="item.spesifikasi"
                                             placeholder="Spesifikasi teknis, merek, seri..."
                                             class="block w-full border-gray-300 bg-gray-50 rounded-md text-xs focus:ring-primary-500 focus:border-primary-500 text-gray-600">
+
+                                        <!-- Kontrol Tipe Barang & Batas Minimum -->
+                                        <template x-if="item.barang_id">
+                                            <div class="mt-1.5 flex items-center gap-2">
+                                                <input type="hidden" :name="'items[' + index + '][jenis_barang]'" :value="item.jenis_barang">
+                                                <input type="hidden" :name="'items[' + index + '][minimum_stok]'" :value="item.minimum_stok">
+                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                                    Katalog Master: <span class="capitalize ml-1" x-text="item.jenis_barang === 'bhp' ? 'BHP' : 'Inventaris'"></span>
+                                                </span>
+                                                <template x-if="item.minimum_stok !== null">
+                                                    <span class="text-[10px] text-gray-500 font-mono" x-text="'Min: ' + item.minimum_stok"></span>
+                                                </template>
+                                            </div>
+                                        </template>
+
+                                        <template x-if="!item.barang_id">
+                                            <div class="mt-1.5 flex items-center gap-2">
+                                                <div class="w-1/2">
+                                                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Tipe Barang <span class="text-red-500">*</span></label>
+                                                    <select :name="'items[' + index + '][jenis_barang]'" x-model="item.jenis_barang" required
+                                                        class="block w-full border-gray-300 rounded-md text-xs py-1 px-2 focus:ring-primary-500 focus:border-primary-500 bg-white">
+                                                        <option value="inventaris">Alat Inventaris</option>
+                                                        <option value="bhp">BHP (Bahan Habis Pakai)</option>
+                                                    </select>
+                                                </div>
+                                                <div class="w-1/2">
+                                                    <label class="block text-[10px] font-semibold text-gray-500 uppercase tracking-wider mb-0.5">Batas Min. Stok</label>
+                                                    <input type="number" min="0" :name="'items[' + index + '][minimum_stok]'" x-model.number="item.minimum_stok" placeholder="Contoh: 1"
+                                                        class="block w-full border-gray-300 rounded-md text-xs py-1 px-2 focus:ring-primary-500 focus:border-primary-500 bg-white">
+                                                </div>
+                                            </div>
+                                        </template>
+
                                         <template x-if="item.info_stok">
                                             <p class="text-[11px] text-amber-600 font-medium mt-1"
                                                 x-text="'Rekomendasi sistem: ' + item.info_stok"></p>

@@ -98,20 +98,13 @@
             <x-input-error :messages="$errors->get('password')" class="mt-1 text-red-500 text-xs" />
         </div>
 
-        <!-- Remember Me & Lupa Password -->
+        <!-- Remember Me -->
         <div class="flex items-center justify-between">
             <label for="remember_me" class="inline-flex items-center cursor-pointer select-none">
                 <input id="remember_me" type="checkbox" name="remember"
                     class="w-4 h-4 rounded border-gray-300 text-primary-600 shadow-2xs focus:ring-primary-500 cursor-pointer">
                 <span class="ms-2 text-xs sm:text-sm text-gray-600 font-medium">{{ __('Ingat Saya') }}</span>
             </label>
-
-            {{-- @if (Route::has('password.request'))
-                <a class="text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors"
-                    href="{{ route('password.request') }}">
-                    {{ __('Lupa Password?') }}
-                </a>
-            @endif --}}
         </div>
 
         <!-- Tombol Submit -->

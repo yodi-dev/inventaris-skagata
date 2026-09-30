@@ -135,6 +135,7 @@ class RemediationBatch3Test extends TestCase
             'jumlah' => 2,
             'satuan' => 'Unit',
             'harga_satuan' => 25000000,
+            'jenis_barang' => 'inventaris',
         ]);
 
         $response = $this->actingAs($toolman)

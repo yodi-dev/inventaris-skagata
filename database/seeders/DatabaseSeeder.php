@@ -12,8 +12,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            BengkelSeeder::class,
-            UserSeeder::class,
             BengkelSeeder::class,           // 1. Master bengkel
             LokasiPenyimpananSeeder::class, // 2. Lokasi penyimpanan (butuh bengkel)
             UserSeeder::class,              // 3. User / pengguna (butuh bengkel)

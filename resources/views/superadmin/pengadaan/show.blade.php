@@ -280,6 +280,28 @@
                                             (Barang usulan baru / belum di master)
                                         </p>
                                     @endif
+
+                                    <div class="mt-1 flex items-center gap-1.5 flex-wrap">
+                                        @if ($item->effective_jenis_barang === 'bhp')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                                BHP (Bahan Habis Pakai)
+                                            </span>
+                                        @elseif ($item->effective_jenis_barang === 'inventaris')
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                                                Alat Inventaris
+                                            </span>
+                                        @else
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 border border-gray-200">
+                                                Tipe Belum Ditentukan
+                                            </span>
+                                        @endif
+
+                                        @if ($item->effective_minimum_stok !== null)
+                                            <span class="text-[10px] text-gray-500 font-mono">
+                                                Min. Stok: {{ $item->effective_minimum_stok }}
+                                            </span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td class="px-6 py-4 text-xs text-gray-600 max-w-xs">
                                     {{ $item->spesifikasi ?: '-' }}

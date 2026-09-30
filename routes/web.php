@@ -82,26 +82,6 @@ Route::prefix('superadmin')->name('superadmin.')->middleware(['auth', 'role:waka
     Route::delete('/toolman/{id}', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'destroy'])->name('toolman.destroy');
     Route::post('/toolman/{id}/reset-password', [\App\Http\Controllers\Superadmin\ToolmanController::class, 'resetPassword'])->name('toolman.reset-password');
 
-    // Backward-compatible aliases for legacy master routes
-    Route::get('/master/bengkel', function () {
-        return redirect()->route('superadmin.bengkel.index');
-    })->name('master.bengkel');
-    Route::get('/master/bengkel/create', function () {
-        return redirect()->route('superadmin.bengkel.create');
-    })->name('master.bengkel.create');
-    Route::get('/master/bengkel/edit/{id}', function ($id) {
-        return redirect()->route('superadmin.bengkel.edit', $id);
-    })->name('master.bengkel.edit');
-    Route::get('/master/toolman', function () {
-        return redirect()->route('superadmin.toolman.index');
-    })->name('master.toolman');
-    Route::get('/master/toolman/create', function () {
-        return redirect()->route('superadmin.toolman.create');
-    })->name('master.toolman.create');
-    Route::get('/master/toolman/edit/{id}', function ($id) {
-        return redirect()->route('superadmin.toolman.edit', $id);
-    })->name('master.toolman.edit');
-
     // Profil Waka Sarpras
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
@@ -121,7 +101,7 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::post('/barang', [ToolmanBarangController::class, 'store'])->name('barang.store');
     Route::get('/barang/template-excel', [ToolmanBarangController::class, 'downloadTemplate'])->name('barang.template-excel');
     Route::post('/barang/import', [ToolmanBarangController::class, 'import'])->name('barang.import');
-    Route::get('/barang/edit/{id?}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
+    Route::get('/barang/edit/{id}', [ToolmanBarangController::class, 'edit'])->name('barang.edit');
     Route::put('/barang/{id}', [ToolmanBarangController::class, 'update'])->name('barang.update');
     Route::delete('/barang/{id}', [ToolmanBarangController::class, 'destroy'])->name('barang.destroy');
     Route::get('/barang/{id}/print-kartu', [ToolmanBarangController::class, 'printKartu'])->name('barang.print-kartu');
@@ -131,9 +111,6 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::post('/lokasi', [ToolmanLokasiController::class, 'store'])->name('lokasi.store');
     Route::put('/lokasi/{id}', [ToolmanLokasiController::class, 'update'])->name('lokasi.update');
     Route::delete('/lokasi/{id}', [ToolmanLokasiController::class, 'destroy'])->name('lokasi.destroy');
-    Route::get('/lokasi-penyimpanan', function () {
-        return redirect()->route('toolman.lokasi.index');
-    })->name('lokasi-penyimpanan.index');
 
     // Manajemen Satuan Barang
     Route::get('/satuan', [ToolmanSatuanController::class, 'index'])->name('satuan.index');
@@ -187,19 +164,6 @@ Route::prefix('toolman')->name('toolman.')->middleware(['auth', 'role:toolman'])
     Route::get('/mutasi/export-excel', [ToolmanMutasiController::class, 'exportExcel'])->name('mutasi.export-excel');
     Route::get('/mutasi/print', [ToolmanMutasiController::class, 'print'])->name('mutasi.print');
 
-    // Backward-compatible aliases
-    Route::get('/sirkulasi/peminjaman', function () {
-        return redirect()->route('toolman.peminjaman.index');
-    })->name('sirkulasi.peminjaman');
-
-    Route::get('/sirkulasi/pengembalian', function () {
-        return redirect()->route('toolman.pengembalian.index');
-    })->name('sirkulasi.pengembalian');
-
-    Route::get('/users', function () {
-        return redirect()->route('toolman.peminjam.index');
-    })->name('users.index');
-
     // Profil Toolman
     Route::get('/profile', function () {
         return redirect()->route('profile.edit');
@@ -227,11 +191,6 @@ Route::prefix('peminjam')->name('peminjam.')->middleware(['auth', 'role:peminjam
         return redirect()->route('profile.edit');
     })->name('profile');
 });
-
-// Alias backward-compatible peminjam
-Route::get('/peminjam', function () {
-    return redirect()->route('peminjam.dashboard');
-})->middleware(['auth', 'role:peminjam']);
 
 // Route untuk halaman edit profil dengan deteksi role dinamis
 Route::middleware('auth')->group(function () {
