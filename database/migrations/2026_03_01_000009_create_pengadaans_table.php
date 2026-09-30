@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::create('pengadaans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bengkel_id')->constrained('bengkels')->cascadeOnDelete();
-            $table->foreignId('dibuat_oleh')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('bengkel_id')->constrained('bengkels')->restrictOnDelete();
+            $table->foreignId('dibuat_oleh')->constrained('users')->restrictOnDelete();
             $table->string('judul');
-            $table->string('status')->default('draft'); // draft, pending, revisi, approved, rejected
+            $table->string('status')->default('draft'); // draft, pending, revisi, approved, rejected, selesai
             $table->text('catatan')->nullable();
             $table->text('catatan_review')->nullable();
             $table->dateTime('diajukan_pada')->nullable();

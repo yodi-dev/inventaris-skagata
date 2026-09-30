@@ -16,6 +16,8 @@ return new class extends Migration
             $table->text('spesifikasi')->nullable();
             $table->integer('jumlah');
             $table->string('satuan');
+            $table->enum('jenis_barang', ['inventaris', 'bhp'])->nullable();
+            $table->integer('minimum_stok')->nullable();
             $table->decimal('harga_satuan', 15, 2)->default(0);
             $table->timestamps();
         });

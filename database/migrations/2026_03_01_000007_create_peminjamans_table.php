@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('peminjamans', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('bengkel_id')->constrained('bengkels')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
+            $table->foreignId('bengkel_id')->constrained('bengkels')->restrictOnDelete();
             $table->dateTime('tanggal_pinjam');
             $table->dateTime('batas_kembali')->nullable();
             $table->text('keperluan');

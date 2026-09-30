@@ -10,8 +10,8 @@ return new class extends Migration
     {
         Schema::create('stock_movements', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('barang_id')->constrained('barangs')->cascadeOnDelete();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('barang_id')->constrained('barangs')->restrictOnDelete();
+            $table->foreignId('user_id')->constrained('users')->restrictOnDelete();
             $table->string('jenis'); // stok_masuk, peminjaman, pengembalian_baik, pengembalian_rusak, barang_hilang, bhp_keluar, perbaikan, penyesuaian
             $table->integer('jumlah');
             $table->string('referensi_tipe')->nullable();

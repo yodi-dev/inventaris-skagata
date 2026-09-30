@@ -299,7 +299,11 @@ Evolusi dari versi draf awal (v1.1) menjadi versi produksi (v2.0):
 3. **Pembersihan Residu Prototype:**
     - Menghapus mockup kotak unggah foto barang dan aset dummy router pada form barang.
     - Menghapus rute alias redirect usang (`/master/bengkel`, `/master/toolman`, `/sirkulasi/*`, `/users`, `/peminjam`).
-    - Menghapus seeder kosong peninggalan skema lama (`CategorySeeder`, `RoomSeeder`) dan merapikan array key `UserSeeder`.
+    - Menghapus seeder dummy prototype (`BarangSeeder`, `BengkelSeeder`, `LokasiPenyimpananSeeder`, `PeminjamanSeeder`, `PengadaanSeeder`, `StockMovementSeeder`).
     - Mengubah rute edit barang menjadi parameter eksplisit wajib `/barang/edit/{id}`.
 4. **Hardening Batasan Spreadsheet:** Pembatasan ukuran file, penolakan format lama `.xls`, penolakan kolom lebih dari 50 baris, pencegahan injeksi formula kalkulasi Excel, serta proteksi parser XML dari serangan XXE.
 5. **Autentikasi Internal Sekolah:** Menghapus fitur publik reset password via email demi menyesuaikan SOP operasional langsung di sekolah, serta menerapkan rate-limiting pada registrasi mandiri.
+6. **Konsolidasi Migrasi & Onboarding Database Bersih:**
+    - Mengkonsolidasi file migrasi fragmentaris menjadi susunan migrasi kanonikal dengan integritas relasi utuh (*restrictOnDelete* / *nullOnDelete* / *cascadeOnDelete* langsung pada DDL pembuatan tabel).
+    - Mereset database ke status bersih produksi (*clean slate*).
+    - Mengonfigurasi `UserSeeder` khusus untuk 2 akun administratif awal: Waka Sarpras (`waka@skagata.sch.id`) dan Kepala Gudang (`gudang@skagata.sch.id`) dengan NIP kosong yang dapat dikonfigurasi mandiri melalui menu pengaturan profil.

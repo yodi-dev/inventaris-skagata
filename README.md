@@ -161,11 +161,12 @@ inventaris-skagata/
     npm install
     ```
 
-5. **Migrasi Database & Seeder (Jika database sudah disiapkan):**
+5. **Migrasi Database & Seeder Awal:**
 
     ```bash
-    php artisan migrate
+    php artisan migrate --seed
     ```
+    *(Menyiapkan skema basis data dan 2 akun administrator awal: Waka Sarpras & Kepala Gudang)*
 
 6. **Jalankan Server Pengembang (Development):**
     - **Jika menggunakan Laravel Herd:**
