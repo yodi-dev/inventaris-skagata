@@ -200,7 +200,7 @@ class BarangController extends Controller
         });
     }
 
-    public function edit($id = null)
+    public function edit($id)
     {
         $user = auth()->user();
         $bengkelId = $user->bengkel_id;
@@ -211,20 +211,13 @@ class BarangController extends Controller
 
         SumberDanaController::ensureSchemaReady();
 
-        $barang = null;
-        if ($id) {
-            $barang = Barang::with(['lokasiPenyimpanan', 'sumberDana', 'detailPeminjamans' => function ($q) {
-                $q->whereHas('peminjaman', function ($p) {
-                    $p->whereIn('status', ['active', 'terlambat']);
-                })->with('peminjaman.user');
-            }])
-                ->where('bengkel_id', $bengkelId)
-                ->findOrFail($id);
-        } else {
-            $barang = Barang::with(['lokasiPenyimpanan', 'sumberDana'])
-                ->where('bengkel_id', $bengkelId)
-                ->firstOrFail();
-        }
+        $barang = Barang::with(['lokasiPenyimpanan', 'sumberDana', 'detailPeminjamans' => function ($q) {
+            $q->whereHas('peminjaman', function ($p) {
+                $p->whereIn('status', ['active', 'terlambat']);
+            })->with('peminjaman.user');
+        }])
+            ->where('bengkel_id', $bengkelId)
+            ->findOrFail($id);
 
         $lokasiPenyimpanans = LokasiPenyimpanan::where('bengkel_id', $bengkelId)->get();
         $sumberDanas = SumberDana::withCount('barangs')->orderBy('nama', 'asc')->get();

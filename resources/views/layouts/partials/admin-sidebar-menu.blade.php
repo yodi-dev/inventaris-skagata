@@ -21,7 +21,7 @@
             <p class="px-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">Master Data</p>
         </div>
         <a href="/superadmin/bengkel"
-            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/bengkel*') || request()->is('superadmin/master/bengkel*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
+            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/bengkel*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
             <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4">
@@ -30,7 +30,7 @@
             Data Bengkel
         </a>
         <a href="/superadmin/toolman"
-            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/toolman*') || request()->is('superadmin/master/toolman*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
+            class="flex items-center px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('superadmin/toolman*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors">
             <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
@@ -137,7 +137,7 @@
 
         <!-- Pengembalian -->
         <a href="/toolman/pengembalian"
-            class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/pengembalian*') || request()->is('toolman/sirkulasi/pengembalian*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors group">
+            class="flex items-center justify-between px-3 py-2.5 text-sm font-medium rounded-lg {{ request()->is('toolman/pengembalian*') ? 'bg-primary-50 text-primary-600 font-semibold' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900' }} transition-colors group">
             <div class="flex items-center min-w-0">
                 <svg class="w-5 h-5 mr-3 shrink-0 text-gray-500 group-hover:text-gray-700" fill="none"
                     stroke="currentColor" viewBox="0 0 24 24">

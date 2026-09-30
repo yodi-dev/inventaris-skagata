@@ -32,19 +32,6 @@
                         this.importFileName = '';
                     }
                 },
-                // Upload Preview
-                imagePreview: null,
-                handleFileChange(event) {
-                    const file = event.target.files[0];
-                    if (file) {
-                        this.imagePreview = URL.createObjectURL(file);
-                    }
-                },
-                removeImage() {
-                    this.imagePreview = null;
-                    const fileInput = document.getElementById('foto_barang');
-                    if (fileInput) fileInput.value = '';
-                },
                 generateKode() {
                     const randomNum = Math.floor(Math.random() * 900) + 100;
                     if (this.tipe === 'inventaris') {
@@ -853,106 +840,41 @@
 
             </div>
 
-            <!-- SECTION 4: Spesifikasi Teknis, Estimasi Harga, & Foto Barang -->
+            <!-- SECTION 4: Spesifikasi Teknis & Estimasi Harga -->
             <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm space-y-5">
                 <div class="border-b border-gray-100 pb-3">
-                    <h4 class="text-base font-semibold text-gray-900">Spesifikasi Teknis & Dokumentasi</h4>
-                    <p class="text-xs text-gray-500 mt-0.5">Lengkapi spesifikasi untuk acuan peminjam dan referensi
-                        pengadaan.</p>
+                    <h4 class="text-base font-semibold text-gray-900">Spesifikasi Teknis & Estimasi Harga</h4>
+                    <p class="text-xs text-gray-500 mt-0.5">Lengkapi spesifikasi untuk acuan peminjam dan referensi pengadaan.</p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                    <!-- Kolom Kiri: Deskripsi & Estimasi Biaya -->
-                    <div class="space-y-4">
-                        <!-- Spesifikasi / Deskripsi Teknis -->
-                        <div>
-                            <label for="spesifikasi" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                Spesifikasi Teknis & Keterangan Tambahan
-                            </label>
-                            <textarea id="spesifikasi" name="spesifikasi" rows="4"
-                                class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
-                                placeholder="Tuliskan merk, tipe chipset, nomor model, panjang/kapasitas, atau panduan penggunaan..."></textarea>
-                            <p class="text-[11px] text-gray-400 mt-1">Deskripsi ini akan dibaca oleh siswa saat melihat
-                                katalog peminjaman.</p>
-                        </div>
-
-                        <!-- Estimasi Harga Satuan (Untuk RAB) -->
-                        <div>
-                            <label for="estimasi_harga" class="block text-sm font-medium text-gray-700 mb-1.5">
-                                Estimasi Harga Satuan (Opsional)
-                            </label>
-                            <div class="relative">
-                                <div
-                                    class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 font-medium text-sm">
-                                    Rp
-                                </div>
-                                <input type="number" id="estimasi_harga" name="estimasi_harga" x-model="estimasiHarga"
-                                    class="block w-full pl-10 text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
-                                    placeholder="Contoh: 1850000">
-                            </div>
-                            <p class="text-[11px] text-gray-400 mt-1">Digunakan sebagai perkiraan otomatis saat
-                                men-generate draf RAB Pengadaan ke Waka Sarpras.</p>
-                        </div>
-                    </div>
-
-                    <!-- Kolom Kanan: Upload Foto Barang -->
+                    <!-- Spesifikasi / Deskripsi Teknis -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">
-                            Foto / Gambar Barang
+                        <label for="spesifikasi" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Spesifikasi Teknis & Keterangan Tambahan
                         </label>
-
-                        <!-- Upload Area & Preview -->
-                        <div
-                            class="border-2 border-dashed border-gray-300 hover:border-primary-500 rounded-xl p-4 text-center transition-colors bg-gray-50/50 relative">
-
-                            <!-- State 1: Ada Preview -->
-                            <template x-if="imagePreview">
-                                <div class="space-y-3">
-                                    <div
-                                        class="relative max-w-xs mx-auto h-44 rounded-lg overflow-hidden border border-gray-200 shadow-inner">
-                                        <img :src="imagePreview" alt="Preview Foto Barang"
-                                            class="w-full h-full object-contain bg-white">
-                                        <button type="button" @click="removeImage()"
-                                            class="absolute top-2 right-2 p-1.5 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-md transition-colors"
-                                            title="Hapus foto">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                    d="M6 18L18 6M6 6l12 12"></path>
-                                            </svg>
-                                        </button>
-                                    </div>
-                                    <p class="text-xs text-green-600 font-medium">Foto berhasil dipilih</p>
-                                </div>
-                            </template>
-
-                            <!-- State 2: Belum Ada Foto -->
-                            <template x-if="!imagePreview">
-                                <div class="py-6">
-                                    <svg class="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none"
-                                        viewBox="0 0 48 48">
-                                        <path
-                                            d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02"
-                                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                                    </svg>
-                                    <div class="flex text-sm text-gray-600 justify-center mt-2">
-                                        <label for="foto_barang"
-                                            class="relative cursor-pointer bg-white rounded-md font-semibold text-primary-600 hover:text-primary-500 focus-within:outline-none">
-                                            <span>Unggah gambar</span>
-                                            <input id="foto_barang" name="foto_barang" type="file" accept="image/*"
-                                                class="sr-only" @change="handleFileChange($event)">
-                                        </label>
-                                        <p class="pl-1">atau tarik ke sini</p>
-                                    </div>
-                                    <p class="text-[11px] text-gray-400 mt-1">PNG, JPG, WEBP hingga 2MB (Opsional)</p>
-                                </div>
-                            </template>
-                        </div>
-                        <p class="text-[11px] text-gray-400 mt-2">Foto akan tampil di katalog siswa/guru untuk mempermudah
-                            identifikasi alat.</p>
+                        <textarea id="spesifikasi" name="spesifikasi" rows="4"
+                            class="block w-full text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
+                            placeholder="Tuliskan merk, tipe chipset, nomor model, panjang/kapasitas, atau panduan penggunaan..."></textarea>
+                        <p class="text-[11px] text-gray-400 mt-1">Deskripsi ini akan dibaca oleh siswa saat melihat katalog peminjaman.</p>
                     </div>
 
+                    <!-- Estimasi Harga Satuan (Untuk RAB) -->
+                    <div>
+                        <label for="estimasi_harga" class="block text-sm font-medium text-gray-700 mb-1.5">
+                            Estimasi Harga Satuan (Opsional)
+                        </label>
+                        <div class="relative">
+                            <div
+                                class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-500 font-medium text-sm">
+                                Rp
+                            </div>
+                            <input type="number" id="estimasi_harga" name="estimasi_harga" x-model="estimasiHarga"
+                                class="block w-full pl-10 text-sm rounded-lg border-gray-300 focus:ring-primary-500 focus:border-primary-500 shadow-sm"
+                                placeholder="Contoh: 1850000">
+                        </div>
+                        <p class="text-[11px] text-gray-400 mt-1">Digunakan sebagai perkiraan otomatis saat men-generate draf RAB Pengadaan ke Waka Sarpras.</p>
+                    </div>
                 </div>
             </div>
 

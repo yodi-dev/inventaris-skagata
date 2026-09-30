@@ -101,7 +101,7 @@ inventaris-skagata/
 ├── routes/
 │   ├── web.php                # Definisi route sistem Sibenka
 │   └── auth.php               # Route autentikasi Breeze
-├── PRD_Sibenka.md             # Dokumen Product Requirement Document
+├── PRD Sibenka - v2.0.md      # Dokumen Product Requirement Document (v2.0)
 └── README.md                  # Dokumentasi teknis proyek
 ```
 
@@ -172,17 +172,28 @@ inventaris-skagata/
 
 ---
 
-## 🧭 8. Peta Route Utama Prototype
+## 🧭 8. Peta Rute Utama Aplikasi
 
 | Modul | URL Endpoint | Keterangan Halaman |
 | :--- | :--- | :--- |
 | **Login** | `/login` | Pintu masuk autentikasi pengguna |
 | **Super Admin** | `/superadmin/dashboard` | Dashboard analitik Waka Sarpras |
-| **Super Admin** | `/superadmin/pengadaan` | Verifikasi draf RAB Pengadaan (Interaktif) |
+| **Super Admin** | `/superadmin/pengadaan` | Verifikasi draf RAB Pengadaan |
+| **Super Admin** | `/superadmin/bengkel` | Manajemen master bengkel |
+| **Super Admin** | `/superadmin/toolman` | Manajemen akun Toolman |
+| **Super Admin** | `/superadmin/laporan/mutasi` | Laporan mutasi aset bengkel |
+| **Super Admin** | `/superadmin/laporan/konsumsi` | Laporan konsumsi bahan (BHP) |
 | **Toolman** | `/toolman/dashboard` | Dashboard operasional bengkel jurusan |
-| **Toolman** | `/toolman/barang` | Manajemen master alat & bahan |
-| **Toolman** | `/toolman/sirkulasi/peminjaman` | Antrean persetujuan pinjam siswa/guru |
-| **Toolman** | `/toolman/pengadaan/create` | Form pengajuan RAB dari stok kritis |
+| **Toolman** | `/toolman/barang` | Manajemen master alat & bahan (Katalog, Import, Export) |
+| **Toolman** | `/toolman/lokasi` | Manajemen master lokasi penyimpanan |
+| **Toolman** | `/toolman/satuan` | Manajemen master satuan barang |
+| **Toolman** | `/toolman/sumber-dana` | Manajemen master sumber dana anggaran |
+| **Toolman** | `/toolman/peminjaman` | Antrean persetujuan pinjam siswa/guru |
+| **Toolman** | `/toolman/pengembalian` | Verifikasi pengembalian & cek fisik barang |
+| **Toolman** | `/toolman/pengadaan` | Penyusunan RAB & penerimaan fisik barang |
+| **Toolman** | `/toolman/peminjam` | Manajemen akun peminjam (Approval & Suspend) |
+| **Toolman** | `/toolman/mutasi` | Riwayat kartu stok & kartu barang |
+| **Peminjam** | `/peminjam/dashboard` | Dashboard peminjam & ringkasan peminjaman |
 | **Peminjam** | `/peminjam/katalog` | Katalog barang praktik (*Mobile-First* & Keranjang) |
 | **Peminjam** | `/peminjam/tiket` | Tiket aktif & riwayat peminjaman |
 
