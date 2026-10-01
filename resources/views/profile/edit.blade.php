@@ -266,18 +266,28 @@
                             <label class="text-xs font-bold text-gray-600 uppercase tracking-wide">
                                 {{ $identifierLabel }}
                             </label>
-                            <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
-                                <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                                Terkunci
-                            </span>
+                            @if ($currentRole !== 'superadmin')
+                                <span class="text-[10px] text-gray-400 flex items-center gap-1 font-medium">
+                                    <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                    </svg>
+                                    Terkunci
+                                </span>
+                            @endif
                         </div>
-                        <input type="text" value="{{ $user->nomor_identitas ?? '-' }}" readonly
-                            class="w-full text-xs sm:text-sm font-mono border border-gray-200 rounded-xl py-2.5 px-3.5 bg-gray-100 text-gray-500 cursor-not-allowed select-all outline-none">
-                        <p class="text-[10px] text-gray-400 mt-1">Identitas resmi dikelola oleh pihak sekolah.</p>
+                        @if ($currentRole === 'superadmin')
+                            <input type="text" name="nomor_identitas"
+                                value="{{ old('nomor_identitas', $user->nomor_identitas) }}"
+                                placeholder="Contoh: 19750814 200003 1 002"
+                                class="w-full text-xs sm:text-sm font-mono border border-gray-300 rounded-xl py-2.5 px-3.5 bg-gray-50/50 focus:bg-white focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-medium transition-all outline-none">
+                            <p class="text-[10px] text-gray-400 mt-1">Isi dengan NIP atau nomor identitas resmi Anda.</p>
+                        @else
+                            <input type="text" value="{{ $user->nomor_identitas ?? '-' }}" readonly
+                                class="w-full text-xs sm:text-sm font-mono border border-gray-200 rounded-xl py-2.5 px-3.5 bg-gray-100 text-gray-500 cursor-not-allowed select-all outline-none">
+                            <p class="text-[10px] text-gray-400 mt-1">Identitas resmi dikelola oleh pihak sekolah.</p>
+                        @endif
                     </div>
 
                     {{-- Email --}}

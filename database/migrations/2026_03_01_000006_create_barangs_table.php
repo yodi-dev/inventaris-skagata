@@ -10,12 +10,14 @@ return new class extends Migration
     {
         Schema::create('barangs', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('bengkel_id')->constrained('bengkels')->cascadeOnDelete();
+            $table->foreignId('bengkel_id')->constrained('bengkels')->restrictOnDelete();
             $table->foreignId('lokasi_penyimpanan_id')->nullable()->constrained('lokasi_penyimpanans')->nullOnDelete();
+            $table->foreignId('sumber_dana_id')->nullable()->constrained('sumber_danas')->nullOnDelete();
             $table->string('kode_barang');
             $table->string('nama');
             $table->enum('jenis_barang', ['inventaris', 'bhp']);
             $table->string('satuan');
+            $table->decimal('harga', 15, 2)->default(0);
             $table->integer('stok_total')->default(0);
             $table->integer('stok_tersedia')->default(0);
             $table->integer('stok_dipinjam')->default(0);

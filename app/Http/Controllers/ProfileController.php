@@ -7,7 +7,6 @@ use App\Models\Barang;
 use App\Models\Bengkel;
 use App\Models\Peminjaman;
 use App\Models\Pengadaan;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
