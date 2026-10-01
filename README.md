@@ -26,7 +26,43 @@ SMK Negeri 3 Yogyakarta (Skagata) memiliki beragam bengkel kejuruan (TKJ, TAV, T
 
 ---
 
-## 👥 2. Hak Akses & Peran Pengguna (User Roles)
+## 🌐 2. Live Demo & Akun Pengujian Portofolio
+
+Aplikasi SIBENKA telah aktif dan dapat diakses langsung secara online (*Live Cloud Production*) tanpa perlu instalasi lokal:
+
+🔗 **Akses Aplikasi Demo:** [https://sibenka-skagata.onrender.com](https://sibenka-skagata.onrender.com)
+
+> [!NOTE]
+> Karena menggunakan layanan *Render Free Tier*, server web akan masuk ke mode *sleep* saat tidak ada lalu lintas pengunjung. Pemuatan awal (*cold start*) mungkin membutuhkan waktu sekitar 30–50 detik.
+
+### 🔑 Tabel Kredensial Akun Demo (Password: `password`)
+
+Seluruh akun demo menggunakan password seragam: **`password`**
+
+| Peran (Role) | Nama Akun | Email Login | Password | Bengkel / Cakupan | Fokus Fitur yang Dapat Diuji |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Waka Sarpras** | `Waka Sarpras (Demo)` | `waka@skagata.sch.id` | `password` | *Semua Bengkel* | Dashboard analitik aset, approval usulan RAB Pengadaan, laporan mutasi & konsumsi. |
+| **Kepala Gudang** | `Kepala Gudang (Demo)` | `gudang@skagata.sch.id` | `password` | *Semua Bengkel* | Pengawasan stok sarpras sekolah & master inventaris umum. |
+| **Toolman TKJ** | `Budi Toolman (TKJ)` | `toolman.tkj@skagata.sch.id` | `password` | **TKJ** | Manajemen katalog alat/BHP TKJ, verifikasi antrean pinjam, cek fisik pengembalian, draf RAB. |
+| **Toolman TKR** | `Joko Toolman (TKR)` | `toolman.tkr@skagata.sch.id` | `password` | **TKR** | Manajemen katalog alat otomotif TKR, pencatatan bahan habis pakai, kartu stok mutasi. |
+| **Siswa TKJ** | `Ahmad Pratama (Siswa TKJ)` | `siswa.tkj@skagata.sch.id` | `password` | **TKJ** | Eksplorasi katalog alat TKJ, keranjang multi-item, pengajuan pinjam, tiket sirkulasi. |
+| **Siswa TKR** | `Rian Ramadhan (Siswa TKR)` | `siswa.tkr@skagata.sch.id` | `password` | **TKR** | Pengajuan peminjaman alat praktikum otomotif & pelacakan status tiket. |
+| **Guru (Umum)** | `Drs. Hendro Wibowo (Guru)` | `guru@skagata.sch.id` | `password` | *Lintas Bengkel* | Peminjaman alat antar-kejuruan (bebas memilih bengkel TKJ maupun TKR). |
+
+### 💡 Rekomendasi Skenario Uji Coba:
+1. **Alur Peminjaman (Siswa/Guru):** Login sebagai `siswa.tkj@skagata.sch.id`, telusuri katalog barang, masukkan *Routerboard MikroTik* ke keranjang, lalu ajukan pinjam.
+2. **Alur Verifikasi & Pengembalian (Toolman):** Login sebagai `toolman.tkj@skagata.sch.id`, setujui peminjaman di antrean sirkulasi. Saat barang dikembalikan, buka menu pengembalian untuk input cek kondisi fisik (Baik / Rusak).
+3. **Alur Usulan & Persetujuan RAB (Toolman & Waka):** Sebagai toolman buat usulan RAB pengadaan baru atau generate otomatis, lalu login sebagai `waka@skagata.sch.id` untuk meninjau dan menyetujui (ACC) dokumen RAB.
+
+### 🔄 Perintah Pemulihan / Reset Data Demo:
+Jika data demo telah dimodifikasi selama pengujian dan ingin dikembalikan ke kondisi awal:
+```bash
+php artisan app:reset-demo --force
+```
+
+---
+
+## 👥 3. Hak Akses & Peran Pengguna (User Roles)
 
 Sistem membagi akses ke dalam 3 tingkatan pengguna:
 
