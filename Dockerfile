@@ -53,6 +53,7 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 COPY docker/nginx.conf /etc/nginx/templates/default.conf.template
 COPY docker/supervisord.conf /etc/supervisord.conf
 COPY docker/php.ini /usr/local/etc/php/conf.d/custom.ini
+COPY docker/php-fpm-custom.conf /usr/local/etc/php-fpm.d/zz-custom.conf
 COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
 
 RUN chmod +x /usr/local/bin/entrypoint.sh \
