@@ -166,7 +166,8 @@ inventaris-skagata/
     ```bash
     php artisan migrate --seed
     ```
-    *(Menyiapkan skema basis data dan 2 akun administrator awal: Waka Sarpras & Kepala Gudang)*
+
+    _(Menyiapkan skema basis data dan 2 akun administrator awal: Waka Sarpras & Kepala Gudang)_
 
 6. **Jalankan Server Pengembang (Development):**
     - **Jika menggunakan Laravel Herd:**

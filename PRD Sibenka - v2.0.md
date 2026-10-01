@@ -304,6 +304,6 @@ Evolusi dari versi draf awal (v1.1) menjadi versi produksi (v2.0):
 4. **Hardening Batasan Spreadsheet:** Pembatasan ukuran file, penolakan format lama `.xls`, penolakan kolom lebih dari 50 baris, pencegahan injeksi formula kalkulasi Excel, serta proteksi parser XML dari serangan XXE.
 5. **Autentikasi Internal Sekolah:** Menghapus fitur publik reset password via email demi menyesuaikan SOP operasional langsung di sekolah, serta menerapkan rate-limiting pada registrasi mandiri.
 6. **Konsolidasi Migrasi & Onboarding Database Bersih:**
-    - Mengkonsolidasi file migrasi fragmentaris menjadi susunan migrasi kanonikal dengan integritas relasi utuh (*restrictOnDelete* / *nullOnDelete* / *cascadeOnDelete* langsung pada DDL pembuatan tabel).
-    - Mereset database ke status bersih produksi (*clean slate*).
+    - Mengkonsolidasi file migrasi fragmentaris menjadi susunan migrasi kanonikal dengan integritas relasi utuh (_restrictOnDelete_ / _nullOnDelete_ / _cascadeOnDelete_ langsung pada DDL pembuatan tabel).
+    - Mereset database ke status bersih produksi (_clean slate_).
     - Mengonfigurasi `UserSeeder` khusus untuk 2 akun administratif awal: Waka Sarpras (`waka@skagata.sch.id`) dan Kepala Gudang (`gudang@skagata.sch.id`) dengan NIP kosong yang dapat dikonfigurasi mandiri melalui menu pengaturan profil.
