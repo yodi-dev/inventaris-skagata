@@ -141,7 +141,7 @@ class ProfileTest extends TestCase
         // Uji otentikasi akun waka
         $loginResponse = $this->post('/login', [
             'email' => 'waka@skagata.sch.id',
-            'password' => 'password123',
+            'password' => 'password',
         ]);
         $loginResponse->assertRedirect('/superadmin/dashboard');
 
@@ -149,7 +149,7 @@ class ProfileTest extends TestCase
         $this->post('/logout');
         $gudangResponse = $this->post('/login', [
             'email' => 'gudang@skagata.sch.id',
-            'password' => 'password123',
+            'password' => 'password',
         ]);
         $gudangResponse->assertRedirect('/superadmin/dashboard');
     }
